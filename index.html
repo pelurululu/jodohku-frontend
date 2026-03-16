@@ -51,8 +51,7 @@ button{cursor:pointer;font-family:var(--fb)}
 .dot{width:10px;height:10px;background:var(--e4);border-radius:50%;border:2px solid #fff;display:inline-block}
 .tg{background:linear-gradient(135deg,#C8A23C,#FFD11A,#A68732);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-.afu{opacity:0;transform:translateY(20px)}
-.pg.on .afu{animation:fadeUp .55s var(--ez) both}
+.afu{animation:fadeUp .55s var(--ez) both}
 .d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}.d5{animation-delay:.5s}
 
 /* === NAV === */
@@ -93,7 +92,6 @@ button{cursor:pointer;font-family:var(--fb)}
 .nb-btn:hover{background:var(--s1)}
 .nb-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:#EF4444;border-radius:50%}
 .pgc{padding:32px}
-.pgc.no-pad{padding:0;overflow:hidden}
 
 /* === PROFILE CARD (GALLERY) === */
 .pcard{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:24px;transition:all .5s var(--ez)}
@@ -111,7 +109,7 @@ button{cursor:pointer;font-family:var(--fb)}
 .pcard-acts .btn{flex:1;padding:12px 0}.pcard-acts .btn.lam{flex:2}
 
 /* === CHAT === */
-.chat-wrap{display:flex;height:calc(100vh - 57px);background:#fff;overflow:hidden;border-top:1px solid var(--s2)}
+.chat-wrap{display:flex;height:calc(100vh - 120px);margin:-32px;background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--s2)}
 .chat-list{width:340px;border-right:1px solid var(--s2);display:flex;flex-direction:column}
 .chat-list-hd{padding:16px 20px;border-bottom:1px solid var(--s2)}
 .chat-list-hd h2{font-family:var(--fd);font-weight:600;font-size:20px}
@@ -275,7 +273,7 @@ button{cursor:pointer;font-family:var(--fb)}
 <div id="reg-s2" class="auth-step">
 <button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">← Kembali</button>
 <h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2>
-<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b>anda@contoh.com</b>. Sah 10 minit.</p>
+<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dabbb4bebb9ab9b5b4aeb5b2f4b9b5b7">[email&#160;protected]</a></b>. Sah 10 minit.</p>
 <div style="margin-bottom:20px"><label class="lbl">Kod OTP</label><input class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em"></div>
 <button class="btn bp" style="width:100%;padding:14px 0" onclick="regStep(3)">Sahkan OTP</button>
 <p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer">Hantar Semula</span></p>
@@ -324,10 +322,10 @@ const msgs=[
 {mine:false,text:'Terima kasih! Saya pun suka mendaki 😊 Dah pernah daki Gunung Kinabalu?',time:'2:30 PM'},
 ];
 const profiles=[
-{id:'1',code:'AH72R',name:'Nurul',age:28,state:'Selangor',edu:'Ijazah',job:'Jurutera',status:'Bujang',tier:'gold',t20:true,score:94,online:true,bio:'Seorang yang mencintai ilmu dan sentiasa berusaha untuk menjadi lebih baik setiap hari.',tip:'Anda berdua suka mendaki — cadangkan ini sebagai topik pertama!',hue:220},
-{id:'2',code:'FS63M',name:'Aisyah',age:26,state:'WP KL',edu:'Master',job:'Doktor',status:'Bujang',tier:'platinum',t20:false,score:91,online:false,bio:'Alhamdulillah, diberi rezeki untuk berkhidmat kepada masyarakat.',tip:'Anda berdua mementingkan perancangan masa depan — topik yang bagus!',hue:250},
-{id:'3',code:'NR19K',name:'Fatimah',age:30,state:'Johor',edu:'PhD',job:'Pensyarah',status:'Bujang',tier:'premium',t20:true,score:88,online:true,bio:'Sedang menyelesaikan PhD dalam bidang bioteknologi. Percaya bahawa ilmu dan agama berjalan seiring.',tip:'Anda berdua suka membaca — mulakan dengan bertanya buku kegemaran!',hue:180},
-{id:'4',code:'ZK55P',name:'Sarah',age:25,state:'P. Pinang',edu:'Ijazah',job:'Akauntan',status:'Bujang',tier:'gold',t20:false,score:86,online:false,bio:'Orang Pulau Pinang yang suka makanan sedap dan perjalanan.',tip:'Anda berdua minat melancong — tanya destinasi impian!',hue:280},
+{id:'1',code:'AH72R',name:'Nurul',age:28,state:'Selangor',edu:'Ijazah',job:'Jurutera',status:'Bujang',tier:'gold',t20:true,score:94,online:true,bio:'Seorang yang mencintai ilmu dan sentiasa berusaha untuk menjadi lebih baik setiap hari.',tip:'Anda berdua suka mendaki — cadangkan ini sebagai topik pertama!',color:'220,35,20'},
+{id:'2',code:'FS63M',name:'Aisyah',age:26,state:'WP KL',edu:'Master',job:'Doktor',status:'Bujang',tier:'platinum',t20:false,score:91,online:false,bio:'Alhamdulillah, diberi rezeki untuk berkhidmat kepada masyarakat.',tip:'Anda berdua mementingkan perancangan masa depan — topik yang bagus!',color:'250,30,18'},
+{id:'3',code:'NR19K',name:'Fatimah',age:30,state:'Johor',edu:'PhD',job:'Pensyarah',status:'Bujang',tier:'premium',t20:true,score:88,online:true,bio:'Sedang menyelesaikan PhD dalam bidang bioteknologi. Percaya bahawa ilmu dan agama berjalan seiring.',tip:'Anda berdua suka membaca — mulakan dengan bertanya buku kegemaran!',color:'180,30,18'},
+{id:'4',code:'ZK55P',name:'Sarah',age:25,state:'P. Pinang',edu:'Ijazah',job:'Akauntan',status:'Bujang',tier:'gold',t20:false,score:86,online:false,bio:'Orang Pulau Pinang yang suka makanan sedap dan perjalanan.',tip:'Anda berdua minat melancong — tanya destinasi impian!',color:'280,25,22'},
 ];
 const convos=[
 {partner:profiles[0],lastMsg:'Terima kasih! Saya pun suka mendaki 😊',time:'2:30 PM',unread:2},
@@ -347,7 +345,7 @@ function go(pg){
 document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
 currentPage=pg;
 const el=document.getElementById('pg-'+pg);
-if(el){el.classList.add('on');try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){window.scrollTo(0,0)}}
+if(el){el.classList.add('on');window.scrollTo(0,0)}
 // Build app pages on demand
 if(['gallery','chat','profile','payment','notif','settings','success'].includes(pg))buildAppPage(pg);
 }
@@ -391,7 +389,7 @@ return `<div class="side">
 <nav class="side-nav">${items.map(i=>`<div class="nav-i${active===i.id?' on':''}" onclick="go('${i.id}')">${i.icon} <span style="flex:1">${i.label}</span>${i.badge?`<span class="nb">${i.badge}</span>`:''}</div>`).join('')}</nav>
 <div class="side-bt"><div class="nav-i" style="color:#EF4444" onclick="go('landing')">🚪 Log Keluar</div></div>
 </div>
-<div class="main"><div class="topbar"><div class="nb-btn" onclick="go('notif')">🔔${notifs.filter(n=>!n.read).length?'<span class="nb-dot"></span>':''}</div></div><div class="pgc${active==='chat'?' no-pad':''}">`;
+<div class="main"><div class="topbar"><div class="nb-btn" onclick="go('notif')">🔔${notifs.filter(n=>!n.read).length?'<span class="nb-dot"></span>':''}</div></div><div class="pgc">`;
 }
 const sideEnd=`</div></div>`;
 
@@ -409,7 +407,7 @@ h+=`<div style="max-width:680px;margin:0 auto">
 profiles.forEach((p,i)=>{
 const isFav=favs.has(p.id);
 h+=`<div class="pcard afu d${i+1}">
-<div class="pcard-ph" style="background:linear-gradient(135deg,hsl(${p.hue},35%,20%),hsl(${p.hue+40},25%,13%))">
+<div class="pcard-ph" style="background:linear-gradient(135deg,hsl(${p.color}),hsl(${parseInt(p.color)+40},25%,15%))">
 <div class="pcard-ph-inner"><div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;backdrop-filter:blur(4px)">👤</div><span style="color:rgba(255,255,255,.5);font-family:var(--fm);font-size:12px">Demo</span></div>
 <div class="wm"></div>
 <div class="pcard-badges"><span class="badge b-${p.tier==='gold'?'gld':p.tier==='platinum'?'plt':p.tier==='premium'?'prm':'rah'}">${p.tier.toUpperCase()}</span>${p.t20?'<span class="badge b-ver">🛡️ T20</span>':''}</div>
@@ -564,7 +562,7 @@ go('chat');
 // ═══════════════ FAVORITES ═══════════════
 function toggleFav(id){
 if(favs.has(id))favs.delete(id);else favs.add(id);
-go(currentPage);
+go('gallery');
 }
 
 // ═══════════════ NOTIFICATIONS ═══════════════
@@ -579,7 +577,8 @@ const tiers=[
 {n:'Rahmah',icon:'🕊️',p:'Percuma',d:'7 Hari',bg:'var(--s0)',bd:'var(--s2)',f:['10 paparan/hari','3 sembang','Gambar kabur']},
 {n:'Gold',icon:'⭐',p:'RM39.99',d:'30 Hari',bg:'rgba(255,249,230,.3)',bd:'var(--g400)',pop:true,f:['30 paparan/hari','10 sembang','Gambar jelas','WhatsApp','Tanpa iklan']},
 {n:'Platinum',icon:'💎',p:'RM69.99',d:'60 Hari',s:'12%',bg:'rgba(243,232,255,.15)',bd:'#C4B5FD',f:['Tanpa had','Keutamaan carian','Video ta\'aruf','Ciri beta']},
-{n:'Premium',icon:'👑',p:'RM101.99',d:'90 Hari',s:'15%',bg:'rgba(237,233,254,.2)',bd:'#A78BFA',f:['Semua Platinum','Keutamaan tertinggi','Laporan PDF','3 Golden Ticket']},];
+{n:'Premium',icon:'👑',p:'RM101.99',d:'90 Hari',s:'15%',bg:'rgba(237,233,254,.2)',bd:'#A78BFA',f:['Semua Platinum','Keutamaan tertinggi','Laporan PDF','3 Golden Ticket']},
+];
 g.innerHTML=tiers.map(t=>`<div style="border-radius:var(--r);border:2px solid ${t.bd};padding:24px;background:${t.bg};position:relative;${t.pop?'box-shadow:0 0 24px rgba(200,162,60,.2)':''}">
 ${t.pop?'<span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--g50);color:var(--g7);font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px">⭐ Paling Popular</span>':''}
 ${t.s?`<span style="display:inline-block;background:#E6F5ED;color:var(--e7);font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;margin-bottom:8px">Jimat ${t.s}</span>`:''}
@@ -592,473 +591,322 @@ ${t.s?`<span style="display:inline-block;background:#E6F5ED;color:var(--e7);font
 }
 
 // ═══════════════════════════════════════════════════
-// API LAYER — connects jodohku-live.html to FastAPI backend
-// Base URL auto-detects: production vs localhost
+// API LAYER — Jodohku.my → FastAPI Backend
 // ═══════════════════════════════════════════════════
 
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? 'http://localhost:8000/api/v1'
   : 'https://api.jodohku.my/api/v1';
 
-// ── Token Management ──
+// ── Token Storage ──
 const Auth = {
-  getToken: () => localStorage.getItem('jk_token'),
-  getRefresh: () => localStorage.getItem('jk_refresh'),
-  setTokens: (access, refresh) => {
-    localStorage.setItem('jk_token', access);
-    if (refresh) localStorage.setItem('jk_refresh', refresh);
-  },
-  clear: () => {
-    localStorage.removeItem('jk_token');
-    localStorage.removeItem('jk_refresh');
-    localStorage.removeItem('jk_user');
-  },
-  isLoggedIn: () => !!localStorage.getItem('jk_token'),
-  getUser: () => { try { return JSON.parse(localStorage.getItem('jk_user') || 'null'); } catch { return null; } },
-  setUser: (u) => localStorage.setItem('jk_user', JSON.stringify(u)),
+  getToken:   ()    => localStorage.getItem('jk_token'),
+  getRefresh: ()    => localStorage.getItem('jk_refresh'),
+  setTokens:  (a,r) => { localStorage.setItem('jk_token',a); if(r) localStorage.setItem('jk_refresh',r); },
+  clear:      ()    => { ['jk_token','jk_refresh','jk_user'].forEach(k=>localStorage.removeItem(k)); },
+  isLoggedIn: ()    => !!localStorage.getItem('jk_token'),
+  getUser:    ()    => { try{return JSON.parse(localStorage.getItem('jk_user')||'null')}catch{return null} },
+  setUser:    (u)   => localStorage.setItem('jk_user', JSON.stringify(u)),
 };
 
-// ── Core API Fetch ──
-async function apiFetch(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...options.headers };
+// ── Core Fetch with auto token refresh ──
+async function apiFetch(path, opts={}) {
+  const headers = {'Content-Type':'application/json', ...opts.headers};
   const token = Auth.getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
-
   try {
-    const res = await fetch(API_BASE + path, { ...options, headers });
-
-    // Token expired — try refresh
+    const res = await fetch(API_BASE + path, {...opts, headers});
     if (res.status === 401 && Auth.getRefresh()) {
-      const refreshed = await fetch(API_BASE + '/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: Auth.getRefresh() }),
+      const r = await fetch(API_BASE+'/auth/refresh', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({refresh_token: Auth.getRefresh()})
       });
-      if (refreshed.ok) {
-        const data = await refreshed.json();
-        Auth.setTokens(data.access_token, data.refresh_token);
-        headers['Authorization'] = `Bearer ${data.access_token}`;
-        return fetch(API_BASE + path, { ...options, headers });
-      } else {
-        Auth.clear();
-        go('login');
-        return null;
+      if (r.ok) {
+        const d = await r.json();
+        Auth.setTokens(d.access_token, d.refresh_token);
+        headers['Authorization'] = `Bearer ${d.access_token}`;
+        return fetch(API_BASE + path, {...opts, headers});
       }
+      Auth.clear(); _go('login'); return null;
     }
     return res;
-  } catch (err) {
+  } catch(err) {
     console.error('API Error:', err);
     showToast('Ralat sambungan. Cuba semula.', 'error');
     return null;
   }
 }
 
-// ── Toast Notification ──
-function showToast(msg, type = 'info') {
-  const existing = document.getElementById('jk-toast');
-  if (existing) existing.remove();
+// ── Toast ──
+function showToast(msg, type='info') {
+  const old = document.getElementById('jk-toast');
+  if(old) old.remove();
   const t = document.createElement('div');
   t.id = 'jk-toast';
-  const colors = { info: '#1B2A4A', error: '#EF4444', success: '#1A7A45', warn: '#C8A23C' };
-  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.info};color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:fadeUp .3s ease`;
+  const c = {info:'#1B2A4A',error:'#EF4444',success:'#1A7A45',warn:'#C8A23C'};
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${c[type]||c.info};color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)`;
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(() => t.remove(), 3500);
+  setTimeout(()=>t.remove(), 3500);
 }
 
-// ── Loading State ──
-function setLoading(btnEl, loading, text = '') {
-  if (!btnEl) return;
-  btnEl.disabled = loading;
-  btnEl.textContent = loading ? '⏳ Sila tunggu...' : text || btnEl.dataset.originalText;
-  if (!loading && text) btnEl.dataset.originalText = text;
+// ── Button loading state ──
+function setLoading(btn, loading, label='') {
+  if(!btn) return;
+  btn.disabled = loading;
+  if(loading) { btn.dataset.orig = btn.textContent; btn.textContent = '⏳ Sila tunggu...'; }
+  else btn.textContent = label || btn.dataset.orig || btn.textContent;
 }
 
-// ═══════════════════════════════════════
-// AUTH FUNCTIONS
-// ═══════════════════════════════════════
+// ══════════════════════════
+// AUTH
+// ══════════════════════════
+let regEmail='', regPassword='';
 
-// ── Login ──
 async function apiLogin() {
   const email = document.getElementById('login-email')?.value?.trim();
-  const password = document.getElementById('login-password')?.value;
-  const btn = document.getElementById('login-btn');
-  if (!email || !password) return showToast('Sila isi semua medan.', 'warn');
-
-  setLoading(btn, true);
-  const res = await apiFetch('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  setLoading(btn, false, 'Log Masuk →');
-
-  if (!res) return;
-  const data = await res.json();
-
-  if (res.ok) {
-    Auth.setTokens(data.access_token, data.refresh_token);
-    Auth.setUser(data.user);
-    currentUser = data.user;
-    unreadN = 0;
-    showToast('Selamat datang kembali! 👋', 'success');
-    go('gallery');
+  const pass  = document.getElementById('login-password')?.value;
+  const btn   = document.getElementById('login-btn');
+  if(!email||!pass) return showToast('Sila isi semua medan.','warn');
+  setLoading(btn,true);
+  const res = await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({email,password:pass})});
+  setLoading(btn,false,'Log Masuk →');
+  if(!res) return;
+  const d = await res.json();
+  if(res.ok){
+    Auth.setTokens(d.access_token, d.refresh_token);
+    Auth.setUser(d);
+    currentUser = d;
+    showToast('Selamat datang kembali! 👋','success');
+    _go('gallery');
     apiLoadGallery();
   } else {
-    showToast(data.detail || 'Emel atau kata laluan tidak sah.', 'error');
+    showToast(d.detail||'Emel atau kata laluan tidak sah.','error');
   }
 }
 
-// ── Register Step 1 ──
-let regEmail = '', regPassword = '';
 async function apiRegister() {
-  regEmail = document.getElementById('reg-email')?.value?.trim();
+  regEmail    = document.getElementById('reg-email')?.value?.trim();
   regPassword = document.getElementById('reg-password')?.value;
-  const confirm = document.getElementById('reg-confirm')?.value;
-  const btn = document.getElementById('reg-btn');
-
-  if (!regEmail || !regPassword) return showToast('Sila isi semua medan.', 'warn');
-  if (regPassword !== confirm) return showToast('Kata laluan tidak sepadan.', 'warn');
-  if (regPassword.length < 8) return showToast('Kata laluan minimum 8 aksara.', 'warn');
-
-  setLoading(btn, true);
-  const res = await apiFetch('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ email: regEmail, password: regPassword }),
-  });
-  setLoading(btn, false, 'Teruskan →');
-
-  if (!res) return;
-  const data = await res.json();
-
-  if (res.ok) {
-    showToast('OTP dihantar! Semak emel anda.', 'success');
-    regStep(2);
-  } else {
-    showToast(data.detail || 'Pendaftaran gagal. Cuba semula.', 'error');
-  }
+  const conf  = document.getElementById('reg-confirm')?.value;
+  const btn   = document.getElementById('reg-btn');
+  if(!regEmail||!regPassword) return showToast('Sila isi semua medan.','warn');
+  if(regPassword!==conf)      return showToast('Kata laluan tidak sepadan.','warn');
+  if(regPassword.length<8)    return showToast('Kata laluan minimum 8 aksara.','warn');
+  setLoading(btn,true);
+  const res = await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({email:regEmail,password:regPassword})});
+  setLoading(btn,false,'Teruskan →');
+  if(!res) return;
+  const d = await res.json();
+  if(res.ok){ showToast('OTP dihantar! Semak emel anda.','success'); regStep(2); }
+  else showToast(d.detail||'Pendaftaran gagal. Cuba semula.','error');
 }
 
-// ── Register Step 2: Verify OTP ──
 async function apiVerifyOTP() {
   const otp = document.getElementById('reg-otp')?.value?.trim();
   const btn = document.getElementById('otp-btn');
-  if (!otp || otp.length !== 6) return showToast('Sila masukkan kod OTP 6 digit.', 'warn');
-
-  setLoading(btn, true);
-  const res = await apiFetch('/auth/verify-otp', {
-    method: 'POST',
-    body: JSON.stringify({ email: regEmail, otp_code: otp }),
-  });
-  setLoading(btn, false, 'Sahkan OTP');
-
-  if (!res) return;
-  const data = await res.json();
-
-  if (res.ok) {
-    showToast('OTP disahkan! ✅', 'success');
-    regStep(3);
-  } else {
-    showToast(data.detail || 'Kod OTP tidak sah atau tamat.', 'error');
-  }
+  if(!otp||otp.length!==6) return showToast('Sila masukkan kod OTP 6 digit.','warn');
+  setLoading(btn,true);
+  const res = await apiFetch('/auth/verify-otp',{method:'POST',body:JSON.stringify({email:regEmail,otp_code:otp})});
+  setLoading(btn,false,'Sahkan OTP');
+  if(!res) return;
+  const d = await res.json();
+  if(res.ok){ showToast('OTP disahkan! ✅','success'); regStep(3); }
+  else showToast(d.detail||'Kod OTP tidak sah.','error');
 }
 
-// ── Logout ──
 async function apiLogout() {
-  await apiFetch('/auth/logout', { method: 'POST' });
-  Auth.clear();
-  currentUser = null;
-  showToast('Berjaya log keluar.', 'info');
-  go('landing');
+  await apiFetch('/auth/logout',{method:'POST'});
+  Auth.clear(); currentUser=null;
+  showToast('Berjaya log keluar.','info');
+  _go('landing');
 }
 
-// ═══════════════════════════════════════
-// GALLERY FUNCTIONS
-// ═══════════════════════════════════════
+// ══════════════════════════
+// GALLERY
+// ══════════════════════════
+let galleryPage=1, galleryLoading=false, galleryDone=false;
 
-let galleryPage = 1, galleryLoading = false, galleryDone = false;
-
-async function apiLoadGallery(reset = true) {
-  if (galleryLoading) return;
-  if (reset) { galleryPage = 1; galleryDone = false; profiles = []; }
-  if (galleryDone) return;
-
-  galleryLoading = true;
-  const shell = document.getElementById('shell-gallery');
-  if (reset && shell) {
-    const grid = shell.querySelector('[data-gallery-grid]');
-    if (grid) grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--im)">⏳ Memuatkan...</div>';
-  }
-
+async function apiLoadGallery(reset=true) {
+  if(galleryLoading) return;
+  if(reset){ galleryPage=1; galleryDone=false; profiles=[]; }
+  if(galleryDone) return;
+  galleryLoading=true;
   const res = await apiFetch(`/gallery/?page=${galleryPage}&page_size=10`);
-  galleryLoading = false;
-
-  if (!res || !res.ok) {
-    showToast('Gagal memuatkan galeri.', 'error');
-    return;
-  }
-
-  const data = await res.json();
-  const newProfiles = data.profiles || data.items || [];
-
-  if (reset) profiles = newProfiles;
-  else profiles = [...profiles, ...newProfiles];
-
-  if (newProfiles.length < 10) galleryDone = true;
+  galleryLoading=false;
+  if(!res||!res.ok){ showToast('Gagal memuatkan galeri.','error'); return; }
+  const d = await res.json();
+  const items = (d.profiles||d.items||[]).map(p=>({
+    id: p.id||p.user_id,
+    code: p.code_name||p.code||'???',
+    name: p.display_name||p.name||'',
+    age: p.age||'?',
+    state: p.state_of_residence||p.state||'',
+    edu: p.education_level||p.edu||'',
+    job: p.occupation||p.job||'',
+    status: p.marital_status||p.status||'',
+    tier: (p.tier||'rahmah').toLowerCase(),
+    t20: p.is_t20||false,
+    score: Math.round((p.compatibility_score||p.score||0)*100)||'?',
+    online: p.is_online||false,
+    bio: p.bio_text||p.bio||'',
+    tip: p.wingman_tip||p.tip||'',
+    hue: p.hue||220,
+  }));
+  profiles = reset ? items : [...profiles, ...items];
+  if(items.length<10) galleryDone=true;
   galleryPage++;
-
-  go('gallery');
+  _go('gallery');
 }
 
-async function apiToggleFav(profileId) {
-  if (favs.has(profileId)) {
-    favs.delete(profileId);
-    await apiFetch('/gallery/action', {
-      method: 'POST',
-      body: JSON.stringify({ target_user_id: profileId, action: 'unlike' }),
-    });
-  } else {
-    favs.add(profileId);
-    await apiFetch('/gallery/action', {
-      method: 'POST',
-      body: JSON.stringify({ target_user_id: profileId, action: 'save_favorite' }),
-    });
-  }
-  go(currentPage);
+async function apiToggleFav(id) {
+  const action = favs.has(id) ? (favs.delete(id),'unlike') : (favs.add(id),'save_favorite');
+  await apiFetch('/gallery/action',{method:'POST',body:JSON.stringify({target_user_id:id,action})});
+  _go(currentPage);
 }
 
-async function apiLamar(profileId) {
-  const res = await apiFetch('/chat/initiate', {
-    method: 'POST',
-    body: JSON.stringify({
-      target_user_id: profileId,
-      message: { content: 'Assalamualaikum! Saya berminat untuk berkenalan. 😊', is_ice_breaker: true },
-    }),
-  });
-  if (!res) return;
-  const data = await res.json();
-  if (res.ok) {
-    showToast('Lamaran dihantar! ✉️', 'success');
-    activeChatIdx = 0;
-    await apiLoadConversations();
-    go('chat');
-  } else {
-    showToast(data.detail || 'Gagal menghantar lamaran.', 'error');
-  }
-}
-
-// ═══════════════════════════════════════
-// CHAT FUNCTIONS
-// ═══════════════════════════════════════
-
-let conversations = [], wsConnection = null;
+// ══════════════════════════
+// CHAT
+// ══════════════════════════
+let conversations=[], wsConn=null;
 
 async function apiLoadConversations() {
   const res = await apiFetch('/chat/conversations');
-  if (!res || !res.ok) return;
-  const data = await res.json();
-  conversations = data.conversations || data.items || [];
-  unreadN = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+  if(!res||!res.ok) return;
+  const d = await res.json();
+  conversations = d.conversations||d.items||[];
+  unreadN = conversations.reduce((s,c)=>s+(c.unread_count||0),0);
 }
 
-async function apiLoadMessages(conversationId) {
-  const res = await apiFetch(`/chat/conversations/${conversationId}/messages`);
-  if (!res || !res.ok) return [];
-  const data = await res.json();
-  return data.messages || data.items || [];
+async function apiLoadMessages(convId) {
+  const res = await apiFetch(`/chat/conversations/${convId}/messages`);
+  if(!res||!res.ok) return [];
+  const d = await res.json();
+  return (d.messages||d.items||[]).map(m=>({
+    mine: m.is_mine||m.mine||false,
+    text: m.content||m.text,
+    time: m.created_at ? new Date(m.created_at).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}) : m.time,
+  }));
 }
 
 async function apiSendMessage() {
   const inp = document.getElementById('msg-inp');
-  if (!inp || !inp.value.trim()) return;
+  if(!inp||!inp.value.trim()) return;
   const text = inp.value.trim();
   const conv = conversations[activeChatIdx];
-  if (!conv) return;
-
-  inp.value = '';
-  // Optimistic update
-  msgs.push({ mine: true, text, time: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) });
-  go('chat');
-
-  const res = await apiFetch(`/chat/conversations/${conv.id}/messages`, {
-    method: 'POST',
-    body: JSON.stringify({ content: text, is_ice_breaker: false }),
+  if(!conv) return;
+  inp.value='';
+  msgs.push({mine:true,text,time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})});
+  _go('chat');
+  const res = await apiFetch(`/chat/conversations/${conv.id}/messages`,{
+    method:'POST', body:JSON.stringify({content:text,is_ice_breaker:false})
   });
-
-  if (!res || !res.ok) {
-    const data = res ? await res.json() : null;
-    if (data?.blocked) {
-      msgs.pop();
-      go('chat');
-      showToast(data.reason_ms || 'Mesej disekat oleh penapis kandungan.', 'warn');
-    }
+  if(res&&!res.ok){
+    const d = await res.json();
+    if(d?.blocked){ msgs.pop(); _go('chat'); showToast(d.reason_ms||'Mesej disekat.','warn'); }
   }
 }
 
-// ── WebSocket Setup ──
-function setupWebSocket() {
+function setupWS() {
   const token = Auth.getToken();
-  if (!token || wsConnection) return;
-
-  const wsBase = API_BASE.replace('http', 'ws').replace('/api/v1', '');
-  wsConnection = new WebSocket(`${wsBase}/api/v1/chat/ws/${token}`);
-
-  wsConnection.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === 'message:new') {
-      const conv = conversations.find(c => c.id === data.conversation_id);
-      if (conv) {
-        conv.last_message = data.content;
-        conv.unread_count = (conv.unread_count || 0) + 1;
-        unreadN++;
-      }
-      if (currentPage === 'chat') {
-        msgs.push({ mine: false, text: data.content, time: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) });
-        go('chat');
-      } else {
-        showToast('Mesej baharu diterima 💬', 'info');
-      }
+  if(!token||wsConn) return;
+  const wsBase = API_BASE.replace('https','wss').replace('http','ws').replace('/api/v1','');
+  wsConn = new WebSocket(`${wsBase}/api/v1/chat/ws/${token}`);
+  wsConn.onmessage = (e) => {
+    const d = JSON.parse(e.data);
+    if(d.type==='message:new'){
+      if(currentPage==='chat'){ msgs.push({mine:false,text:d.content,time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})}); _go('chat'); }
+      else showToast('Mesej baharu 💬','info');
     }
   };
-
-  wsConnection.onclose = () => {
-    wsConnection = null;
-    // Reconnect after 3s
-    if (Auth.isLoggedIn()) setTimeout(setupWebSocket, 3000);
-  };
+  wsConn.onclose = () => { wsConn=null; if(Auth.isLoggedIn()) setTimeout(setupWS,3000); };
 }
 
-// ═══════════════════════════════════════
-// NOTIFICATIONS FUNCTIONS
-// ═══════════════════════════════════════
-
-async function apiLoadNotifications() {
+// ══════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════
+async function apiLoadNotifs() {
   const res = await apiFetch('/notifications/');
-  if (!res || !res.ok) return;
-  const data = await res.json();
-  notifs = (data.notifications || data.items || []).map(n => ({
-    type: n.type === 'match' ? '💛' : n.type === 'message' ? '💬' : n.type === 'view' ? '👁️' : '🔔',
-    title: n.title,
-    body: n.body || n.message,
+  if(!res||!res.ok) return;
+  const d = await res.json();
+  notifs = (d.notifications||d.items||[]).map(n=>({
+    type: n.type==='match'?'💛':n.type==='message'?'💬':n.type==='view'?'👁️':'🔔',
+    title: n.title, body: n.body||n.message,
     time: n.created_at ? new Date(n.created_at).toLocaleString('ms-MY') : '',
-    read: n.is_read,
-    id: n.id,
+    read: n.is_read, id: n.id,
   }));
 }
 
 async function apiMarkRead(idx) {
-  const n = notifs[idx];
-  if (!n || n.read) return;
-  notifs[idx].read = true;
-  await apiFetch(`/notifications/${n.id}/read`, { method: 'POST' });
-  go('notif');
+  const n=notifs[idx]; if(!n||n.read) return;
+  notifs[idx].read=true;
+  await apiFetch(`/notifications/${n.id}/read`,{method:'POST'});
+  _go('notif');
 }
 
 async function apiMarkAllRead() {
-  notifs.forEach(n => n.read = true);
-  await apiFetch('/notifications/read-all', { method: 'POST' });
-  go('notif');
+  notifs.forEach(n=>n.read=true);
+  await apiFetch('/notifications/read-all',{method:'POST'});
+  _go('notif');
 }
 
-// ═══════════════════════════════════════
-// PROFILE FUNCTIONS
-// ═══════════════════════════════════════
-
+// ══════════════════════════
+// PROFILE
+// ══════════════════════════
 let currentUser = Auth.getUser();
 
-async function apiLoadMyProfile() {
+async function apiLoadProfile() {
   const res = await apiFetch('/profile/me');
-  if (!res || !res.ok) return;
-  const data = await res.json();
-  currentUser = data;
-  Auth.setUser(data);
+  if(!res||!res.ok) return;
+  currentUser = await res.json();
+  Auth.setUser(currentUser);
 }
 
-// ═══════════════════════════════════════
-// OVERRIDE go() TO USE REAL API
-// ═══════════════════════════════════════
-
+// ══════════════════════════
+// OVERRIDE go() WITH API GUARDS
+// ══════════════════════════
 const _go = go;
 go = async function(pg) {
-  // Guard protected pages
-  const protectedPages = ['gallery', 'chat', 'profile', 'payment', 'notif', 'settings', 'success', 'favorites'];
-  if (protectedPages.includes(pg) && !Auth.isLoggedIn()) {
-    showToast('Sila log masuk dahulu.', 'warn');
+  const protected_ = ['gallery','chat','profile','payment','notif','settings','success'];
+  if(protected_.includes(pg) && !Auth.isLoggedIn()){
+    showToast('Sila log masuk dahulu.','warn');
     return _go('login');
   }
-
-  // Load data before rendering
-  if (pg === 'gallery' && Auth.isLoggedIn()) {
-    if (profiles.length === 0) await apiLoadGallery();
-  }
-  if (pg === 'chat' && Auth.isLoggedIn()) {
-    await apiLoadConversations();
-    if (conversations.length > 0 && msgs.length === 0) {
-      const conv = conversations[activeChatIdx];
-      if (conv) msgs = await apiLoadMessages(conv.id);
-    }
-    setupWebSocket();
-  }
-  if (pg === 'notif' && Auth.isLoggedIn()) {
-    await apiLoadNotifications();
-  }
-  if (pg === 'profile' && Auth.isLoggedIn()) {
-    await apiLoadMyProfile();
-  }
-
+  if(pg==='gallery' && Auth.isLoggedIn() && profiles.length===0) await apiLoadGallery();
+  if(pg==='chat'    && Auth.isLoggedIn()){ await apiLoadConversations(); setupWS(); }
+  if(pg==='notif'   && Auth.isLoggedIn()) await apiLoadNotifs();
+  if(pg==='profile' && Auth.isLoggedIn()) await apiLoadProfile();
   _go(pg);
 };
 
-// ═══════════════════════════════════════
-// OVERRIDE sendMsg & markRead to use API
-// ═══════════════════════════════════════
+// Override event handlers
+sendMsg    = apiSendMessage;
+markRead   = apiMarkRead;
+markAllRead= apiMarkAllRead;
+toggleFav  = apiToggleFav;
 
-sendMsg = apiSendMessage;
-markRead = apiMarkRead;
-markAllRead = apiMarkAllRead;
-toggleFav = apiToggleFav;
-
-// ═══════════════════════════════════════
-// UPDATE HTML — Auth forms use API
-// ═══════════════════════════════════════
-
-// Override login page HTML to add IDs to inputs
-const _buildAppPage = buildAppPage;
-
-// ── Init on load ──
-renderRegSteps();
-buildTierGrid();
-
-// Auto-restore session on page load
-if (Auth.isLoggedIn()) {
-  currentUser = Auth.getUser();
-  apiLoadNotifications().then(() => {});
-}
-
-// Update login page HTML to wire up API
+// ══════════════════════════
+// WIRE UP FORMS WITH IDs
+// ══════════════════════════
 document.getElementById('pg-login').innerHTML = `
 <div class="auth">
-<div class="auth-brand"><div class="gl1"></div><div class="gl2"></div><div class="auth-brand-in">
+<div class="auth-brand"><div class="gl1"></div><div class="gl2"></div>
+<div class="auth-brand-in">
 <div class="logo-ic" style="width:72px;height:72px;margin:0 auto 24px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
 <h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
 </div></div>
 <div class="auth-form"><div class="auth-form-in">
 <div style="text-align:center;margin-bottom:32px">
 <h2 style="font-family:var(--fd);font-weight:600;font-size:24px">Selamat Kembali</h2>
-<p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p>
-</div>
+<p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p></div>
 <div class="card">
 <div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="login-email" class="inp" type="email" placeholder="anda@contoh.com" onkeydown="if(event.key==='Enter')apiLogin()"></div>
 <div style="margin-bottom:20px"><label class="lbl">Kata Laluan</label><input id="login-password" class="inp" type="password" placeholder="Kata laluan anda" onkeydown="if(event.key==='Enter')apiLogin()"></div>
-<button id="login-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiLogin()">Log Masuk →</button>
-</div>
+<button id="login-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiLogin()">Log Masuk →</button></div>
 <p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Belum ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('register')">Daftar Sekarang</span></p>
-</div></div>
-</div>`;
+</div></div></div>`;
 
-// Update register page step 1 inputs to have IDs
-const regS1 = document.getElementById('reg-s1');
-if (regS1) {
-  regS1.innerHTML = `
+document.getElementById('reg-s1').innerHTML = `
 <h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Daftar Akaun</h2>
 <p style="color:var(--is);margin-bottom:28px">Langkah pertama menuju jodoh yang sekufu.</p>
 <div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="reg-email" class="inp" type="email" placeholder="anda@contoh.com"></div>
@@ -1066,19 +914,22 @@ if (regS1) {
 <div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan</label><input id="reg-confirm" class="inp" type="password" placeholder="Ulang kata laluan"></div>
 <button id="reg-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiRegister()">Teruskan →</button>
 <p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Sudah ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('login')">Log Masuk</span></p>`;
-}
 
-// Update OTP step
-const regS2 = document.getElementById('reg-s2');
-if (regS2) {
-  regS2.innerHTML = `
+document.getElementById('reg-s2').innerHTML = `
 <button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">← Kembali</button>
 <h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2>
-<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b>anda@contoh.com</b>. Sah 10 minit.</p>
-<div style="margin-bottom:20px"><label class="lbl">Kod OTP</label><input id="reg-otp" class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em" onkeydown="if(event.key==='Enter')apiVerifyOTP()"></div>
+<p style="color:var(--is);margin-bottom:28px">Kod 6 digit dihantar ke emel anda. Sah 10 minit.</p>
+<div style="margin-bottom:20px"><label class="lbl">Kod OTP</label>
+<input id="reg-otp" class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em" onkeydown="if(event.key==='Enter')apiVerifyOTP()"></div>
 <button id="otp-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiVerifyOTP()">Sahkan OTP</button>
-<p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer">Hantar Semula</span></p>`;
-}
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="apiRegister()">Hantar Semula</span></p>`;
+
+// ══════════════════════════
+// INIT
+// ══════════════════════════
+renderRegSteps();
+buildTierGrid();
+if(Auth.isLoggedIn()){ currentUser=Auth.getUser(); apiLoadNotifs(); }
 
 </script>
 </body>
