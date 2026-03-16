@@ -273,7 +273,7 @@ button{cursor:pointer;font-family:var(--fb)}
 <div id="reg-s2" class="auth-step">
 <button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">← Kembali</button>
 <h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2>
-<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="dabbb4bebb9ab9b5b4aeb5b2f4b9b5b7">[email&#160;protected]</a></b>. Sah 10 minit.</p>
+<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="14757a707554777b7a607b7c3a777b79">[email&#160;protected]</a></b>. Sah 10 minit.</p>
 <div style="margin-bottom:20px"><label class="lbl">Kod OTP</label><input class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em"></div>
 <button class="btn bp" style="width:100%;padding:14px 0" onclick="regStep(3)">Sahkan OTP</button>
 <p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer">Hantar Semula</span></p>
@@ -311,7 +311,7 @@ button{cursor:pointer;font-family:var(--fb)}
 <!-- ======================= SUCCESS WALL ======================= -->
 <div id="pg-success" class="pg"><div class="shell" id="shell-success"></div></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════ STATE ═══════════════
 let currentPage='landing',regStepN=1,activeChatIdx=0,unreadN=2;
 const favs=new Set();
@@ -590,11 +590,10 @@ ${t.s?`<span style="display:inline-block;background:#E6F5ED;color:var(--e7);font
 </div>`).join('');
 }
 
-// ═══════════════════════════════════════════════════
-// API LAYER — Jodohku.my → FastAPI Backend
-// ═══════════════════════════════════════════════════
-
-const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+// ═══════════════════════════════════
+// API BASE URL
+// ═══════════════════════════════════
+const API_BASE = (window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1')
   ? 'http://localhost:8000/api/v1'
   : 'https://api.jodohku.my/api/v1';
 
@@ -609,71 +608,71 @@ const Auth = {
   setUser:    (u)   => localStorage.setItem('jk_user', JSON.stringify(u)),
 };
 
-// ── Core Fetch with auto token refresh ──
+// ── Core Fetch ──
 async function apiFetch(path, opts={}) {
   const headers = {'Content-Type':'application/json', ...opts.headers};
   const token = Auth.getToken();
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if(token) headers['Authorization'] = 'Bearer '+token;
   try {
-    const res = await fetch(API_BASE + path, {...opts, headers});
-    if (res.status === 401 && Auth.getRefresh()) {
+    const res = await fetch(API_BASE+path, {...opts, headers});
+    if(res.status===401 && Auth.getRefresh()) {
       const r = await fetch(API_BASE+'/auth/refresh', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({refresh_token: Auth.getRefresh()})
       });
-      if (r.ok) {
+      if(r.ok) {
         const d = await r.json();
         Auth.setTokens(d.access_token, d.refresh_token);
-        headers['Authorization'] = `Bearer ${d.access_token}`;
-        return fetch(API_BASE + path, {...opts, headers});
+        headers['Authorization'] = 'Bearer '+d.access_token;
+        return fetch(API_BASE+path, {...opts, headers});
       }
       Auth.clear(); _go('login'); return null;
     }
     return res;
   } catch(err) {
     console.error('API Error:', err);
-    showToast('Ralat sambungan. Cuba semula.', 'error');
+    showToast('Ralat sambungan. Cuba semula.','error');
     return null;
   }
 }
 
 // ── Toast ──
-function showToast(msg, type='info') {
+function showToast(msg, type) {
   const old = document.getElementById('jk-toast');
   if(old) old.remove();
   const t = document.createElement('div');
   t.id = 'jk-toast';
   const c = {info:'#1B2A4A',error:'#EF4444',success:'#1A7A45',warn:'#C8A23C'};
-  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${c[type]||c.info};color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)`;
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:'+(c[type]||c.info)+';color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2)';
   t.textContent = msg;
   document.body.appendChild(t);
-  setTimeout(()=>t.remove(), 3500);
+  setTimeout(function(){t.remove();}, 3500);
 }
 
-// ── Button loading state ──
-function setLoading(btn, loading, label='') {
+// ── Button loading ──
+function setLoading(btn, loading, label) {
   if(!btn) return;
   btn.disabled = loading;
   if(loading) { btn.dataset.orig = btn.textContent; btn.textContent = '⏳ Sila tunggu...'; }
   else btn.textContent = label || btn.dataset.orig || btn.textContent;
 }
 
-// ══════════════════════════
+// ══════════════
 // AUTH
-// ══════════════════════════
-let regEmail='', regPassword='';
+// ══════════════
+var regEmail='', regPassword='';
 
 async function apiLogin() {
-  const email = document.getElementById('login-email')?.value?.trim();
-  const pass  = document.getElementById('login-password')?.value;
-  const btn   = document.getElementById('login-btn');
+  var email = document.getElementById('login-email') ? document.getElementById('login-email').value.trim() : '';
+  var pass  = document.getElementById('login-password') ? document.getElementById('login-password').value : '';
+  var btn   = document.getElementById('login-btn');
   if(!email||!pass) return showToast('Sila isi semua medan.','warn');
-  setLoading(btn,true);
-  const res = await apiFetch('/auth/login',{method:'POST',body:JSON.stringify({email,password:pass})});
-  setLoading(btn,false,'Log Masuk →');
+  setLoading(btn, true);
+  var res = await apiFetch('/auth/login', {method:'POST', body:JSON.stringify({email:email, password:pass})});
+  setLoading(btn, false, 'Log Masuk →');
   if(!res) return;
-  const d = await res.json();
-  if(res.ok){
+  var d = await res.json();
+  if(res.ok) {
     Auth.setTokens(d.access_token, d.refresh_token);
     Auth.setUser(d);
     currentUser = d;
@@ -686,185 +685,200 @@ async function apiLogin() {
 }
 
 async function apiRegister() {
-  regEmail    = document.getElementById('reg-email')?.value?.trim();
-  regPassword = document.getElementById('reg-password')?.value;
-  const conf  = document.getElementById('reg-confirm')?.value;
-  const btn   = document.getElementById('reg-btn');
-
+  regEmail    = document.getElementById('reg-email') ? document.getElementById('reg-email').value.trim() : '';
+  regPassword = document.getElementById('reg-password') ? document.getElementById('reg-password').value : '';
+  var conf    = document.getElementById('reg-confirm') ? document.getElementById('reg-confirm').value : '';
+  var btn     = document.getElementById('reg-btn');
   if(!regEmail||!regPassword) return showToast('Sila isi semua medan.','warn');
   if(regPassword!==conf)      return showToast('Kata laluan tidak sepadan.','warn');
   if(regPassword.length<8)    return showToast('Kata laluan minimum 8 aksara.','warn');
-  // ── TAMBAH INI ──
-  if(!/[A-Z]/.test(regPassword)) return showToast('Kata laluan mesti ada huruf besar (A-Z).','warn');
-  if(!/[0-9]/.test(regPassword)) return showToast('Kata laluan mesti ada nombor (0-9).','warn');
+  if(!/[A-Z]/.test(regPassword)) return showToast('Kata laluan mesti ada huruf besar (contoh: A).','warn');
+  if(!/[0-9]/.test(regPassword)) return showToast('Kata laluan mesti ada nombor (contoh: 1).','warn');
+  setLoading(btn, true);
+  var res = await apiFetch('/auth/register', {method:'POST', body:JSON.stringify({email:regEmail, password:regPassword})});
+  setLoading(btn, false, 'Teruskan →');
+  if(!res) return;
+  var d = await res.json();
+  if(res.ok) { showToast('OTP dihantar! Semak emel anda.','success'); regStep(2); }
+  else showToast(d.detail||'Pendaftaran gagal. Cuba semula.','error');
+}
 
 async function apiVerifyOTP() {
-  const otp = document.getElementById('reg-otp')?.value?.trim();
-  const btn = document.getElementById('otp-btn');
+  var otp = document.getElementById('reg-otp') ? document.getElementById('reg-otp').value.trim() : '';
+  var btn = document.getElementById('otp-btn');
   if(!otp||otp.length!==6) return showToast('Sila masukkan kod OTP 6 digit.','warn');
-  setLoading(btn,true);
-  const res = await apiFetch('/auth/verify-otp',{method:'POST',body:JSON.stringify({email:regEmail,otp_code:otp})});
-  setLoading(btn,false,'Sahkan OTP');
+  setLoading(btn, true);
+  var res = await apiFetch('/auth/verify-otp', {method:'POST', body:JSON.stringify({email:regEmail, otp_code:otp})});
+  setLoading(btn, false, 'Sahkan OTP');
   if(!res) return;
-  const d = await res.json();
-  if(res.ok){ showToast('OTP disahkan! ✅','success'); regStep(3); }
+  var d = await res.json();
+  if(res.ok) { showToast('OTP disahkan! ✅','success'); regStep(3); }
   else showToast(d.detail||'Kod OTP tidak sah.','error');
 }
 
 async function apiLogout() {
-  await apiFetch('/auth/logout',{method:'POST'});
+  await apiFetch('/auth/logout', {method:'POST'});
   Auth.clear(); currentUser=null;
   showToast('Berjaya log keluar.','info');
   _go('landing');
 }
 
-// ══════════════════════════
+// ══════════════
 // GALLERY
-// ══════════════════════════
-let galleryPage=1, galleryLoading=false, galleryDone=false;
+// ══════════════
+var galleryPage=1, galleryLoading=false, galleryDone=false;
 
-async function apiLoadGallery(reset=true) {
+async function apiLoadGallery(reset) {
+  if(reset===undefined) reset=true;
   if(galleryLoading) return;
   if(reset){ galleryPage=1; galleryDone=false; profiles=[]; }
   if(galleryDone) return;
   galleryLoading=true;
-  const res = await apiFetch(`/gallery/?page=${galleryPage}&page_size=10`);
+  var res = await apiFetch('/gallery/?page='+galleryPage+'&page_size=10');
   galleryLoading=false;
   if(!res||!res.ok){ showToast('Gagal memuatkan galeri.','error'); return; }
-  const d = await res.json();
-  const items = (d.profiles||d.items||[]).map(p=>({
-    id: p.id||p.user_id,
-    code: p.code_name||p.code||'???',
-    name: p.display_name||p.name||'',
-    age: p.age||'?',
-    state: p.state_of_residence||p.state||'',
-    edu: p.education_level||p.edu||'',
-    job: p.occupation||p.job||'',
-    status: p.marital_status||p.status||'',
-    tier: (p.tier||'rahmah').toLowerCase(),
-    t20: p.is_t20||false,
-    score: Math.round((p.compatibility_score||p.score||0)*100)||'?',
-    online: p.is_online||false,
-    bio: p.bio_text||p.bio||'',
-    tip: p.wingman_tip||p.tip||'',
-    hue: p.hue||220,
-  }));
-  profiles = reset ? items : [...profiles, ...items];
+  var d = await res.json();
+  var items = (d.profiles||d.items||[]).map(function(p){
+    return {
+      id: p.id||p.user_id,
+      code: p.code_name||p.code||'???',
+      name: p.display_name||p.name||'',
+      age: p.age||'?',
+      state: p.state_of_residence||p.state||'',
+      edu: p.education_level||p.edu||'',
+      job: p.occupation||p.job||'',
+      status: p.marital_status||p.status||'',
+      tier: (p.tier||'rahmah').toLowerCase(),
+      t20: p.is_verified_t20||false,
+      score: Math.round((p.compatibility_score||0)*100)||'?',
+      online: p.is_online||false,
+      bio: p.bio_text||p.bio||'',
+      tip: p.wingman_tip||'',
+      hue: p.hue||220,
+    };
+  });
+  profiles = reset ? items : profiles.concat(items);
   if(items.length<10) galleryDone=true;
   galleryPage++;
   _go('gallery');
 }
 
 async function apiToggleFav(id) {
-  const action = favs.has(id) ? (favs.delete(id),'unlike') : (favs.add(id),'save_favorite');
-  await apiFetch('/gallery/action',{method:'POST',body:JSON.stringify({target_user_id:id,action})});
+  var action;
+  if(favs.has(id)){ favs.delete(id); action='unlike'; }
+  else { favs.add(id); action='save_favorite'; }
+  await apiFetch('/gallery/action', {method:'POST', body:JSON.stringify({target_user_id:id, action:action})});
   _go(currentPage);
 }
 
-// ══════════════════════════
+// ══════════════
 // CHAT
-// ══════════════════════════
-let conversations=[], wsConn=null;
+// ══════════════
+var conversations=[], wsConn=null;
 
 async function apiLoadConversations() {
-  const res = await apiFetch('/chat/conversations');
+  var res = await apiFetch('/chat/conversations');
   if(!res||!res.ok) return;
-  const d = await res.json();
+  var d = await res.json();
   conversations = d.conversations||d.items||[];
-  unreadN = conversations.reduce((s,c)=>s+(c.unread_count||0),0);
+  unreadN = conversations.reduce(function(s,c){ return s+(c.unread_count||0); }, 0);
 }
 
 async function apiLoadMessages(convId) {
-  const res = await apiFetch(`/chat/conversations/${convId}/messages`);
+  var res = await apiFetch('/chat/conversations/'+convId+'/messages');
   if(!res||!res.ok) return [];
-  const d = await res.json();
-  return (d.messages||d.items||[]).map(m=>({
-    mine: m.is_mine||m.mine||false,
-    text: m.content||m.text,
-    time: m.created_at ? new Date(m.created_at).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}) : m.time,
-  }));
+  var d = await res.json();
+  return (d.messages||d.items||[]).map(function(m){
+    return {
+      mine: m.is_mine||m.mine||false,
+      text: m.content||m.text,
+      time: m.created_at ? new Date(m.created_at).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}) : (m.time||''),
+    };
+  });
 }
 
 async function apiSendMessage() {
-  const inp = document.getElementById('msg-inp');
+  var inp = document.getElementById('msg-inp');
   if(!inp||!inp.value.trim()) return;
-  const text = inp.value.trim();
-  const conv = conversations[activeChatIdx];
-  if(!conv) return;
+  var text = inp.value.trim();
+  var conv = conversations[activeChatIdx];
+  if(!conv){ sendMsg(); return; }
   inp.value='';
-  msgs.push({mine:true,text,time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})});
+  msgs.push({mine:true,text:text,time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})});
   _go('chat');
-  const res = await apiFetch(`/chat/conversations/${conv.id}/messages`,{
-    method:'POST', body:JSON.stringify({content:text,is_ice_breaker:false})
+  var res = await apiFetch('/chat/conversations/'+conv.id+'/messages', {
+    method:'POST', body:JSON.stringify({content:text, is_ice_breaker:false})
   });
   if(res&&!res.ok){
-    const d = await res.json();
-    if(d?.blocked){ msgs.pop(); _go('chat'); showToast(d.reason_ms||'Mesej disekat.','warn'); }
+    var d = await res.json();
+    if(d&&d.blocked){ msgs.pop(); _go('chat'); showToast(d.reason_ms||'Mesej disekat.','warn'); }
   }
 }
 
 function setupWS() {
-  const token = Auth.getToken();
+  var token = Auth.getToken();
   if(!token||wsConn) return;
-  const wsBase = API_BASE.replace('https','wss').replace('http','ws').replace('/api/v1','');
-  wsConn = new WebSocket(`${wsBase}/api/v1/chat/ws/${token}`);
-  wsConn.onmessage = (e) => {
-    const d = JSON.parse(e.data);
+  var wsBase = API_BASE.replace('https://','wss://').replace('http://','ws://').replace('/api/v1','');
+  wsConn = new WebSocket(wsBase+'/api/v1/chat/ws/'+token);
+  wsConn.onmessage = function(e) {
+    var d = JSON.parse(e.data);
     if(d.type==='message:new'){
       if(currentPage==='chat'){ msgs.push({mine:false,text:d.content,time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})}); _go('chat'); }
       else showToast('Mesej baharu 💬','info');
     }
   };
-  wsConn.onclose = () => { wsConn=null; if(Auth.isLoggedIn()) setTimeout(setupWS,3000); };
+  wsConn.onclose = function(){ wsConn=null; if(Auth.isLoggedIn()) setTimeout(setupWS,3000); };
 }
 
-// ══════════════════════════
+// ══════════════
 // NOTIFICATIONS
-// ══════════════════════════
+// ══════════════
 async function apiLoadNotifs() {
-  const res = await apiFetch('/notifications/');
+  var res = await apiFetch('/notifications/');
   if(!res||!res.ok) return;
-  const d = await res.json();
-  notifs = (d.notifications||d.items||[]).map(n=>({
-    type: n.type==='match'?'💛':n.type==='message'?'💬':n.type==='view'?'👁️':'🔔',
-    title: n.title, body: n.body||n.message,
-    time: n.created_at ? new Date(n.created_at).toLocaleString('ms-MY') : '',
-    read: n.is_read, id: n.id,
-  }));
+  var d = await res.json();
+  notifs = (d.notifications||d.items||[]).map(function(n){
+    return {
+      type: n.type==='match'?'💛':n.type==='message'?'💬':n.type==='view'?'👁️':'🔔',
+      title: n.title, body: n.body||n.message||'',
+      time: n.created_at ? new Date(n.created_at).toLocaleString('ms-MY') : '',
+      read: n.is_read, id: n.id,
+    };
+  });
 }
 
 async function apiMarkRead(idx) {
-  const n=notifs[idx]; if(!n||n.read) return;
+  var n=notifs[idx]; if(!n||n.read) return;
   notifs[idx].read=true;
-  await apiFetch(`/notifications/${n.id}/read`,{method:'POST'});
+  await apiFetch('/notifications/'+n.id+'/read', {method:'POST'});
   _go('notif');
 }
 
 async function apiMarkAllRead() {
-  notifs.forEach(n=>n.read=true);
-  await apiFetch('/notifications/read-all',{method:'POST'});
+  notifs.forEach(function(n){ n.read=true; });
+  await apiFetch('/notifications/read-all', {method:'POST'});
   _go('notif');
 }
 
-// ══════════════════════════
+// ══════════════
 // PROFILE
-// ══════════════════════════
-let currentUser = Auth.getUser();
+// ══════════════
+var currentUser = Auth.getUser();
 
 async function apiLoadProfile() {
-  const res = await apiFetch('/profile/me');
+  var res = await apiFetch('/profile/me');
   if(!res||!res.ok) return;
   currentUser = await res.json();
   Auth.setUser(currentUser);
 }
 
-// ══════════════════════════
-// OVERRIDE go() WITH API GUARDS
-// ══════════════════════════
-const _go = go;
+// ══════════════════════════════════════
+// OVERRIDE go() WITH AUTH GUARD + DATA
+// ══════════════════════════════════════
+var _go = go;
 go = async function(pg) {
-  const protected_ = ['gallery','chat','profile','payment','notif','settings','success'];
-  if(protected_.includes(pg) && !Auth.isLoggedIn()){
+  var protected_ = ['gallery','chat','profile','payment','notif','settings','success'];
+  if(protected_.indexOf(pg)>-1 && !Auth.isLoggedIn()){
     showToast('Sila log masuk dahulu.','warn');
     return _go('login');
   }
@@ -875,54 +889,24 @@ go = async function(pg) {
   _go(pg);
 };
 
-// Override event handlers
-sendMsg    = apiSendMessage;
-markRead   = apiMarkRead;
-markAllRead= apiMarkAllRead;
-toggleFav  = apiToggleFav;
+// Override handlers
+sendMsg     = apiSendMessage;
+markRead    = apiMarkRead;
+markAllRead = apiMarkAllRead;
+toggleFav   = apiToggleFav;
 
-// ══════════════════════════
-// WIRE UP FORMS WITH IDs
-// ══════════════════════════
-document.getElementById('pg-login').innerHTML = `
-<div class="auth">
-<div class="auth-brand"><div class="gl1"></div><div class="gl2"></div>
-<div class="auth-brand-in">
-<div class="logo-ic" style="width:72px;height:72px;margin:0 auto 24px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
-<h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
-</div></div>
-<div class="auth-form"><div class="auth-form-in">
-<div style="text-align:center;margin-bottom:32px">
-<h2 style="font-family:var(--fd);font-weight:600;font-size:24px">Selamat Kembali</h2>
-<p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p></div>
-<div class="card">
-<div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="login-email" class="inp" type="email" placeholder="anda@contoh.com" onkeydown="if(event.key==='Enter')apiLogin()"></div>
-<div style="margin-bottom:20px"><label class="lbl">Kata Laluan</label><input id="login-password" class="inp" type="password" placeholder="Kata laluan anda" onkeydown="if(event.key==='Enter')apiLogin()"></div>
-<button id="login-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiLogin()">Log Masuk →</button></div>
-<p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Belum ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('register')">Daftar Sekarang</span></p>
-</div></div></div>`;
+// ══════════════
+// WIRE FORMS
+// ══════════════
+document.getElementById('pg-login').innerHTML = '<div class="auth"><div class="auth-brand"><div class="gl1"></div><div class="gl2"></div><div class="auth-brand-in"><div class="logo-ic" style="width:72px;height:72px;margin:0 auto 24px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p></div></div><div class="auth-form"><div class="auth-form-in"><div style="text-align:center;margin-bottom:32px"><h2 style="font-family:var(--fd);font-weight:600;font-size:24px">Selamat Kembali</h2><p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p></div><div class="card"><div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="login-email" class="inp" type="email" placeholder="anda@contoh.com"></div><div style="margin-bottom:20px"><label class="lbl">Kata Laluan</label><input id="login-password" class="inp" type="password" placeholder="Kata laluan anda"></div><button id="login-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiLogin()">Log Masuk &#8594;</button></div><p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Belum ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go(\'register\')">Daftar Sekarang</span></p></div></div></div>';
 
-document.getElementById('reg-s1').innerHTML = `
-<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Daftar Akaun</h2>
-<p style="color:var(--is);margin-bottom:28px">Langkah pertama menuju jodoh yang sekufu.</p>
-<div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="reg-email" class="inp" type="email" placeholder="anda@contoh.com"></div>
-<div style="margin-bottom:16px"><label class="lbl">Kata Laluan</label><input id="reg-password" class="inp" type="password" placeholder="Min 8 aksara, huruf besar & nombor"></div>
-<div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan</label><input id="reg-confirm" class="inp" type="password" placeholder="Ulang kata laluan"></div>
-<button id="reg-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiRegister()">Teruskan →</button>
-<p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Sudah ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('login')">Log Masuk</span></p>`;
+document.getElementById('reg-s1').innerHTML = '<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Daftar Akaun</h2><p style="color:var(--is);margin-bottom:16px">Langkah pertama menuju jodoh yang sekufu.</p><div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="reg-email" class="inp" type="email" placeholder="anda@contoh.com"></div><div style="margin-bottom:16px"><label class="lbl">Kata Laluan</label><input id="reg-password" class="inp" type="password" placeholder="Min 8 aksara, huruf besar &amp; nombor"><p style="font-size:12px;color:var(--im);margin-top:4px">Contoh: Jodoh123</p></div><div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan</label><input id="reg-confirm" class="inp" type="password" placeholder="Ulang kata laluan"></div><button id="reg-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiRegister()">Teruskan &#8594;</button><p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Sudah ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go(\'login\')">Log Masuk</span></p>';
 
-document.getElementById('reg-s2').innerHTML = `
-<button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">← Kembali</button>
-<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2>
-<p style="color:var(--is);margin-bottom:28px">Kod 6 digit dihantar ke emel anda. Sah 10 minit.</p>
-<div style="margin-bottom:20px"><label class="lbl">Kod OTP</label>
-<input id="reg-otp" class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em" onkeydown="if(event.key==='Enter')apiVerifyOTP()"></div>
-<button id="otp-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiVerifyOTP()">Sahkan OTP</button>
-<p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="apiRegister()">Hantar Semula</span></p>`;
+document.getElementById('reg-s2').innerHTML = '<button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">&#8592; Kembali</button><h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2><p style="color:var(--is);margin-bottom:28px">Kod 6 digit dihantar ke emel anda. Sah 10 minit.</p><div style="margin-bottom:20px"><label class="lbl">Kod OTP</label><input id="reg-otp" class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em"></div><button id="otp-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiVerifyOTP()">Sahkan OTP</button><p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="apiRegister()">Hantar Semula</span></p>';
 
-// ══════════════════════════
+// ══════════════
 // INIT
-// ══════════════════════════
+// ══════════════
 renderRegSteps();
 buildTierGrid();
 if(Auth.isLoggedIn()){ currentUser=Auth.getUser(); apiLoadNotifs(); }
