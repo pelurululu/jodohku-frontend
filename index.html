@@ -690,17 +690,13 @@ async function apiRegister() {
   regPassword = document.getElementById('reg-password')?.value;
   const conf  = document.getElementById('reg-confirm')?.value;
   const btn   = document.getElementById('reg-btn');
+
   if(!regEmail||!regPassword) return showToast('Sila isi semua medan.','warn');
   if(regPassword!==conf)      return showToast('Kata laluan tidak sepadan.','warn');
   if(regPassword.length<8)    return showToast('Kata laluan minimum 8 aksara.','warn');
-  setLoading(btn,true);
-  const res = await apiFetch('/auth/register',{method:'POST',body:JSON.stringify({email:regEmail,password:regPassword})});
-  setLoading(btn,false,'Teruskan →');
-  if(!res) return;
-  const d = await res.json();
-  if(res.ok){ showToast('OTP dihantar! Semak emel anda.','success'); regStep(2); }
-  else showToast(d.detail||'Pendaftaran gagal. Cuba semula.','error');
-}
+  // ── TAMBAH INI ──
+  if(!/[A-Z]/.test(regPassword)) return showToast('Kata laluan mesti ada huruf besar (A-Z).','warn');
+  if(!/[0-9]/.test(regPassword)) return showToast('Kata laluan mesti ada nombor (0-9).','warn');
 
 async function apiVerifyOTP() {
   const otp = document.getElementById('reg-otp')?.value?.trim();
