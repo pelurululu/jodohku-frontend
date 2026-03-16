@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jodohku.my — Pencarian Sekufu Bermula Di Sini</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--g50:#FFF9E6;--g100:#FFF0B3;--g200:#FFE680;--g400:#FFD11A;--g5:#C8A23C;--g6:#A68732;--g7:#856C28;--g8:#63511E;
+--n5:#1B2A4A;--n7:#131D35;--n9:#0A0F1D;
+--e4:#26AD62;--e5:#1A7A45;--e7:#10522E;
+--s0:#FAFAF8;--s1:#F5F3EF;--s2:#EBE8E1;--s8:#1A1A1F;--s9:#111114;--s95:#0A0A0C;
+--ip:#1A1A2E;--is:#4A4A68;--im:#8A8AA3;
+--r:16px;--rs:10px;--rb:12px;
+--fd:'Playfair Display',Georgia,serif;--fb:'Plus Jakarta Sans',system-ui,sans-serif;--fm:'JetBrains Mono',monospace;
+--sh:0 1px 3px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.06);
+--sh2:0 4px 16px rgba(0,0,0,.08),0 16px 48px rgba(0,0,0,.12);
+--ez:cubic-bezier(.16,1,.3,1);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--fb);color:var(--ip);background:var(--s0);-webkit-font-smoothing:antialiased;line-height:1.6;overflow-x:hidden}
+::selection{background:rgba(200,162,60,.2)}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:rgba(138,138,163,.3);border-radius:3px}
+a{text-decoration:none;color:inherit}img{max-width:100%;display:block}
+button{cursor:pointer;font-family:var(--fb)}
+
+/* === PAGES === */
+.pg{display:none;min-height:100vh;animation:pgIn .35s var(--ez)}
+.pg.on{display:block}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* === SHARED === */
+.container{max-width:1140px;margin:0 auto;padding:0 24px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--rb);font-weight:600;font-size:14px;border:none;transition:all .3s var(--ez);line-height:1.3}
+.bp{background:var(--g5);color:#fff;box-shadow:0 2px 8px rgba(200,162,60,.25)}.bp:hover{background:var(--g6);transform:translateY(-2px);box-shadow:0 4px 16px rgba(200,162,60,.35)}
+.bs{background:0 0;color:var(--g5);border:2px solid var(--g5)}.bs:hover{background:var(--g5);color:#fff}
+.bg{background:0 0;color:var(--is);padding:8px 16px;border:none}.bg:hover{background:var(--s2);color:var(--ip)}
+.card{background:#fff;border-radius:var(--r);padding:24px;box-shadow:var(--sh);transition:all .3s var(--ez)}
+.card:hover{box-shadow:var(--sh2)}
+.inp{width:100%;padding:12px 16px;background:var(--s1);border:1.5px solid transparent;border-radius:var(--rs);font-family:var(--fb);font-size:16px;color:var(--ip);outline:0;transition:all .2s}
+.inp::placeholder{color:var(--im)}.inp:focus{background:#fff;border-color:var(--g5);box-shadow:0 0 0 3px rgba(200,162,60,.12)}
+.lbl{display:block;font-size:14px;font-weight:500;color:var(--is);margin-bottom:6px}
+.progress{height:6px;background:var(--s2);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--g5),var(--g400));transition:width .7s var(--ez)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.b-rah{background:#F3F4F6;color:#6B7280}.b-gld{background:var(--g50);color:var(--g7)}.b-plt{background:#F3E8FF;color:#7C3AED}.b-prm{background:#EDE9FE;color:#6D28D9}.b-sov{background:var(--s95);color:var(--g5);border:1px solid rgba(200,162,60,.3)}.b-ver{background:#E6F5ED;color:var(--e7)}
+.dot{width:10px;height:10px;background:var(--e4);border-radius:50%;border:2px solid #fff;display:inline-block}
+.tg{background:linear-gradient(135deg,#C8A23C,#FFD11A,#A68732);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.afu{opacity:0;transform:translateY(20px)}
+.pg.on .afu{animation:fadeUp .55s var(--ez) both}
+.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.d4{animation-delay:.4s}.d5{animation-delay:.5s}
+
+/* === NAV === */
+.topnav{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(250,250,248,.75);backdrop-filter:blur(20px) saturate(1.5);border-bottom:1px solid rgba(235,232,225,.6)}
+.topnav-in{max-width:1140px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo-ic{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--g5),var(--g400));display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(200,162,60,.3)}
+.logo-tx{font-family:var(--fd);font-weight:700;font-size:21px;color:var(--n5)}.logo-tx b{color:var(--g5)}
+
+/* === HERO === */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;padding-top:80px;position:relative;overflow:hidden}
+.hero .glow1{position:absolute;top:15%;right:15%;width:400px;height:400px;background:rgba(200,162,60,.08);border-radius:50%;filter:blur(80px)}
+.hero .glow2{position:absolute;bottom:20%;left:10%;width:350px;height:350px;background:rgba(26,122,69,.06);border-radius:50%;filter:blur(80px)}
+.hero-c{position:relative;z-index:1;max-width:700px;text-align:center;padding:0 24px}
+.hero-chip{display:inline-flex;align-items:center;gap:8px;background:var(--g50);color:var(--g7);padding:8px 16px;border-radius:20px;font-size:14px;font-weight:500}
+.hero h1{font-family:var(--fd);font-weight:700;font-size:clamp(2.4rem,6vw,4.2rem);line-height:1.1;color:var(--n5);letter-spacing:-.02em}
+.hero p{font-size:18px;color:var(--is);line-height:1.65;max-width:550px;margin:0 auto}
+.trust{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;color:var(--im);font-size:13px}
+
+/* === SECTION COMMON === */
+.sec-t{font-family:var(--fd);font-weight:600;font-size:32px;color:var(--n5)}
+.sec-st{font-size:17px;color:var(--is);margin-top:8px}
+
+/* === SIDEBAR === */
+.shell{display:flex;min-height:100vh}
+.side{width:260px;background:#fff;border-right:1px solid var(--s2);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:30}
+.side-hd{padding:16px 20px;border-bottom:1px solid var(--s2)}
+.side-user{padding:12px 20px;border-bottom:1px solid var(--s2)}
+.side-av{width:38px;height:38px;border-radius:50%;background:#E8ECF4;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:11px;font-weight:700;color:var(--n5)}
+.side-nav{flex:1;padding:8px;overflow-y:auto}
+.nav-i{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--rb);font-size:14px;font-weight:500;color:var(--is);cursor:pointer;transition:all .2s;margin-bottom:2px}
+.nav-i:hover{background:var(--s1);color:var(--ip)}.nav-i.on{background:rgba(200,162,60,.08);color:var(--g7)}
+.nav-i .nb{margin-left:auto;background:#EF4444;color:#fff;font-size:9px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.side-bt{padding:8px;border-top:1px solid var(--s2)}
+.main{flex:1;margin-left:260px}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(250,250,248,.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--s2);padding:10px 32px;display:flex;justify-content:flex-end;align-items:center}
+.nb-btn{position:relative;width:36px;height:36px;border-radius:var(--rb);border:none;background:0 0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+.nb-btn:hover{background:var(--s1)}
+.nb-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:#EF4444;border-radius:50%}
+.pgc{padding:32px}
+.pgc.no-pad{padding:0;overflow:hidden}
+
+/* === PROFILE CARD (GALLERY) === */
+.pcard{background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:24px;transition:all .5s var(--ez)}
+.pcard:hover{box-shadow:var(--sh2);transform:translateY(-3px)}
+.pcard-ph{position:relative;height:360px;overflow:hidden}
+.pcard-ph-inner{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+.pcard-ph .wm{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(-45deg,transparent,transparent 120px,rgba(200,162,60,.03) 120px,rgba(200,162,60,.03) 240px)}
+.pcard-badges{position:absolute;top:12px;left:12px;display:flex;gap:6px}
+.pcard-score{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:20px;padding:6px 12px;font-family:var(--fm);font-weight:700;font-size:14px;color:var(--g7)}
+.pcard-online{position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--e7)}
+.pcard-info{padding:20px 24px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--is);background:var(--s1);padding:4px 10px;border-radius:20px}
+.wtip{background:rgba(255,249,230,.6);border:1px solid rgba(200,162,60,.2);border-radius:var(--rs);padding:12px;margin:12px 0;font-size:13px;color:var(--g7);display:flex;gap:8px;line-height:1.45}
+.pcard-acts{display:flex;gap:12px;margin-top:16px}
+.pcard-acts .btn{flex:1;padding:12px 0}.pcard-acts .btn.lam{flex:2}
+
+/* === CHAT === */
+.chat-wrap{display:flex;height:calc(100vh - 57px);background:#fff;overflow:hidden;border-top:1px solid var(--s2)}
+.chat-list{width:340px;border-right:1px solid var(--s2);display:flex;flex-direction:column}
+.chat-list-hd{padding:16px 20px;border-bottom:1px solid var(--s2)}
+.chat-list-hd h2{font-family:var(--fd);font-weight:600;font-size:20px}
+.chat-items{flex:1;overflow-y:auto}
+.ch-i{display:flex;align-items:center;gap:12px;padding:14px 20px;cursor:pointer;border-bottom:1px solid var(--s1);transition:background .15s}
+.ch-i:hover{background:var(--s0)}.ch-i.on{background:rgba(200,162,60,.06)}
+.ch-av{width:48px;height:48px;border-radius:50%;background:#E8ECF4;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:11px;font-weight:700;color:var(--n5);position:relative;flex-shrink:0}
+.ch-info{flex:1;min-width:0}
+.ch-name{font-family:var(--fm);font-size:13px;font-weight:600}
+.ch-last{font-size:13px;color:var(--im);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-time{font-size:11px;color:var(--im);flex-shrink:0}
+.ch-unread{background:var(--g5);color:#fff;font-size:9px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-area{flex:1;display:flex;flex-direction:column}
+.chat-hd{padding:12px 20px;border-bottom:1px solid var(--s2);display:flex;align-items:center;gap:12px}
+.chat-msgs{flex:1;overflow-y:auto;padding:24px;background:var(--s0)}
+.msg{max-width:70%;margin-bottom:12px}
+.msg.mine{margin-left:auto}
+.msg-b{padding:10px 16px;border-radius:20px;font-size:14px;line-height:1.5}
+.msg.mine .msg-b{background:var(--g5);color:#fff;border-bottom-right-radius:4px}
+.msg.them .msg-b{background:#fff;color:var(--ip);box-shadow:0 1px 3px rgba(0,0,0,.06);border-bottom-left-radius:4px}
+.msg-t{font-size:10px;margin-top:3px}.msg.mine .msg-t{text-align:right;color:rgba(200,162,60,.5)}.msg.them .msg-t{color:var(--im)}
+.msg-ice{font-size:10px;font-weight:700;opacity:.6;margin-bottom:3px}
+.chat-inp{padding:12px 16px;border-top:1px solid var(--s2);display:flex;align-items:center;gap:12px}
+.chat-inp .inp{flex:1;background:var(--s0)}
+.send-btn{width:44px;height:44px;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center}
+.chat-notice{text-align:center;font-size:11px;color:var(--im);padding:4px 0 8px}
+
+/* === AUTH === */
+.auth{display:flex;min-height:100vh}
+.auth-brand{width:45%;background:var(--n9);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.auth-brand .gl1{position:absolute;top:0;right:0;width:300px;height:300px;background:rgba(200,162,60,.08);border-radius:50%;filter:blur(60px)}
+.auth-brand .gl2{position:absolute;bottom:0;left:0;width:250px;height:250px;background:rgba(26,122,69,.06);border-radius:50%;filter:blur(60px)}
+.auth-brand-in{position:relative;z-index:1;text-align:center}
+.auth-brand-in h1{font-family:var(--fd);font-weight:700;font-size:36px;color:#fff}.auth-brand-in h1 b{color:var(--g5)}
+.auth-brand-in p{color:rgba(255,255,255,.45);margin-top:8px}
+.auth-form{flex:1;display:flex;align-items:center;justify-content:center;padding:32px}
+.auth-form-in{width:100%;max-width:420px}
+.steps{display:flex;align-items:center;gap:8px;margin-bottom:32px}
+.step-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;transition:all .3s}
+.step-dot.on{background:var(--g5);color:#fff}.step-dot.done{background:var(--e4);color:#fff}.step-dot.wait{background:var(--s2);color:var(--im)}
+.step-line{width:32px;height:2px;background:var(--s2);transition:background .3s}
+.step-line.done{background:var(--e4)}
+.auth-step{display:none;animation:fadeUp .35s var(--ez)}.auth-step.on{display:block}
+
+/* === RESPONSIVE === */
+@media(max-width:900px){
+.auth-brand{display:none}
+.side{display:none}.main{margin-left:0}
+.chat-list{width:100%}
+}
+@media(max-width:600px){
+.hero h1{font-size:2.2rem}
+.pcard-ph{height:260px}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= LANDING ======================= -->
+<div id="pg-landing" class="pg on">
+<nav class="topnav"><div class="topnav-in">
+<div class="logo" onclick="go('landing')"><div class="logo-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="logo-tx">Jodohku<b>.my</b></div></div>
+<div style="display:flex;align-items:center;gap:12px"><button class="btn bg" onclick="go('login')">Log Masuk</button><button class="btn bp" onclick="go('register')">Daftar Sekarang</button></div>
+</div></nav>
+
+<section class="hero"><div class="glow1"></div><div class="glow2"></div>
+<div class="hero-c">
+<div class="afu" style="margin-bottom:24px"><div class="hero-chip">✨ Platform Matchmaking Islam Premium #1 Malaysia</div></div>
+<h1 class="afu d1" style="margin-bottom:24px">Pencarian Sekufu <span class="tg">Bermula</span> Di Sini</h1>
+<p class="afu d2" style="margin-bottom:32px">Algoritma psikometrik yang memahami jiwa anda. Pengesahan identiti sebenar. Proses ta'aruf yang terkawal dan beradab.</p>
+<div class="afu d3" style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:48px">
+<button class="btn bp" style="padding:16px 32px;font-size:16px;box-shadow:0 4px 20px rgba(200,162,60,.3)" onclick="go('register')">Mula Pencarian Anda →</button>
+<a href="#how" class="btn bs" style="padding:16px 32px;font-size:16px">Cara Ia Berfungsi</a>
+</div>
+<div class="trust afu d4">
+<span>🛡️ e-KYC Verified</span><span>🛡️ Patuh PDPA</span><span>🛡️ AES-256</span><span>🛡️ Anti-Catfish</span>
+</div>
+</div></section>
+
+<section id="how" style="padding:96px 24px;background:#fff">
+<div class="container" style="text-align:center;margin-bottom:48px"><h2 class="sec-t">Bagaimana Ia Berfungsi</h2><p class="sec-st">4 langkah mudah menuju perkahwinan yang diberkati</p></div>
+<div class="container" style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px">
+<div style="text-align:center"><div style="width:64px;height:64px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">🛡️</div><div style="font-family:var(--fm);font-size:11px;color:var(--g5);margin-bottom:8px">01</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Daftar &amp; Sahkan</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Daftar akaun dan lalu proses pengesahan e-KYC dengan MyKad.</p></div>
+<div style="text-align:center"><div style="width:64px;height:64px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">⭐</div><div style="font-family:var(--fm);font-size:11px;color:var(--g5);margin-bottom:8px">02</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Lengkapkan Profil</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Isi maklumat peribadi dan jawab kuiz psikometrik 30 soalan.</p></div>
+<div style="text-align:center"><div style="width:64px;height:64px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">💛</div><div style="font-family:var(--fm);font-size:11px;color:var(--g5);margin-bottom:8px">03</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Terima Cadangan</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Algoritma vektor kosinus mencari calon 85%+ serasi dengan anda.</p></div>
+<div style="text-align:center"><div style="width:64px;height:64px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px">👥</div><div style="font-family:var(--fm);font-size:11px;color:var(--g5);margin-bottom:8px">04</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Mula Ta'aruf</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Berbual dalam platform yang terkawal. Libatkan wali jika mahu.</p></div>
+</div></section>
+
+<section style="padding:96px 24px">
+<div class="container" style="text-align:center;margin-bottom:48px"><h2 class="sec-t">Mengapa Jodohku?</h2></div>
+<div class="container" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+<div class="card"><div class="badge b-gld" style="margin-bottom:12px">Eksklusif</div><h3 style="font-family:var(--fd);font-weight:600;font-size:20px;margin-bottom:8px">Mod Wali/Mahram</h3><p style="font-size:14px;color:var(--is);line-height:1.6">Satu-satunya platform di Malaysia yang melibatkan wali secara formal dalam proses ta'aruf digital.</p></div>
+<div class="card"><div class="badge b-gld" style="margin-bottom:12px">AI-Powered</div><h3 style="font-family:var(--fd);font-weight:600;font-size:20px;margin-bottom:8px">Algoritma Psikometrik</h3><p style="font-size:14px;color:var(--is);line-height:1.6">Bukan sekadar umur dan lokasi. 12 domain psikologi dianalisis untuk keserasian sebenar.</p></div>
+<div class="card"><div class="badge b-gld" style="margin-bottom:12px">Keselamatan</div><h3 style="font-family:var(--fd);font-weight:600;font-size:20px;margin-bottom:8px">Anti-Catfish Terkuat</h3><p style="font-size:14px;color:var(--is);line-height:1.6">e-KYC MyKad + Liveness Detection + Device Fingerprinting. Scammer tidak ada ruang.</p></div>
+</div></section>
+
+<section style="padding:96px 24px;background:#fff">
+<div class="container" style="text-align:center;margin-bottom:48px"><h2 class="sec-t">Pakej Langganan</h2><p class="sec-st">Pilih pelan yang sesuai dengan perjalanan anda</p></div>
+<div class="container" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px" id="tier-grid"></div>
+<div class="container" style="max-width:700px;margin-top:32px">
+<div style="background:var(--s95);border-radius:var(--r);padding:40px;text-align:center;border:1px solid rgba(200,162,60,.15)">
+<div class="badge b-sov">Sovereign Black Card</div>
+<div style="font-family:var(--fd);font-weight:700;font-size:36px;color:var(--g5);margin-top:12px">RM1,299.99</div>
+<p style="color:rgba(200,162,60,.5);font-size:14px;margin:8px 0 24px">30 Hari — Human Matchmaker, CTOS, Mod Halimunan, Video Ta'aruf</p>
+<button class="btn bp" style="background:var(--s95);color:var(--g5);border:1px solid rgba(200,162,60,.3);padding:14px 32px" onclick="go('register')">Hubungi Kami</button>
+</div></div>
+</section>
+
+<footer style="background:var(--n9);color:rgba(255,255,255,.5);padding:64px 24px 32px">
+<div class="container" style="display:grid;grid-template-columns:repeat(4,1fr);gap:48px;margin-bottom:48px">
+<div><div class="logo" style="margin-bottom:12px"><div class="logo-ic" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="logo-tx" style="color:#fff;font-size:16px">Jodohku<b>.my</b></div></div><p style="font-size:13px">Pencarian Sekufu Bermula Di Sini</p></div>
+<div><h4 style="color:#fff;font-size:14px;font-weight:600;margin-bottom:12px">Platform</h4><p style="font-size:13px;line-height:2.2"><a href="#how" style="color:rgba(255,255,255,.5)">Cara Berfungsi</a><br>Harga<br><span style="cursor:pointer" onclick="go('success')">Kisah Kejayaan</span></p></div>
+<div><h4 style="color:#fff;font-size:14px;font-weight:600;margin-bottom:12px">Undang-Undang</h4><p style="font-size:13px;line-height:2.2">Polisi Privasi<br>Terma Perkhidmatan<br>Polisi Refund</p></div>
+<div><h4 style="color:#fff;font-size:14px;font-weight:600;margin-bottom:12px">Syarikat</h4><p style="font-size:13px;line-height:1.6">Asas Technologies Sdn Bhd<br>(1670390-W)<br>Level 30, Menara Prestige<br>Jalan Pinang, 54200 KL</p></div>
+</div>
+<div style="border-top:1px solid rgba(255,255,255,.08);padding-top:24px;text-align:center;font-size:12px">© 2025 Asas Technologies Sdn Bhd. Semua hak terpelihara.</div>
+</footer>
+</div>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="pg-login" class="pg">
+<div class="auth">
+<div class="auth-brand"><div class="gl1"></div><div class="gl2"></div><div class="auth-brand-in">
+<div class="logo-ic" style="width:72px;height:72px;margin:0 auto 24px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+<h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
+</div></div>
+<div class="auth-form"><div class="auth-form-in">
+<div style="text-align:center;margin-bottom:40px">
+<div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:20px"><div class="logo-ic" style="width:48px;height:48px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><span style="font-family:var(--fd);font-weight:700;font-size:24px;color:var(--n5)">Jodohku<span style="color:var(--g5)">.my</span></span></div>
+<h2 style="font-family:var(--fd);font-weight:600;font-size:22px">Selamat Kembali</h2>
+<p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p>
+</div>
+<div class="card">
+<div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input class="inp" placeholder="anda@contoh.com"></div>
+<div style="margin-bottom:20px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><label class="lbl" style="margin:0">Kata Laluan</label><span style="font-size:12px;color:var(--g5);cursor:pointer">Lupa kata laluan?</span></div><input type="password" class="inp" placeholder="Kata laluan anda"></div>
+<button class="btn bp" style="width:100%;padding:14px 0" onclick="go('gallery')">Log Masuk →</button>
+</div>
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Belum ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('register')">Daftar Sekarang</span></p>
+</div></div>
+</div></div>
+
+<!-- ======================= REGISTER ======================= -->
+<div id="pg-register" class="pg">
+<div class="auth">
+<div class="auth-brand"><div class="gl1"></div><div class="gl2"></div><div class="auth-brand-in">
+<div class="logo-ic" style="width:72px;height:72px;margin:0 auto 24px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+<h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
+<div style="display:flex;justify-content:center;gap:24px;margin-top:32px;color:rgba(255,255,255,.3);font-size:13px"><span>🛡️ e-KYC</span><span>🛡️ PDPA</span><span>🛡️ AES-256</span></div>
+</div></div>
+<div class="auth-form"><div class="auth-form-in">
+<div class="steps" id="reg-steps"></div>
+<div id="reg-s1" class="auth-step on">
+<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Daftar Akaun</h2>
+<p style="color:var(--is);margin-bottom:28px">Langkah pertama menuju jodoh yang sekufu.</p>
+<div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input class="inp" placeholder="anda@contoh.com"></div>
+<div style="margin-bottom:16px"><label class="lbl">Kata Laluan</label><input type="password" class="inp" placeholder="Minimum 8 aksara"></div>
+<div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan</label><input type="password" class="inp" placeholder="Ulang kata laluan"></div>
+<button class="btn bp" style="width:100%;padding:14px 0" onclick="regStep(2)">Teruskan →</button>
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Sudah ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('login')">Log Masuk</span></p>
+</div>
+<div id="reg-s2" class="auth-step">
+<button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">← Kembali</button>
+<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2>
+<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b>anda@contoh.com</b>. Sah 10 minit.</p>
+<div style="margin-bottom:20px"><label class="lbl">Kod OTP</label><input class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em"></div>
+<button class="btn bp" style="width:100%;padding:14px 0" onclick="regStep(3)">Sahkan OTP</button>
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer">Hantar Semula</span></p>
+</div>
+<div id="reg-s3" class="auth-step">
+<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan Identiti</h2>
+<p style="color:var(--is);margin-bottom:20px">Untuk keselamatan semua pengguna.</p>
+<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:24px">
+<div style="display:flex;gap:16px"><div style="font-size:28px;flex-shrink:0">🛡️</div><div><div style="font-weight:600;margin-bottom:8px">Apa yang diperlukan?</div><p style="font-size:14px;color:var(--is);line-height:1.6">• Gambar hadapan MyKad<br>• Swafoto masa nyata (Live Selfie)<br>• Proses ~2 minit</p></div></div>
+</div>
+<button class="btn bp" style="width:100%;padding:14px 0" onclick="go('gallery')">Mulakan e-KYC →</button>
+<p style="text-align:center;font-size:12px;color:var(--im);margin-top:12px">Data dienkripsi AES-256 dan tidak dikongsi pihak ketiga.</p>
+</div>
+</div></div>
+</div></div>
+
+<!-- ======================= GALLERY ======================= -->
+<div id="pg-gallery" class="pg"><div class="shell" id="shell-gallery"></div></div>
+
+<!-- ======================= CHAT ======================= -->
+<div id="pg-chat" class="pg"><div class="shell" id="shell-chat"></div></div>
+
+<!-- ======================= PROFILE ======================= -->
+<div id="pg-profile" class="pg"><div class="shell" id="shell-profile"></div></div>
+
+<!-- ======================= PAYMENT ======================= -->
+<div id="pg-payment" class="pg"><div class="shell" id="shell-payment"></div></div>
+
+<!-- ======================= NOTIFICATIONS ======================= -->
+<div id="pg-notif" class="pg"><div class="shell" id="shell-notif"></div></div>
+
+<!-- ======================= SETTINGS ======================= -->
+<div id="pg-settings" class="pg"><div class="shell" id="shell-settings"></div></div>
+
+<!-- ======================= SUCCESS WALL ======================= -->
+<div id="pg-success" class="pg"><div class="shell" id="shell-success"></div></div>
+
+<script>
+// ═══════════════ STATE ═══════════════
+let currentPage='landing',regStepN=1,activeChatIdx=0,unreadN=2;
+const favs=new Set();
+const msgs=[
+{mine:true,text:'Assalamualaikum! Saya perasan kita serasi dari segi komunikasi. Apa pendapat anda? 😊',time:'2:15 PM',ice:true},
+{mine:false,text:'Waalaikumsalam! Ya betul, saya pun perasan. Score 94% tu sangat menarik. Apa yang buat anda tertarik dengan Jodohku?',time:'2:20 PM'},
+{mine:true,text:'Saya suka konsep ta\'aruf yang terkawal. Dan pengesahan e-KYC memberikan keyakinan bahawa profil di sini adalah tulen.',time:'2:25 PM'},
+{mine:false,text:'Terima kasih! Saya pun suka mendaki 😊 Dah pernah daki Gunung Kinabalu?',time:'2:30 PM'},
+];
+const profiles=[
+{id:'1',code:'AH72R',name:'Nurul',age:28,state:'Selangor',edu:'Ijazah',job:'Jurutera',status:'Bujang',tier:'gold',t20:true,score:94,online:true,bio:'Seorang yang mencintai ilmu dan sentiasa berusaha untuk menjadi lebih baik setiap hari.',tip:'Anda berdua suka mendaki — cadangkan ini sebagai topik pertama!',hue:220},
+{id:'2',code:'FS63M',name:'Aisyah',age:26,state:'WP KL',edu:'Master',job:'Doktor',status:'Bujang',tier:'platinum',t20:false,score:91,online:false,bio:'Alhamdulillah, diberi rezeki untuk berkhidmat kepada masyarakat.',tip:'Anda berdua mementingkan perancangan masa depan — topik yang bagus!',hue:250},
+{id:'3',code:'NR19K',name:'Fatimah',age:30,state:'Johor',edu:'PhD',job:'Pensyarah',status:'Bujang',tier:'premium',t20:true,score:88,online:true,bio:'Sedang menyelesaikan PhD dalam bidang bioteknologi. Percaya bahawa ilmu dan agama berjalan seiring.',tip:'Anda berdua suka membaca — mulakan dengan bertanya buku kegemaran!',hue:180},
+{id:'4',code:'ZK55P',name:'Sarah',age:25,state:'P. Pinang',edu:'Ijazah',job:'Akauntan',status:'Bujang',tier:'gold',t20:false,score:86,online:false,bio:'Orang Pulau Pinang yang suka makanan sedap dan perjalanan.',tip:'Anda berdua minat melancong — tanya destinasi impian!',hue:280},
+];
+const convos=[
+{partner:profiles[0],lastMsg:'Terima kasih! Saya pun suka mendaki 😊',time:'2:30 PM',unread:2},
+{partner:profiles[1],lastMsg:'InsyaAllah, kita boleh berbincang lagi.',time:'11:45 AM',unread:0},
+{partner:profiles[2],lastMsg:'Saya sedang menyelesaikan PhD saya.',time:'Semalam',unread:0},
+];
+const notifs=[
+{type:'💛',title:'Padanan Baharu!',body:'AH72R mempunyai 94% keserasian',time:'2 jam lalu',read:false},
+{type:'💬',title:'Mesej Baharu',body:'FS63M menghantar mesej',time:'5 jam lalu',read:false},
+{type:'👁️',title:'Profil Dilihat',body:'3 orang melihat profil anda hari ini',time:'8 jam lalu',read:true},
+{type:'🛡️',title:'Lencana Baharu!',body:'Anda memperoleh lencana Komunikator Aktif',time:'Semalam',read:true},
+{type:'💳',title:'Langganan',body:'Langganan Gold tamat dalam 5 hari',time:'2 hari lalu',read:true},
+];
+
+// ═══════════════ NAVIGATION ═══════════════
+function go(pg){
+document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+currentPage=pg;
+const el=document.getElementById('pg-'+pg);
+if(el){el.classList.add('on');try{window.scrollTo({top:0,behavior:'smooth'})}catch(e){window.scrollTo(0,0)}}
+// Build app pages on demand
+if(['gallery','chat','profile','payment','notif','settings','success'].includes(pg))buildAppPage(pg);
+}
+
+// ═══════════════ REGISTER STEPS ═══════════════
+function regStep(n){
+regStepN=n;
+for(let i=1;i<=3;i++){
+const s=document.getElementById('reg-s'+i);
+if(s)s.classList.toggle('on',i===n);
+}
+renderRegSteps();
+}
+function renderRegSteps(){
+const c=document.getElementById('reg-steps');
+if(!c)return;
+let h='';
+for(let i=1;i<=3;i++){
+const cls=i<regStepN?'done':i===regStepN?'on':'wait';
+h+=`<div class="step-dot ${cls}">${i<regStepN?'✓':i}</div>`;
+if(i<3)h+=`<div class="step-line${i<regStepN?' done':''}"></div>`;
+}
+c.innerHTML=h;
+}
+
+// ═══════════════ SIDEBAR BUILDER ═══════════════
+function sidebar(active){
+const items=[
+{id:'gallery',icon:'📋',label:'Bilik Pameran'},
+{id:'chat',icon:'💬',label:'Sembang',badge:unreadN},
+{id:'profile',icon:'👤',label:'Profil Saya'},
+{id:'payment',icon:'💳',label:'Langganan'},
+{id:'success',icon:'🏆',label:'Kisah Kejayaan'},
+{id:'notif',icon:'🔔',label:'Notifikasi',badge:notifs.filter(n=>!n.read).length},
+{id:'settings',icon:'⚙️',label:'Tetapan'},
+];
+return `<div class="side">
+<div class="side-hd"><div class="logo" onclick="go('landing')"><div class="logo-ic" style="width:34px;height:34px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="logo-tx" style="font-size:17px">Jodohku<b>.my</b></div></div></div>
+<div class="side-user"><div style="display:flex;align-items:center;gap:10px"><div class="side-av">MF</div><div><div style="font-family:var(--fm);font-size:13px;font-weight:600">MF41K</div><div class="badge b-gld" style="font-size:8px;padding:2px 8px;margin-top:3px">GOLD</div></div></div>
+<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--im)"><span>Profil</span><span>72%</span></div><div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:72%"></div></div></div></div>
+<nav class="side-nav">${items.map(i=>`<div class="nav-i${active===i.id?' on':''}" onclick="go('${i.id}')">${i.icon} <span style="flex:1">${i.label}</span>${i.badge?`<span class="nb">${i.badge}</span>`:''}</div>`).join('')}</nav>
+<div class="side-bt"><div class="nav-i" style="color:#EF4444" onclick="go('landing')">🚪 Log Keluar</div></div>
+</div>
+<div class="main"><div class="topbar"><div class="nb-btn" onclick="go('notif')">🔔${notifs.filter(n=>!n.read).length?'<span class="nb-dot"></span>':''}</div></div><div class="pgc${active==='chat'?' no-pad':''}">`;
+}
+const sideEnd=`</div></div>`;
+
+// ═══════════════ BUILD APP PAGES ═══════════════
+function buildAppPage(pg){
+const shell=document.getElementById('shell-'+pg);
+if(!shell)return;
+let h=sidebar(pg);
+
+if(pg==='gallery'){
+h+=`<div style="max-width:680px;margin:0 auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+<div><h1 style="font-family:var(--fd);font-weight:700;font-size:28px">Bilik Pameran</h1><p style="color:var(--is);font-size:14px;margin-top:4px">Calon sekufu ≥85% keserasian</p></div>
+<button class="btn bg" style="border:1px solid var(--s2)">🔍 Tapis</button></div>`;
+profiles.forEach((p,i)=>{
+const isFav=favs.has(p.id);
+h+=`<div class="pcard afu d${i+1}">
+<div class="pcard-ph" style="background:linear-gradient(135deg,hsl(${p.hue},35%,20%),hsl(${p.hue+40},25%,13%))">
+<div class="pcard-ph-inner"><div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:36px;backdrop-filter:blur(4px)">👤</div><span style="color:rgba(255,255,255,.5);font-family:var(--fm);font-size:12px">Demo</span></div>
+<div class="wm"></div>
+<div class="pcard-badges"><span class="badge b-${p.tier==='gold'?'gld':p.tier==='platinum'?'plt':p.tier==='premium'?'prm':'rah'}">${p.tier.toUpperCase()}</span>${p.t20?'<span class="badge b-ver">🛡️ T20</span>':''}</div>
+<div class="pcard-score">💛 <b>${p.score}%</b></div>
+${p.online?'<div class="pcard-online"><span class="dot"></span> Dalam Talian</div>':''}
+</div>
+<div class="pcard-info">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-family:var(--fm);font-weight:700;font-size:20px;color:var(--n5)">${p.code}</div><div style="color:var(--is);font-size:14px">${p.name}</div></div>
+<div style="font-family:var(--fd);font-weight:600;font-size:28px;color:var(--im)">${p.age}</div></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0">
+<span class="chip">📍 ${p.state}</span><span class="chip">🎓 ${p.edu}</span><span class="chip">💼 ${p.job}</span><span class="chip">💍 ${p.status}</span></div>
+<p style="font-size:14px;color:var(--is);line-height:1.55">${p.bio}</p>
+<div class="wtip">✨ ${p.tip}</div>
+<div class="pcard-acts">
+<button class="btn bg" style="border:1px solid var(--s2);font-size:18px" title="Abaikan">✕</button>
+<button class="btn bg" style="border:1px solid var(--s2);color:${isFav?'var(--g5)':'var(--im)'}" onclick="toggleFav('${p.id}')" id="fav-${p.id}" title="Simpan">🔖</button>
+<button class="btn bp lam" onclick="activeChatIdx=0;go('chat')">💬 Lamar</button>
+</div></div></div>`;
+});
+h+=`<button class="btn bs" style="width:100%;padding:14px 0">Lihat Lebih ↓</button></div>`;
+}
+
+else if(pg==='chat'){
+h+=`<div class="chat-wrap"><div class="chat-list"><div class="chat-list-hd"><h2>Sembang</h2></div><div class="chat-items">`;
+convos.forEach((c,i)=>{
+h+=`<div class="ch-i${i===activeChatIdx?' on':''}" onclick="activeChatIdx=${i};go('chat')">
+<div class="ch-av">${c.partner.code.slice(0,2)}${c.partner.online?'<span class="dot" style="position:absolute;bottom:0;right:0"></span>':''}</div>
+<div class="ch-info"><div class="ch-name">${c.partner.code}</div><div class="ch-last">${c.lastMsg}</div></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="ch-time">${c.time}</span>${c.unread?`<span class="ch-unread">${c.unread}</span>`:''}</div></div>`;
+});
+h+=`</div></div><div class="chat-area">
+<div class="chat-hd"><div class="ch-av" style="width:40px;height:40px;font-size:10px">${convos[activeChatIdx].partner.code.slice(0,2)}${convos[activeChatIdx].partner.online?'<span class="dot" style="position:absolute;bottom:-1px;right:-1px"></span>':''}</div>
+<div style="flex:1"><div style="font-family:var(--fm);font-size:14px;font-weight:600">${convos[activeChatIdx].partner.code}</div><div style="font-size:12px;color:${convos[activeChatIdx].partner.online?'var(--e5)':'var(--im)'}">${convos[activeChatIdx].partner.online?'Dalam Talian':'Luar Talian'}</div></div>
+<span class="badge b-gld">✨ ${convos[activeChatIdx].partner.score}%</span></div>
+<div class="chat-msgs" id="chat-msgs">`;
+msgs.forEach(m=>{
+h+=`<div class="msg ${m.mine?'mine':'them'}">
+${m.ice?'<div class="msg-ice">❄️ Ice Breaker</div>':''}
+<div class="msg-b">${m.text}</div>
+<div class="msg-t">${m.time}${m.mine?' ✓✓':''}</div></div>`;
+});
+h+=`</div>
+<div class="chat-inp"><input class="inp" id="msg-inp" placeholder="Taip mesej..." onkeydown="if(event.key==='Enter')sendMsg()"><button class="btn bp send-btn" onclick="sendMsg()">➤</button></div>
+<div class="chat-notice">Hanya teks dan emoji. Pautan dan nombor telefon disekat.</div>
+</div></div>`;
+}
+
+else if(pg==='profile'){
+h+=`<div style="max-width:640px;margin:0 auto">
+<div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)">
+<div style="height:160px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">
+<div style="position:absolute;bottom:-40px;left:24px"><div style="width:88px;height:88px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);font-size:32px">👤</div></div></div>
+<div style="padding:52px 24px 24px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span style="font-family:var(--fm);font-weight:700;font-size:24px;color:var(--n5)">MF41K</span><span class="badge b-gld">GOLD</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">${['📍 Selangor','🎓 Ijazah','💼 Usahawan','💍 Bujang','📅 32 tahun'].map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+<p style="font-size:14px;color:var(--is);line-height:1.6;margin-top:16px">Usahawan muda yang mementingkan agama dan keluarga. Mencari pasangan yang memahami dunia perniagaan dan menyokong perjalanan hidup bersama.</p>
+</div></div>
+<div class="card" style="margin-top:20px;background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2)">
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span>✨</span><span style="font-weight:600;font-size:14px;color:var(--g7)">Profil 72% lengkap</span></div>
+<div class="progress"><div class="progress-fill" style="width:72%"></div></div>
+<p style="font-size:13px;color:var(--g7);margin-top:8px">Jawab kuiz psikometrik untuk meningkatkan ketepatan padanan.</p></div>
+<div class="card" style="margin-top:20px"><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:12px">Hobi & Minat</h3>
+<div style="display:flex;flex-wrap:wrap;gap:8px">${['Mendaki','Fotografi','Membaca','Melancong','Gym','Memasak'].map(h=>`<span style="background:#E6F5ED;color:var(--e7);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500">${h}</span>`).join('')}</div></div>
+<div class="card" style="margin-top:20px"><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:12px">Pencapaian</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${[{l:'Profil Lengkap',e:false},{l:'Ahli Setia 30 Hari',e:false},{l:'Komunikator Aktif',e:true},{l:'Peneroka Bijak',e:false}].map(b=>`<div style="display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--rs);border:1px solid ${b.e?'rgba(200,162,60,.2)':'var(--s2)'};background:${b.e?'rgba(255,249,230,.4)':'var(--s0)'};opacity:${b.e?1:.5}"><span>${b.e?'⭐':'○'}</span><span style="font-size:13px;font-weight:500">${b.l}</span></div>`).join('')}</div></div>
+</div>`;
+}
+
+else if(pg==='payment'){
+h+=`<div style="max-width:800px;margin:0 auto"><h1 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:24px">Langganan</h1>
+<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:24px;display:flex;align-items:center;gap:16px">
+<div style="width:48px;height:48px;border-radius:50%;background:rgba(200,162,60,.1);display:flex;align-items:center;justify-content:center;font-size:22px">⭐</div>
+<div><div style="font-weight:600">Pelan Semasa: GOLD</div><div style="font-size:13px;color:var(--is)">25 hari berbaki</div></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+${[{n:'Gold',p:'RM39.99',d:'30 Hari',cur:true,f:['30 paparan/hari','10 sembang','WhatsApp','Tanpa iklan']},{n:'Platinum',p:'RM69.99',d:'60 Hari',s:'12%',f:['Tanpa had','Keutamaan carian','Video ta\'aruf']},{n:'Premium',p:'RM101.99',d:'90 Hari',s:'15%',f:['Semua Platinum','Laporan PDF','3 Golden Ticket']},{n:'Sovereign',p:'RM1,299.99',d:'30 Hari',f:['Human Matchmaker','CTOS','Mod Halimunan']}].map(t=>`<div class="card" style="border:${t.cur?'2px solid var(--g5)':'1px solid var(--s2)'}">
+<div style="font-family:var(--fd);font-weight:700;font-size:18px;margin-bottom:4px">${t.n}</div>
+${t.s?`<span style="background:#E6F5ED;color:var(--e7);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Jimat ${t.s}</span>`:''}
+<div style="font-family:var(--fd);font-weight:700;font-size:24px;color:var(--n5);margin-top:8px">${t.p}</div>
+<div style="font-size:12px;color:var(--im);margin-bottom:12px">${t.d}</div>
+<ul style="list-style:none;padding:0;margin-bottom:16px">${t.f.map(f=>`<li style="font-size:13px;color:var(--is);padding:4px 0">✓ ${f}</li>`).join('')}</ul>
+<button class="btn ${t.cur?'bg':'bp'}" style="width:100%;${t.cur?'border:1px solid var(--s2);opacity:.5':''}">${t.cur?'Pelan Semasa':'Langgan'}</button>
+</div>`).join('')}</div></div>`;
+}
+
+else if(pg==='notif'){
+h+=`<div style="max-width:640px;margin:0 auto">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+<h1 style="font-family:var(--fd);font-weight:700;font-size:28px">Notifikasi</h1>
+<button class="btn bg" onclick="markAllRead()">✓ Tandai Semua</button></div>
+<div id="notif-list">`;
+notifs.forEach((n,i)=>{
+h+=`<div class="card" id="notif-${i}" onclick="markRead(${i})" style="display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;cursor:pointer;background:${n.read?'#fff':'rgba(255,249,230,.3)'};border:${n.read?'none':'1px solid rgba(200,162,60,.15)'}">
+<div style="width:40px;height:40px;border-radius:50%;background:${n.read?'var(--s1)':'var(--g50)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">${n.type}</div>
+<div style="flex:1"><div style="font-weight:600;font-size:14px">${n.title}</div><div style="font-size:13px;color:var(--is);margin-top:2px">${n.body}</div><div style="font-size:11px;color:var(--im);margin-top:4px">${n.time}</div></div>
+${n.read?'':`<div style="width:8px;height:8px;background:var(--g5);border-radius:50%;margin-top:8px;flex-shrink:0"></div>`}
+</div>`;
+});
+h+=`</div></div>`;
+}
+
+else if(pg==='settings'){
+h+=`<div style="max-width:640px;margin:0 auto"><h1 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:24px">Tetapan</h1>
+${[{t:'Akaun & Keselamatan',items:[{i:'🔒',l:'Tukar Kata Laluan'},{i:'🛡️',l:'e-KYC',d:'✓ Disahkan'},{i:'🛡️',l:'Verified T20',d:'Mohon pengesahan'}]},{t:'Keutamaan',items:[{i:'🌐',l:'Bahasa',d:'Bahasa Melayu'},{i:'🔔',l:'Notifikasi'},{i:'👁️',l:'Privasi Profil'}]},{t:'Mod Wali/Mahram',items:[{i:'👥',l:'Urus Mod Wali',d:'Tidak aktif'}]},{t:'Status Akaun',items:[{i:'💛',l:'Tandai Sudah Berkahwin',d:'Profil disembunyikan 24 jam'},{i:'⏸️',l:'Jeda Akaun',d:'Jeda sehingga 6 bulan'}]}].map(s=>`<div class="card" style="margin-bottom:16px">
+<div style="font-size:12px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px">${s.t}</div>
+${s.items.map(it=>`<div style="display:flex;align-items:center;gap:16px;padding:12px 8px;border-radius:var(--rb);cursor:pointer">
+<span style="font-size:18px">${it.i}</span><div style="flex:1"><div style="font-size:14px;font-weight:500">${it.l}</div>${it.d?`<div style="font-size:12px;color:var(--im)">${it.d}</div>`:''}</div><span style="color:var(--im)">›</span></div>`).join('')}
+</div>`).join('')}
+<div class="card" style="border:1px solid #FECACA"><div style="font-size:12px;font-weight:600;color:#EF4444;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">Zon Bahaya</div>
+<div style="display:flex;align-items:center;gap:16px;padding:12px 8px;cursor:pointer"><span style="font-size:18px">🗑️</span><div><div style="font-size:14px;font-weight:500;color:#EF4444">Padam Akaun</div><div style="font-size:12px;color:#F87171">Hak Untuk Dilupakan (PDPA)</div></div></div></div>
+<button class="btn bg" style="width:100%;margin-top:16px;color:#EF4444;justify-content:center" onclick="go('landing')">🚪 Log Keluar</button>
+</div>`;
+}
+
+else if(pg==='success'){
+h+=`<div style="max-width:640px;margin:0 auto;text-align:center">
+<div style="width:64px;height:64px;border-radius:50%;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px">💛</div>
+<h1 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Dinding Kejayaan</h1>
+<p style="color:var(--is);font-size:16px;margin-bottom:40px">Kisah cinta bermula di Jodohku.my</p>
+${[{c:'A & Z',loc:'Selangor',date:'Dis 2025',sc:92,s:'Kami bertemu di Jodohku.my dan menemui keserasian yang luar biasa. Algoritma psikometrik benar-benar memahami apa yang kami cari. Alhamdulillah!'},{c:'M & S',loc:'WP KL',date:'Jan 2026',sc:88,s:'Mod Wali memberikan keluarga saya keyakinan untuk menyokong proses ta\'aruf ini. Semuanya telus dan terkawal.'},{c:'F & N',loc:'Johor',date:'Feb 2026',sc:95,s:'Saya skeptikal pada mulanya, tetapi e-KYC dan Liveness Detection memberi keyakinan. Kini saya menemui pasangan hidup.'}].map(st=>`<div class="card" style="text-align:left;margin-bottom:20px;display:flex;gap:16px">
+<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--g5),var(--g400));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">💛</div>
+<div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-family:var(--fd);font-weight:600;font-size:18px">${st.c}</div><div style="font-size:12px;color:var(--im)">${st.loc} • ${st.date}</div></div><span class="badge b-gld">⭐ ${st.sc}%</span></div>
+<p style="font-size:14px;color:var(--is);line-height:1.6;margin-top:12px;font-style:italic">"${st.s}"</p>
+<span class="badge b-ver" style="margin-top:8px">✓ Alumni Jodohku</span></div></div>`).join('')}
+<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);display:inline-block;margin-top:16px">
+<p style="font-size:14px;color:var(--g7);margin-bottom:12px">Sudah berkahwin melalui Jodohku?</p>
+<button class="btn bp">Kongsi Kisah Anda</button></div>
+</div>`;
+}
+
+h+=sideEnd;
+shell.innerHTML=h;
+// Scroll chat to bottom
+if(pg==='chat'){const cm=document.getElementById('chat-msgs');if(cm)cm.scrollTop=cm.scrollHeight}
+}
+
+// ═══════════════ CHAT SEND ═══════════════
+function sendMsg(){
+const inp=document.getElementById('msg-inp');
+if(!inp||!inp.value.trim())return;
+const text=inp.value.trim();
+msgs.push({mine:true,text,time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})});
+inp.value='';
+go('chat');
+// Auto reply
+setTimeout(()=>{
+msgs.push({mine:false,text:'Terima kasih atas mesej anda! InsyaAllah kita boleh berbincang lebih lanjut. 😊',time:new Date().toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'})});
+go('chat');
+},1500);
+}
+
+// ═══════════════ FAVORITES ═══════════════
+function toggleFav(id){
+if(favs.has(id))favs.delete(id);else favs.add(id);
+go(currentPage);
+}
+
+// ═══════════════ NOTIFICATIONS ═══════════════
+function markRead(i){notifs[i].read=true;go('notif')}
+function markAllRead(){notifs.forEach(n=>n.read=true);go('notif')}
+
+// ═══════════════ TIER GRID (Landing) ═══════════════
+function buildTierGrid(){
+const g=document.getElementById('tier-grid');
+if(!g)return;
+const tiers=[
+{n:'Rahmah',icon:'🕊️',p:'Percuma',d:'7 Hari',bg:'var(--s0)',bd:'var(--s2)',f:['10 paparan/hari','3 sembang','Gambar kabur']},
+{n:'Gold',icon:'⭐',p:'RM39.99',d:'30 Hari',bg:'rgba(255,249,230,.3)',bd:'var(--g400)',pop:true,f:['30 paparan/hari','10 sembang','Gambar jelas','WhatsApp','Tanpa iklan']},
+{n:'Platinum',icon:'💎',p:'RM69.99',d:'60 Hari',s:'12%',bg:'rgba(243,232,255,.15)',bd:'#C4B5FD',f:['Tanpa had','Keutamaan carian','Video ta\'aruf','Ciri beta']},
+{n:'Premium',icon:'👑',p:'RM101.99',d:'90 Hari',s:'15%',bg:'rgba(237,233,254,.2)',bd:'#A78BFA',f:['Semua Platinum','Keutamaan tertinggi','Laporan PDF','3 Golden Ticket']},];
+g.innerHTML=tiers.map(t=>`<div style="border-radius:var(--r);border:2px solid ${t.bd};padding:24px;background:${t.bg};position:relative;${t.pop?'box-shadow:0 0 24px rgba(200,162,60,.2)':''}">
+${t.pop?'<span style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--g50);color:var(--g7);font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px">⭐ Paling Popular</span>':''}
+${t.s?`<span style="display:inline-block;background:#E6F5ED;color:var(--e7);font-size:10px;font-weight:700;padding:3px 8px;border-radius:12px;margin-bottom:8px">Jimat ${t.s}</span>`:''}
+<div style="font-family:var(--fd);font-weight:700;font-size:20px">${t.icon} ${t.n}</div>
+<div style="font-family:var(--fd);font-weight:700;font-size:28px;color:var(--n5);margin-top:4px">${t.p}</div>
+<div style="font-size:12px;color:var(--im);margin-bottom:16px">${t.d}</div>
+<ul style="list-style:none;padding:0;margin-bottom:20px">${t.f.map(f=>`<li style="font-size:13px;color:var(--is);padding:5px 0;display:flex;gap:6px"><span style="color:var(--e5);font-weight:700">✓</span>${f}</li>`).join('')}</ul>
+<button class="btn ${t.pop?'bp':'bs'}" style="width:100%;padding:12px 0" onclick="go('register')">${t.p==='Percuma'?'Cuba Percuma':'Pilih Pelan'}</button>
+</div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// API LAYER — connects jodohku-live.html to FastAPI backend
+// Base URL auto-detects: production vs localhost
+// ═══════════════════════════════════════════════════
+
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000/api/v1'
+  : 'https://api.jodohku.my/api/v1';
+
+// ── Token Management ──
+const Auth = {
+  getToken: () => localStorage.getItem('jk_token'),
+  getRefresh: () => localStorage.getItem('jk_refresh'),
+  setTokens: (access, refresh) => {
+    localStorage.setItem('jk_token', access);
+    if (refresh) localStorage.setItem('jk_refresh', refresh);
+  },
+  clear: () => {
+    localStorage.removeItem('jk_token');
+    localStorage.removeItem('jk_refresh');
+    localStorage.removeItem('jk_user');
+  },
+  isLoggedIn: () => !!localStorage.getItem('jk_token'),
+  getUser: () => { try { return JSON.parse(localStorage.getItem('jk_user') || 'null'); } catch { return null; } },
+  setUser: (u) => localStorage.setItem('jk_user', JSON.stringify(u)),
+};
+
+// ── Core API Fetch ──
+async function apiFetch(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  const token = Auth.getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(API_BASE + path, { ...options, headers });
+
+    // Token expired — try refresh
+    if (res.status === 401 && Auth.getRefresh()) {
+      const refreshed = await fetch(API_BASE + '/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: Auth.getRefresh() }),
+      });
+      if (refreshed.ok) {
+        const data = await refreshed.json();
+        Auth.setTokens(data.access_token, data.refresh_token);
+        headers['Authorization'] = `Bearer ${data.access_token}`;
+        return fetch(API_BASE + path, { ...options, headers });
+      } else {
+        Auth.clear();
+        go('login');
+        return null;
+      }
+    }
+    return res;
+  } catch (err) {
+    console.error('API Error:', err);
+    showToast('Ralat sambungan. Cuba semula.', 'error');
+    return null;
+  }
+}
+
+// ── Toast Notification ──
+function showToast(msg, type = 'info') {
+  const existing = document.getElementById('jk-toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.id = 'jk-toast';
+  const colors = { info: '#1B2A4A', error: '#EF4444', success: '#1A7A45', warn: '#C8A23C' };
+  t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${colors[type]||colors.info};color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:500;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:fadeUp .3s ease`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── Loading State ──
+function setLoading(btnEl, loading, text = '') {
+  if (!btnEl) return;
+  btnEl.disabled = loading;
+  btnEl.textContent = loading ? '⏳ Sila tunggu...' : text || btnEl.dataset.originalText;
+  if (!loading && text) btnEl.dataset.originalText = text;
+}
+
+// ═══════════════════════════════════════
+// AUTH FUNCTIONS
+// ═══════════════════════════════════════
+
+// ── Login ──
+async function apiLogin() {
+  const email = document.getElementById('login-email')?.value?.trim();
+  const password = document.getElementById('login-password')?.value;
+  const btn = document.getElementById('login-btn');
+  if (!email || !password) return showToast('Sila isi semua medan.', 'warn');
+
+  setLoading(btn, true);
+  const res = await apiFetch('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  setLoading(btn, false, 'Log Masuk →');
+
+  if (!res) return;
+  const data = await res.json();
+
+  if (res.ok) {
+    Auth.setTokens(data.access_token, data.refresh_token);
+    Auth.setUser(data.user);
+    currentUser = data.user;
+    unreadN = 0;
+    showToast('Selamat datang kembali! 👋', 'success');
+    go('gallery');
+    apiLoadGallery();
+  } else {
+    showToast(data.detail || 'Emel atau kata laluan tidak sah.', 'error');
+  }
+}
+
+// ── Register Step 1 ──
+let regEmail = '', regPassword = '';
+async function apiRegister() {
+  regEmail = document.getElementById('reg-email')?.value?.trim();
+  regPassword = document.getElementById('reg-password')?.value;
+  const confirm = document.getElementById('reg-confirm')?.value;
+  const btn = document.getElementById('reg-btn');
+
+  if (!regEmail || !regPassword) return showToast('Sila isi semua medan.', 'warn');
+  if (regPassword !== confirm) return showToast('Kata laluan tidak sepadan.', 'warn');
+  if (regPassword.length < 8) return showToast('Kata laluan minimum 8 aksara.', 'warn');
+
+  setLoading(btn, true);
+  const res = await apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email: regEmail, password: regPassword }),
+  });
+  setLoading(btn, false, 'Teruskan →');
+
+  if (!res) return;
+  const data = await res.json();
+
+  if (res.ok) {
+    showToast('OTP dihantar! Semak emel anda.', 'success');
+    regStep(2);
+  } else {
+    showToast(data.detail || 'Pendaftaran gagal. Cuba semula.', 'error');
+  }
+}
+
+// ── Register Step 2: Verify OTP ──
+async function apiVerifyOTP() {
+  const otp = document.getElementById('reg-otp')?.value?.trim();
+  const btn = document.getElementById('otp-btn');
+  if (!otp || otp.length !== 6) return showToast('Sila masukkan kod OTP 6 digit.', 'warn');
+
+  setLoading(btn, true);
+  const res = await apiFetch('/auth/verify-otp', {
+    method: 'POST',
+    body: JSON.stringify({ email: regEmail, otp_code: otp }),
+  });
+  setLoading(btn, false, 'Sahkan OTP');
+
+  if (!res) return;
+  const data = await res.json();
+
+  if (res.ok) {
+    showToast('OTP disahkan! ✅', 'success');
+    regStep(3);
+  } else {
+    showToast(data.detail || 'Kod OTP tidak sah atau tamat.', 'error');
+  }
+}
+
+// ── Logout ──
+async function apiLogout() {
+  await apiFetch('/auth/logout', { method: 'POST' });
+  Auth.clear();
+  currentUser = null;
+  showToast('Berjaya log keluar.', 'info');
+  go('landing');
+}
+
+// ═══════════════════════════════════════
+// GALLERY FUNCTIONS
+// ═══════════════════════════════════════
+
+let galleryPage = 1, galleryLoading = false, galleryDone = false;
+
+async function apiLoadGallery(reset = true) {
+  if (galleryLoading) return;
+  if (reset) { galleryPage = 1; galleryDone = false; profiles = []; }
+  if (galleryDone) return;
+
+  galleryLoading = true;
+  const shell = document.getElementById('shell-gallery');
+  if (reset && shell) {
+    const grid = shell.querySelector('[data-gallery-grid]');
+    if (grid) grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--im)">⏳ Memuatkan...</div>';
+  }
+
+  const res = await apiFetch(`/gallery/?page=${galleryPage}&page_size=10`);
+  galleryLoading = false;
+
+  if (!res || !res.ok) {
+    showToast('Gagal memuatkan galeri.', 'error');
+    return;
+  }
+
+  const data = await res.json();
+  const newProfiles = data.profiles || data.items || [];
+
+  if (reset) profiles = newProfiles;
+  else profiles = [...profiles, ...newProfiles];
+
+  if (newProfiles.length < 10) galleryDone = true;
+  galleryPage++;
+
+  go('gallery');
+}
+
+async function apiToggleFav(profileId) {
+  if (favs.has(profileId)) {
+    favs.delete(profileId);
+    await apiFetch('/gallery/action', {
+      method: 'POST',
+      body: JSON.stringify({ target_user_id: profileId, action: 'unlike' }),
+    });
+  } else {
+    favs.add(profileId);
+    await apiFetch('/gallery/action', {
+      method: 'POST',
+      body: JSON.stringify({ target_user_id: profileId, action: 'save_favorite' }),
+    });
+  }
+  go(currentPage);
+}
+
+async function apiLamar(profileId) {
+  const res = await apiFetch('/chat/initiate', {
+    method: 'POST',
+    body: JSON.stringify({
+      target_user_id: profileId,
+      message: { content: 'Assalamualaikum! Saya berminat untuk berkenalan. 😊', is_ice_breaker: true },
+    }),
+  });
+  if (!res) return;
+  const data = await res.json();
+  if (res.ok) {
+    showToast('Lamaran dihantar! ✉️', 'success');
+    activeChatIdx = 0;
+    await apiLoadConversations();
+    go('chat');
+  } else {
+    showToast(data.detail || 'Gagal menghantar lamaran.', 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+// CHAT FUNCTIONS
+// ═══════════════════════════════════════
+
+let conversations = [], wsConnection = null;
+
+async function apiLoadConversations() {
+  const res = await apiFetch('/chat/conversations');
+  if (!res || !res.ok) return;
+  const data = await res.json();
+  conversations = data.conversations || data.items || [];
+  unreadN = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+}
+
+async function apiLoadMessages(conversationId) {
+  const res = await apiFetch(`/chat/conversations/${conversationId}/messages`);
+  if (!res || !res.ok) return [];
+  const data = await res.json();
+  return data.messages || data.items || [];
+}
+
+async function apiSendMessage() {
+  const inp = document.getElementById('msg-inp');
+  if (!inp || !inp.value.trim()) return;
+  const text = inp.value.trim();
+  const conv = conversations[activeChatIdx];
+  if (!conv) return;
+
+  inp.value = '';
+  // Optimistic update
+  msgs.push({ mine: true, text, time: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) });
+  go('chat');
+
+  const res = await apiFetch(`/chat/conversations/${conv.id}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content: text, is_ice_breaker: false }),
+  });
+
+  if (!res || !res.ok) {
+    const data = res ? await res.json() : null;
+    if (data?.blocked) {
+      msgs.pop();
+      go('chat');
+      showToast(data.reason_ms || 'Mesej disekat oleh penapis kandungan.', 'warn');
+    }
+  }
+}
+
+// ── WebSocket Setup ──
+function setupWebSocket() {
+  const token = Auth.getToken();
+  if (!token || wsConnection) return;
+
+  const wsBase = API_BASE.replace('http', 'ws').replace('/api/v1', '');
+  wsConnection = new WebSocket(`${wsBase}/api/v1/chat/ws/${token}`);
+
+  wsConnection.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'message:new') {
+      const conv = conversations.find(c => c.id === data.conversation_id);
+      if (conv) {
+        conv.last_message = data.content;
+        conv.unread_count = (conv.unread_count || 0) + 1;
+        unreadN++;
+      }
+      if (currentPage === 'chat') {
+        msgs.push({ mine: false, text: data.content, time: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) });
+        go('chat');
+      } else {
+        showToast('Mesej baharu diterima 💬', 'info');
+      }
+    }
+  };
+
+  wsConnection.onclose = () => {
+    wsConnection = null;
+    // Reconnect after 3s
+    if (Auth.isLoggedIn()) setTimeout(setupWebSocket, 3000);
+  };
+}
+
+// ═══════════════════════════════════════
+// NOTIFICATIONS FUNCTIONS
+// ═══════════════════════════════════════
+
+async function apiLoadNotifications() {
+  const res = await apiFetch('/notifications/');
+  if (!res || !res.ok) return;
+  const data = await res.json();
+  notifs = (data.notifications || data.items || []).map(n => ({
+    type: n.type === 'match' ? '💛' : n.type === 'message' ? '💬' : n.type === 'view' ? '👁️' : '🔔',
+    title: n.title,
+    body: n.body || n.message,
+    time: n.created_at ? new Date(n.created_at).toLocaleString('ms-MY') : '',
+    read: n.is_read,
+    id: n.id,
+  }));
+}
+
+async function apiMarkRead(idx) {
+  const n = notifs[idx];
+  if (!n || n.read) return;
+  notifs[idx].read = true;
+  await apiFetch(`/notifications/${n.id}/read`, { method: 'POST' });
+  go('notif');
+}
+
+async function apiMarkAllRead() {
+  notifs.forEach(n => n.read = true);
+  await apiFetch('/notifications/read-all', { method: 'POST' });
+  go('notif');
+}
+
+// ═══════════════════════════════════════
+// PROFILE FUNCTIONS
+// ═══════════════════════════════════════
+
+let currentUser = Auth.getUser();
+
+async function apiLoadMyProfile() {
+  const res = await apiFetch('/profile/me');
+  if (!res || !res.ok) return;
+  const data = await res.json();
+  currentUser = data;
+  Auth.setUser(data);
+}
+
+// ═══════════════════════════════════════
+// OVERRIDE go() TO USE REAL API
+// ═══════════════════════════════════════
+
+const _go = go;
+go = async function(pg) {
+  // Guard protected pages
+  const protectedPages = ['gallery', 'chat', 'profile', 'payment', 'notif', 'settings', 'success', 'favorites'];
+  if (protectedPages.includes(pg) && !Auth.isLoggedIn()) {
+    showToast('Sila log masuk dahulu.', 'warn');
+    return _go('login');
+  }
+
+  // Load data before rendering
+  if (pg === 'gallery' && Auth.isLoggedIn()) {
+    if (profiles.length === 0) await apiLoadGallery();
+  }
+  if (pg === 'chat' && Auth.isLoggedIn()) {
+    await apiLoadConversations();
+    if (conversations.length > 0 && msgs.length === 0) {
+      const conv = conversations[activeChatIdx];
+      if (conv) msgs = await apiLoadMessages(conv.id);
+    }
+    setupWebSocket();
+  }
+  if (pg === 'notif' && Auth.isLoggedIn()) {
+    await apiLoadNotifications();
+  }
+  if (pg === 'profile' && Auth.isLoggedIn()) {
+    await apiLoadMyProfile();
+  }
+
+  _go(pg);
+};
+
+// ═══════════════════════════════════════
+// OVERRIDE sendMsg & markRead to use API
+// ═══════════════════════════════════════
+
+sendMsg = apiSendMessage;
+markRead = apiMarkRead;
+markAllRead = apiMarkAllRead;
+toggleFav = apiToggleFav;
+
+// ═══════════════════════════════════════
+// UPDATE HTML — Auth forms use API
+// ═══════════════════════════════════════
+
+// Override login page HTML to add IDs to inputs
+const _buildAppPage = buildAppPage;
+
+// ── Init on load ──
+renderRegSteps();
+buildTierGrid();
+
+// Auto-restore session on page load
+if (Auth.isLoggedIn()) {
+  currentUser = Auth.getUser();
+  apiLoadNotifications().then(() => {});
+}
+
+// Update login page HTML to wire up API
+document.getElementById('pg-login').innerHTML = `
+<div class="auth">
+<div class="auth-brand"><div class="gl1"></div><div class="gl2"></div><div class="auth-brand-in">
+<div class="logo-ic" style="width:72px;height:72px;margin:0 auto 24px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+<h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
+</div></div>
+<div class="auth-form"><div class="auth-form-in">
+<div style="text-align:center;margin-bottom:32px">
+<h2 style="font-family:var(--fd);font-weight:600;font-size:24px">Selamat Kembali</h2>
+<p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p>
+</div>
+<div class="card">
+<div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="login-email" class="inp" type="email" placeholder="anda@contoh.com" onkeydown="if(event.key==='Enter')apiLogin()"></div>
+<div style="margin-bottom:20px"><label class="lbl">Kata Laluan</label><input id="login-password" class="inp" type="password" placeholder="Kata laluan anda" onkeydown="if(event.key==='Enter')apiLogin()"></div>
+<button id="login-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiLogin()">Log Masuk →</button>
+</div>
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Belum ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('register')">Daftar Sekarang</span></p>
+</div></div>
+</div>`;
+
+// Update register page step 1 inputs to have IDs
+const regS1 = document.getElementById('reg-s1');
+if (regS1) {
+  regS1.innerHTML = `
+<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Daftar Akaun</h2>
+<p style="color:var(--is);margin-bottom:28px">Langkah pertama menuju jodoh yang sekufu.</p>
+<div style="margin-bottom:16px"><label class="lbl">Alamat Emel</label><input id="reg-email" class="inp" type="email" placeholder="anda@contoh.com"></div>
+<div style="margin-bottom:16px"><label class="lbl">Kata Laluan</label><input id="reg-password" class="inp" type="password" placeholder="Minimum 8 aksara"></div>
+<div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan</label><input id="reg-confirm" class="inp" type="password" placeholder="Ulang kata laluan"></div>
+<button id="reg-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiRegister()">Teruskan →</button>
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:20px">Sudah ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go('login')">Log Masuk</span></p>`;
+}
+
+// Update OTP step
+const regS2 = document.getElementById('reg-s2');
+if (regS2) {
+  regS2.innerHTML = `
+<button class="btn bg" style="margin-bottom:16px;margin-left:-8px" onclick="regStep(1)">← Kembali</button>
+<h2 style="font-family:var(--fd);font-weight:700;font-size:28px;margin-bottom:8px">Pengesahan OTP</h2>
+<p style="color:var(--is);margin-bottom:28px">Kod 6 digit telah dihantar ke <b>anda@contoh.com</b>. Sah 10 minit.</p>
+<div style="margin-bottom:20px"><label class="lbl">Kod OTP</label><input id="reg-otp" class="inp" placeholder="000000" maxlength="6" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em" onkeydown="if(event.key==='Enter')apiVerifyOTP()"></div>
+<button id="otp-btn" class="btn bp" style="width:100%;padding:14px 0" onclick="apiVerifyOTP()">Sahkan OTP</button>
+<p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer">Hantar Semula</span></p>`;
+}
+
+</script>
+</body>
+</html>
