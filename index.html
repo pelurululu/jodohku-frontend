@@ -809,38 +809,52 @@ function buildAppPage(pg){
   }
 
   else if(pg==='chat'){
-    h+='<div class="chat-wrap">'
-      +'<div class="chat-list active">'
-      +'<div class="chat-list-hd"><h2>Sembang</h2></div>'
-      +'<div class="chat-items">';
-    if(convos.length===0){h+='<div style="padding:48px 24px;text-align:center"><div style="width:56px;height:56px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'+ICONS.chat+'</div><h3 style="font-family:var(--fd);font-size:18px;margin-bottom:8px">Tiada Perbualan Lagi</h3><p style="color:var(--is);font-size:14px">Lamar calon dari Bilik Pameran untuk mula berbual.</p></div>';}
+    if(activeChatIdx>=convos.length) activeChatIdx=0;
+    var ac = convos.length>0 ? convos[activeChatIdx] : null;
+    h+='<div class="chat-wrap">';
+    // ── Conversation List ──
+    h+='<div class="chat-list active"><div class="chat-list-hd"><h2>Sembang</h2></div><div class="chat-items">';
+    if(convos.length===0){
+      h+='<div style="padding:40px 20px;text-align:center">'+ICONS.chat+'<p style="color:var(--im);font-size:14px;margin-top:12px">Tiada perbualan lagi.<br>Lamar calon dari Bilik Pameran.</p></div>';
+    }
     convos.forEach(function(c,i){
       h+='<div class="ch-i'+(i===activeChatIdx?' on':'')+'" onclick="activeChatIdx='+i+';showChatArea()">'
         +'<div class="ch-av">'+c.partner.code.slice(0,2)+(c.partner.online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>':'')+'</div>'
-        +'<div class="ch-info"><div class="ch-name">'+c.partner.code+'</div><div class="ch-last">'+c.lastMsg+'</div></div>'
-        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="ch-time">'+c.time+'</span>'+(c.unread?'<span class="ch-unread">'+c.unread+'</span>':'')+'</div>'
-        +'</div>';
+        +'<div class="ch-info"><div class="ch-name">'+c.partner.code+'</div><div class="ch-last">'+(c.last_message||c.lastMsg||'')+'</div></div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+        +'<span class="ch-time">'+(c.last_message_at?new Date(c.last_message_at).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}):(c.time||''))+'</span>'
+        +(c.unread_count||c.unread?'<span class="ch-unread">'+(c.unread_count||c.unread)+'</span>':'')
+        +'</div></div>';
     });
-    h+='</div></div>'
-      +'<div class="chat-area active">'
-      +'<div class="chat-hd">'
-      +'<button class="btn bg mob-back-btn" onclick="showChatList()" style="display:none;padding:6px 8px">'+ICONS.back+'</button>'
-      +'<div class="ch-av" style="width:38px;height:38px;font-size:10px">'+convos[activeChatIdx].partner.code.slice(0,2)+(convos[activeChatIdx].partner.online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>':'')+'</div>'
-      +'<div style="flex:1"><div style="font-family:var(--fm);font-size:13px;font-weight:600">'+convos[activeChatIdx].partner.code+'</div><div style="font-size:12px;color:'+(convos[activeChatIdx].partner.online?'var(--e5)':'var(--im)')+'">'+( convos[activeChatIdx].partner.online?'Dalam Talian':'Luar Talian')+'</div></div>'
-      +'<span class="badge b-gld">'+ICONS.heart+' '+convos[activeChatIdx].partner.score+'%</span>'
-      +'</div>'
-      +'<div class="chat-msgs" id="chat-msgs">';
-    msgs.forEach(function(m){
-      h+='<div class="msg '+(m.mine?'mine':'them')+'">'
-        +(m.ice?'<div class="msg-ice">&#10052; Ice Breaker</div>':'')
-        +'<div class="msg-b">'+m.text+'</div>'
-        +'<div class="msg-t">'+m.time+(m.mine?' &#10003;&#10003;':'')+'</div>'
+    h+='</div></div>';
+    // ── Chat Area ──
+    h+='<div class="chat-area'+(ac?' active':'')+'">'; 
+    if(!ac){
+      h+='<div style="display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;color:var(--im)">'+ICONS.chat+'<p style="font-size:14px">Pilih perbualan</p></div>';
+    } else {
+      h+='<div class="chat-hd">'
+        +'<button class="btn bg mob-back-btn" onclick="showChatList()" style="display:none;padding:6px 8px">'+ICONS.back+'</button>'
+        +'<div class="ch-av" style="width:38px;height:38px;font-size:10px">'+ac.partner.code.slice(0,2)+(ac.partner.online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>':'')+'</div>'
+        +'<div style="flex:1"><div style="font-family:var(--fm);font-size:13px;font-weight:600">'+ac.partner.code+'</div>'
+        +'<div style="font-size:12px;color:'+(ac.partner.online?'var(--e5)':'var(--im)')+'">'+( ac.partner.online?'Dalam Talian':'Luar Talian')+'</div></div>'
+        +'<span class="badge b-gld">'+ICONS.heart+' '+(ac.partner.compatibility_score?Math.round(ac.partner.compatibility_score*100):ac.partner.score||'?')+'%</span>'
         +'</div>';
-    });
-    h+='</div>'
-      +'<div class="chat-inp"><input class="inp" id="msg-inp" placeholder="Taip mesej..." onkeydown="if(event.key===\'Enter\')sendMsg()"><button class="btn bp send-btn" onclick="sendMsg()">'+ICONS.send+'</button></div>'
-      +'<div class="chat-notice">Hanya teks dan emoji. Pautan dan nombor telefon disekat.</div>'
-      +'</div></div>';
+      h+='<div class="chat-msgs" id="chat-msgs">';
+      if(msgs.length===0){
+        h+='<div style="text-align:center;padding:40px;color:var(--im);font-size:14px">Tiada mesej lagi. Mulakan perbualan!</div>';
+      }
+      msgs.forEach(function(m){
+        h+='<div class="msg '+(m.mine?'mine':'them')+'">'
+          +(m.ice?'<div class="msg-ice">&#10052; Ice Breaker</div>':'')
+          +'<div class="msg-b">'+(m.content||m.text)+'</div>'
+          +'<div class="msg-t">'+(m.created_at?new Date(m.created_at).toLocaleTimeString('ms-MY',{hour:'2-digit',minute:'2-digit'}):(m.time||''))+(m.mine?' &#10003;&#10003;':'')+'</div>'
+          +'</div>';
+      });
+      h+='</div>';
+      h+='<div class="chat-inp"><input class="inp" id="msg-inp" placeholder="Taip mesej..." onkeydown="if(event.key==='Enter')sendMsg()"><button class="btn bp send-btn" onclick="sendMsg()">'+ICONS.send+'</button></div>';
+      h+='<div class="chat-notice">Hanya teks dan emoji. Pautan dan nombor telefon disekat.</div>';
+    }
+    h+='</div></div>';
   }
 
   else if(pg==='profile'){
