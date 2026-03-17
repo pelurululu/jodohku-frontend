@@ -576,30 +576,10 @@ button{cursor:pointer;font-family:var(--fb)}
 // ══════════════════════════════════════
 var currentPage='landing', regStepN=1, activeChatIdx=0, unreadN=0;
 var favs=new Set();
-var msgs=[
-  {mine:true,text:"Assalamualaikum! Saya perasan kita serasi dari segi komunikasi. Apa pendapat anda?",time:'2:15 PM',ice:true},
-  {mine:false,text:"Waalaikumsalam! Ya betul, Score 94% tu sangat menarik. Apa yang buat anda tertarik dengan Jodohku?",time:'2:20 PM'},
-  {mine:true,text:"Saya suka konsep ta'aruf yang terkawal. Pengesahan e-KYC memberikan keyakinan bahawa profil di sini adalah tulen.",time:'2:25 PM'},
-  {mine:false,text:"Terima kasih! Saya pun suka mendaki. Dah pernah daki Gunung Kinabalu?",time:'2:30 PM'},
-];
-var profiles=[
-  {id:'1',code:'AH72R',name:'Nurul',age:28,state:'Selangor',edu:'Ijazah',job:'Jurutera',status:'Bujang',tier:'gold',t20:true,score:94,online:true,bio:'Seorang yang mencintai ilmu dan sentiasa berusaha untuk menjadi lebih baik setiap hari.',tip:'Anda berdua suka mendaki — cadangkan ini sebagai topik pertama!',hue:220},
-  {id:'2',code:'FS63M',name:'Aisyah',age:26,state:'WP KL',edu:'Master',job:'Doktor',status:'Bujang',tier:'platinum',t20:false,score:91,online:false,bio:'Alhamdulillah, diberi rezeki untuk berkhidmat kepada masyarakat. Mencari insan yang memahami tuntutan kerjaya.',tip:'Anda berdua mementingkan perancangan masa depan — topik yang bagus!',hue:250},
-  {id:'3',code:'NR19K',name:'Fatimah',age:30,state:'Johor',edu:'PhD',job:'Pensyarah',status:'Bujang',tier:'premium',t20:true,score:88,online:true,bio:'Sedang menyelesaikan PhD dalam bidang bioteknologi. Percaya bahawa ilmu dan agama berjalan seiring.',tip:'Anda berdua suka membaca — mulakan dengan bertanya buku kegemaran!',hue:180},
-  {id:'4',code:'ZK55P',name:'Sarah',age:25,state:'P. Pinang',edu:'Ijazah',job:'Akauntan',status:'Bujang',tier:'gold',t20:false,score:86,online:false,bio:"Orang Pulau Pinang yang suka makanan sedap dan perjalanan.",tip:'Anda berdua minat melancong — tanya destinasi impian!',hue:280},
-];
-var convos=[
-  {partner:profiles[0],lastMsg:'Terima kasih! Saya pun suka mendaki',time:'2:30 PM',unread:2},
-  {partner:profiles[1],lastMsg:'InsyaAllah, kita boleh berbincang lagi.',time:'11:45 AM',unread:0},
-  {partner:profiles[2],lastMsg:'Saya sedang menyelesaikan PhD saya.',time:'Semalam',unread:0},
-];
-var notifs=[
-  {type:'match',title:'Padanan Baharu!',body:'AH72R mempunyai 94% keserasian',time:'2 jam lalu',read:false},
-  {type:'message',title:'Mesej Baharu',body:'FS63M menghantar mesej',time:'5 jam lalu',read:false},
-  {type:'view',title:'Profil Dilihat',body:'3 orang melihat profil anda hari ini',time:'8 jam lalu',read:true},
-  {type:'badge',title:'Lencana Baharu!',body:'Anda memperoleh lencana Komunikator Aktif',time:'Semalam',read:true},
-  {type:'sub',title:'Langganan',body:'Langganan Gold tamat dalam 5 hari',time:'2 hari lalu',read:true},
-];
+var msgs=[];
+var profiles=[];
+var convos=[];
+var notifs=[];
 
 // ══════════════════════════════════════
 // SVG ICONS
@@ -737,7 +717,7 @@ function sidebar(active){
     +'<div class="side-hd">'
     +'<div class="logo" onclick="go(\'landing\')"><div class="logo-ic" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="logo-tx" style="font-size:16px">Jodohku<b>.my</b></div></div>'
     +'</div>'
-    +'<div class="side-user"><div style="display:flex;align-items:center;gap:10px"><div class="side-av">MF</div><div><div style="font-family:var(--fm);font-size:13px;font-weight:600">'+(currentUser&&currentUser.code_name?currentUser.code_name:'MF41K')+'</div><div class="badge b-gld" style="font-size:8px;padding:2px 8px;margin-top:3px">GOLD</div></div></div>'
+    +'<div class="side-user"><div style="display:flex;align-items:center;gap:10px"><div class="side-av">MF</div><div><div style="font-family:var(--fm);font-size:13px;font-weight:600">'+(currentUser&&currentUser.code_name?currentUser.code_name:(Auth.getUser()&&Auth.getUser().code_name?Auth.getUser().code_name:'---'))+'</div><div class="badge b-gld" style="font-size:8px;padding:2px 8px;margin-top:3px">GOLD</div></div></div>'
     +'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--im)"><span>Profil</span><span>72%</span></div><div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:72%"></div></div></div>'
     +'</div>'
     +'<nav class="side-nav">'+navHtml+'</nav>'
@@ -791,6 +771,7 @@ function buildAppPage(pg){
       +'<div><h1 style="font-family:var(--fd);font-weight:700;font-size:24px">Bilik Pameran</h1><p style="color:var(--is);font-size:13px;margin-top:4px">Calon sekufu &#8805;85% keserasian</p></div>'
       +'<button class="btn bg" style="border:1px solid var(--s2);gap:6px">'+ICONS.filter+' Tapis</button>'
       +'</div>';
+    if(profiles.length===0){h+='<div class="card" style="text-align:center;padding:48px 24px"><div style="width:56px;height:56px;border-radius:50%;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'+ICONS.heart+'</div><h3 style="font-family:var(--fd);font-size:20px;margin-bottom:8px">Tiada Padanan Lagi</h3><p style="color:var(--is);font-size:14px;margin-bottom:20px">Lengkapkan profil anda untuk mendapat cadangan calon sekufu.</p><button class="btn bp" onclick="go(\"profile\")">Lengkapkan Profil</button></div>';}
     profiles.forEach(function(p,i){
       var isFav=favs.has(p.id);
       h+='<div class="pcard afu d'+(Math.min(i+1,5))+'">'
@@ -832,6 +813,7 @@ function buildAppPage(pg){
       +'<div class="chat-list active">'
       +'<div class="chat-list-hd"><h2>Sembang</h2></div>'
       +'<div class="chat-items">';
+    if(convos.length===0){h+='<div style="padding:48px 24px;text-align:center"><div style="width:56px;height:56px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">'+ICONS.chat+'</div><h3 style="font-family:var(--fd);font-size:18px;margin-bottom:8px">Tiada Perbualan Lagi</h3><p style="color:var(--is);font-size:14px">Lamar calon dari Bilik Pameran untuk mula berbual.</p></div>';}
     convos.forEach(function(c,i){
       h+='<div class="ch-i'+(i===activeChatIdx?' on':'')+'" onclick="activeChatIdx='+i+';showChatArea()">'
         +'<div class="ch-av">'+c.partner.code.slice(0,2)+(c.partner.online?'<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>':'')+'</div>'
@@ -869,7 +851,7 @@ function buildAppPage(pg){
       +'<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
       +'</div></div></div>'
       +'<div style="padding:48px 20px 20px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">'+(currentUser&&currentUser.code_name?currentUser.code_name:'MF41K')+'</span><span class="badge b-gld">GOLD</span></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">'+(currentUser&&currentUser.code_name?currentUser.code_name:(Auth.getUser()&&Auth.getUser().code_name?Auth.getUser().code_name:'---'))+'</span><span class="badge b-gld">GOLD</span></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">'+['Selangor','Ijazah','Usahawan','Bujang','32 tahun'].map(function(c){return '<span class="chip">'+c+'</span>'}).join('')+'</div>'
       +'<p style="font-size:14px;color:var(--is);line-height:1.6;margin-top:14px">Usahawan muda yang mementingkan agama dan keluarga. Mencari pasangan yang memahami dunia perniagaan.</p>'
       +'</div></div>'
@@ -908,6 +890,7 @@ function buildAppPage(pg){
       +'<h1 style="font-family:var(--fd);font-weight:700;font-size:24px">Notifikasi</h1>'
       +(unread?'<button class="btn bg" style="font-size:13px" onclick="markAllRead()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Tandai Semua</button>':'')
       +'</div>';
+    if(notifs.length===0){h+='<div class="card" style="text-align:center;padding:40px">'+ICONS.notif+'<p style="color:var(--im);font-size:14px;margin-top:12px">Tiada notifikasi lagi.</p></div>';}
     notifs.forEach(function(n,i){
       var ic=n.type==='match'?ICONS.heart:n.type==='message'?ICONS.chat:n.type==='view'?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>':ICONS.notif;
       h+='<div class="card" onclick="markRead('+i+')" style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px;cursor:pointer;background:'+(n.read?'#fff':'rgba(255,249,230,.3)')+';border:'+(n.read?'none':'1px solid rgba(200,162,60,.15)')+'"><div style="width:38px;height:38px;border-radius:50%;background:'+(n.read?'var(--s1)':'var(--g50)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ic+'</div><div style="flex:1"><div style="font-weight:600;font-size:14px">'+n.title+'</div><div style="font-size:13px;color:var(--is);margin-top:2px">'+n.body+'</div><div style="font-size:11px;color:var(--im);margin-top:4px">'+n.time+'</div></div>'+(n.read?'':'<div style="width:8px;height:8px;background:var(--g5);border-radius:50%;margin-top:8px;flex-shrink:0"></div>')+'</div>';
@@ -1035,6 +1018,7 @@ function buildTierGrid(){
 var API_BASE = (window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1')
   ? 'http://localhost:8000/api/v1'
   : 'https://api.jodohku.my/api/v1';
+// NOTE: Ensure backend CORS allows https://www.jodohku.my
 
 var Auth = {
   getToken:   function(){ return localStorage.getItem('jk_token'); },
@@ -1183,7 +1167,7 @@ async function apiLoadConversations(){
   var res=await apiFetch('/chat/conversations');
   if(!res||!res.ok)return;
   var d=await res.json();
-  conversations=d.conversations||d.items||[];
+  conversations=(d&&(d.conversations||d.items))||[];
   unreadN=conversations.reduce(function(s,c){return s+(c.unread_count||0);},0);
 }
 async function apiSendMessage(){
@@ -1212,7 +1196,7 @@ async function apiLoadNotifs(){
   var res=await apiFetch('/notifications/');
   if(!res||!res.ok)return;
   var d=await res.json();
-  notifs=(d.notifications||d.items||[]).map(function(n){return{type:n.type,title:n.title,body:n.body||n.message||'',time:n.created_at?new Date(n.created_at).toLocaleString('ms-MY'):'',read:n.is_read,id:n.id};});
+  notifs=((d&&(d.notifications||d.items))||[]).map(function(n){return{type:n.type,title:n.title,body:n.body||n.message||'',time:n.created_at?new Date(n.created_at).toLocaleString('ms-MY'):'',read:n.is_read,id:n.id};});
 }
 async function apiMarkRead(idx){
   var n=notifs[idx];if(!n||n.read)return;
