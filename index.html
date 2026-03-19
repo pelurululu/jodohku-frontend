@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Jodohku.my — Pencarian Sekufu Bermula Di Sini</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ======================= LANDING ======================= -->
+<div id="pg-landing" class="pg on">
+
+<nav class="topnav">
+  <div class="topnav-in">
+    <div class="logo" onclick="go('landing')">
+      <div class="logo-ic">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      </div>
+      <div class="logo-tx">Jodohku<b>.my</b></div>
+    </div>
+    <div class="nav-links">
+      <button class="nav-link" onclick="smoothScrollTo('how')">Cara Berfungsi</button>
+      <button class="nav-link" onclick="smoothScrollTo('features')">Kelebihan</button>
+      <button class="nav-link" onclick="smoothScrollTo('pricing')">Harga</button>
+    </div>
+    <div class="nav-actions">
+      <button class="btn bg" onclick="go('login')">Log Masuk</button>
+      <button class="btn bp" onclick="go('register')">Daftar Sekarang</button>
+    </div>
+    <button class="nav-toggle" onclick="toggleMobileMenu()" id="nav-toggle-btn" aria-label="Menu">
+      <svg id="nav-icon-menu" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      <svg id="nav-icon-close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-item" onclick="smoothScrollTo('how');toggleMobileMenu()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+    Cara Berfungsi
+  </button>
+  <button class="mobile-menu-item" onclick="smoothScrollTo('features');toggleMobileMenu()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Kelebihan
+  </button>
+  <button class="mobile-menu-item" onclick="smoothScrollTo('pricing');toggleMobileMenu()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    Harga
+  </button>
+  <div class="mobile-menu-divider"></div>
+  <button class="mobile-menu-item" onclick="go('login');toggleMobileMenu()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+    Log Masuk
+  </button>
+  <button class="mobile-menu-item" onclick="go('register');toggleMobileMenu()" style="color:var(--g6)">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+    Daftar Sekarang
+  </button>
+</div>
+
+<section class="hero">
+  <div class="hero-glow1"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-c">
+    <div class="hero-chip afu">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Platform Matchmaking Islam Premium #1 Malaysia
+    </div>
+    <h1 class="afu d1">Pencarian Sekufu <span class="tg">Bermula</span> Di Sini</h1>
+    <p class="afu d2">Algoritma psikometrik yang memahami jiwa anda. Pengesahan identiti sebenar. Proses ta&apos;aruf yang terkawal dan beradab.</p>
+    <div class="hero-cta afu d3">
+      <button class="btn bp" onclick="go('register')">Mula Pencarian Anda
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <a href="#how" class="btn bs">Cara Ia Berfungsi</a>
+    </div>
+    <div class="trust-bar afu d4">
+      <span class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> e-KYC Verified</span>
+      <span class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Patuh PDPA</span>
+      <span class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> AES-256</span>
+      <span class="trust-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Anti-Catfish</span>
+    </div>
+  </div>
+</section>
+
+<section id="how" style="padding:80px 0;background:#fff">
+  <div class="container" style="text-align:center;margin-bottom:48px">
+    <h2 class="sec-t">Bagaimana Ia Berfungsi</h2>
+    <p class="sec-st">4 langkah mudah menuju perkahwinan yang diberkati</p>
+  </div>
+  <div class="container grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:28px">
+    <div style="text-align:center"><div style="width:60px;height:60px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div style="font-family:var(--fm);font-size:10px;color:var(--g5);margin-bottom:8px;letter-spacing:.1em">01</div><h3 style="font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:8px">Daftar &amp; Sahkan</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Daftar akaun dan lalu proses pengesahan e-KYC dengan MyKad.</p></div>
+    <div style="text-align:center"><div style="width:60px;height:60px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><div style="font-family:var(--fm);font-size:10px;color:var(--g5);margin-bottom:8px;letter-spacing:.1em">02</div><h3 style="font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:8px">Lengkapkan Profil</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Isi maklumat peribadi dan jawab kuiz psikometrik 30 soalan.</p></div>
+    <div style="text-align:center"><div style="width:60px;height:60px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div style="font-family:var(--fm);font-size:10px;color:var(--g5);margin-bottom:8px;letter-spacing:.1em">03</div><h3 style="font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:8px">Terima Cadangan</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Algoritma vektor kosinus mencari calon 85%+ serasi dengan anda.</p></div>
+    <div style="text-align:center"><div style="width:60px;height:60px;border-radius:16px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div style="font-family:var(--fm);font-size:10px;color:var(--g5);margin-bottom:8px;letter-spacing:.1em">04</div><h3 style="font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:8px">Mula Ta&apos;aruf</h3><p style="font-size:14px;color:var(--is);line-height:1.55">Berbual dalam platform yang terkawal. Libatkan wali jika mahu.</p></div>
+  </div>
+</section>
+
+<section id="features" style="padding:80px 0">
+  <div class="container" style="text-align:center;margin-bottom:48px"><h2 class="sec-t">Mengapa Jodohku?</h2></div>
+  <div class="container grid-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+    <div class="card"><div style="width:44px;height:44px;border-radius:12px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="badge b-gld" style="margin-bottom:10px">Eksklusif</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Mod Wali/Mahram</h3><p style="font-size:14px;color:var(--is);line-height:1.6">Satu-satunya platform di Malaysia yang melibatkan wali secara formal dalam proses ta&apos;aruf digital.</p></div>
+    <div class="card"><div style="width:44px;height:44px;border-radius:12px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div><div class="badge b-gld" style="margin-bottom:10px">AI-Powered</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Algoritma Psikometrik</h3><p style="font-size:14px;color:var(--is);line-height:1.6">Bukan sekadar umur dan lokasi. 12 domain psikologi dianalisis untuk keserasian sebenar.</p></div>
+    <div class="card"><div style="width:44px;height:44px;border-radius:12px;background:var(--g50);display:flex;align-items:center;justify-content:center;margin-bottom:16px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div class="badge b-gld" style="margin-bottom:10px">Keselamatan</div><h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:8px">Anti-Catfish Terkuat</h3><p style="font-size:14px;color:var(--is);line-height:1.6">e-KYC MyKad + Liveness Detection + Device Fingerprinting. Scammer tidak ada ruang.</p></div>
+  </div>
+</section>
+
+<section id="pricing" style="padding:80px 0;background:#fff">
+  <div class="container" style="text-align:center;margin-bottom:48px">
+    <h2 class="sec-t">Pakej Langganan</h2>
+    <p class="sec-st">Pilih pelan yang sesuai dengan perjalanan anda</p>
+  </div>
+  <div class="container grid-4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px" id="tier-grid"></div>
+  <div class="container" style="max-width:680px;margin-top:28px">
+    <div style="background:var(--s95);border-radius:var(--r);padding:36px;text-align:center;border:1px solid rgba(200,162,60,.15)">
+      <div class="badge b-sov">Sovereign Black Card</div>
+      <div style="font-family:var(--fd);font-weight:700;font-size:32px;color:var(--g5);margin:12px 0 4px">RM1,299.99</div>
+      <p style="color:rgba(200,162,60,.5);font-size:14px;margin-bottom:20px">30 Hari &mdash; Human Matchmaker, CTOS, Mod Halimunan, Video Ta&apos;aruf</p>
+      <button class="btn" style="background:var(--s95);color:var(--g5);border:1px solid rgba(200,162,60,.3);padding:12px 28px" onclick="go('register')">Hubungi Kami</button>
+    </div>
+  </div>
+</section>
+
+<footer style="background:var(--n9);color:rgba(255,255,255,.5);padding:56px 0 28px">
+  <div class="container footer-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:40px;margin-bottom:40px">
+    <div><div class="logo" style="margin-bottom:12px"><div class="logo-ic" style="width:30px;height:30px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div><div class="logo-tx" style="color:#fff;font-size:15px">Jodohku<b>.my</b></div></div><p style="font-size:13px">Pencarian Sekufu Bermula Di Sini</p></div>
+    <div><h4 style="color:#fff;font-size:13px;font-weight:600;margin-bottom:12px">Platform</h4><div style="font-size:13px;line-height:2.2"><a href="#how" style="color:rgba(255,255,255,.5);display:block">Cara Berfungsi</a><a href="#pricing" style="color:rgba(255,255,255,.5);display:block">Harga</a><span style="cursor:pointer;display:block" onclick="go('success')">Kisah Kejayaan</span></div></div>
+    <div><h4 style="color:#fff;font-size:13px;font-weight:600;margin-bottom:12px">Undang-Undang</h4><div style="font-size:13px;line-height:2.2"><span style="display:block">Polisi Privasi</span><span style="display:block">Terma Perkhidmatan</span><span style="display:block">Polisi Refund</span></div></div>
+    <div><h4 style="color:#fff;font-size:13px;font-weight:600;margin-bottom:12px">Syarikat</h4><p style="font-size:13px;line-height:1.7">Asas Technologies Sdn Bhd<br>(1670390-W)<br>Level 30, Menara Prestige<br>Jalan Pinang, 54200 KL</p></div>
+  </div>
+  <div class="container" style="border-top:1px solid rgba(255,255,255,.08);padding-top:20px;text-align:center;font-size:12px">&copy; 2025 Asas Technologies Sdn Bhd. Semua hak terpelihara.</div>
+</footer>
+</div>
+
+<!-- ======================= LOGIN ======================= -->
+<div id="pg-login" class="pg">
+<div class="auth">
+  <div class="auth-brand"><div class="gl1"></div><div class="gl2"></div>
+    <div class="auth-brand-in">
+      <div class="logo-ic" style="width:64px;height:64px;margin:0 auto 20px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+      <h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
+    </div>
+  </div>
+  <div class="auth-form"><div class="auth-form-in" id="login-form-content"></div></div>
+</div>
+</div>
+
+<!-- ======================= REGISTER ======================= -->
+<div id="pg-register" class="pg">
+<div class="auth">
+  <div class="auth-brand"><div class="gl1"></div><div class="gl2"></div>
+    <div class="auth-brand-in">
+      <div class="logo-ic" style="width:64px;height:64px;margin:0 auto 20px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+      <h1>Jodohku<b>.my</b></h1><p>Pencarian Sekufu Bermula Di Sini</p>
+    </div>
+  </div>
+  <div class="auth-form"><div class="auth-form-in">
+    <div class="steps" id="reg-steps"></div>
+    <div id="reg-s1" class="auth-step on"></div>
+    <div id="reg-s2" class="auth-step"></div>
+    <div id="reg-s3" class="auth-step">
+      <h2 style="font-family:var(--fd);font-weight:700;font-size:26px;margin-bottom:8px">Pengesahan Identiti</h2>
+      <p style="color:var(--is);margin-bottom:20px">Untuk keselamatan semua pengguna.</p>
+      <div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px">
+        <div style="display:flex;gap:14px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div><div style="font-weight:600;margin-bottom:8px;font-size:14px">Apa yang diperlukan?</div><p style="font-size:13px;color:var(--is);line-height:1.7">Gambar hadapan MyKad<br>Swafoto masa nyata (Live Selfie)<br>Proses mengambil masa ~2 minit</p></div>
+        </div>
+      </div>
+      <button class="btn bp" style="width:100%;padding:13px 0" onclick="go('gallery')">Mulakan e-KYC
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </button>
+      <p style="text-align:center;font-size:12px;color:var(--im);margin-top:12px">Data dienkripsi AES-256 dan tidak dikongsi pihak ketiga.</p>
+    </div>
+  </div></div>
+</div>
+</div>
+
+<!-- ======================= APP PAGES ======================= -->
+<div id="pg-gallery"  class="pg"><div class="shell" id="shell-gallery"></div></div>
+<div id="pg-chat"     class="pg"><div class="shell" id="shell-chat"></div></div>
+<div id="pg-profile"  class="pg"><div class="shell" id="shell-profile"></div></div>
+<div id="pg-payment"  class="pg"><div class="shell" id="shell-payment"></div></div>
+<div id="pg-notif"    class="pg"><div class="shell" id="shell-notif"></div></div>
+<div id="pg-settings" class="pg"><div class="shell" id="shell-settings"></div></div>
+<div id="pg-success"  class="pg"><div class="shell" id="shell-success"></div></div>
+
+<!-- Sidebar overlay (mobile) -->
+<div class="side-overlay" id="side-overlay" onclick="closeSidebar()"></div>
+
+<!-- Load JS files in order -->
+<script src="js/icons.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
