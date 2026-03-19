@@ -506,58 +506,246 @@ function buildNotifPage() {
 /* ── Settings Page ── */
 function buildSettingsPage() {
   var user = currentUser || Auth.getUser() || {};
+  var tier = (user.current_tier || 'rahmah').toUpperCase();
+  var isVerified = user.is_verified_t20 || false;
+  var eKYCStatus = user.status === 'active' ? '&#10003; Disahkan' : 'Belum disahkan';
 
-  function row(ic, label, desc, action) {
-    return '<div style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:var(--rb);cursor:pointer;transition:background .15s" '
-      + (action ? 'onclick="' + action + '"' : '') + ' onmouseover="this.style.background=\'var(--s1)\'" onmouseout="this.style.background=\'\'">'
-      + '<span style="color:var(--is)">' + ic + '</span>'
+  function row(ic, label, desc, action, badge) {
+    return '<div style="display:flex;align-items:center;gap:14px;padding:13px 10px;border-radius:var(--rb);cursor:' + (action ? 'pointer' : 'default') + ';transition:background .15s" '
+      + (action ? 'onclick="' + action + '" onmouseover="this.style.background=\'var(--s1)\'" onmouseout="this.style.background=\'\'"' : '') + '>'
+      + '<span style="color:var(--is);flex-shrink:0">' + ic + '</span>'
       + '<div style="flex:1"><div style="font-size:14px;font-weight:500">' + label + '</div>'
-      + (desc ? '<div style="font-size:12px;color:var(--im)">' + desc + '</div>' : '')
-      + '</div>' + ICONS.chevron + '</div>';
+      + (desc ? '<div style="font-size:12px;color:var(--im);margin-top:2px">' + desc + '</div>' : '')
+      + '</div>'
+      + (badge ? badge : '')
+      + (action ? ICONS.chevron : '')
+      + '</div>';
+  }
+
+  function section(title, content) {
+    return '<div class="card" style="margin-bottom:14px">'
+      + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">' + title + '</div>'
+      + content + '</div>';
   }
 
   return '<div style="max-width:620px;margin:0 auto">'
     + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px;margin-bottom:20px">Tetapan</h1>'
 
-    // Akaun
-    + '<div class="card" style="margin-bottom:14px">'
-    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Akaun &amp; Keselamatan</div>'
-    + row(ICONS.lock,   'Tukar Kata Laluan',   null,                     'changePassword()')
-    + row(ICONS.shield, 'e-KYC',               user.is_verified ? '&#10003; Disahkan' : 'Belum disahkan', null)
-    + row(ICONS.shield, 'Verified T20',         'Mohon pengesahan',       null)
+    // ── Akaun & Keselamatan ──
+    + section('Akaun &amp; Keselamatan',
+        row(ICONS.lock,
+          'Tukar Kata Laluan',
+          'Tukar kata laluan akaun anda',
+          'openModal(\'modal-password\')')
+      + row(ICONS.shield,
+          'e-KYC (Pengesahan Identiti)',
+          eKYCStatus,
+          user.status === 'active' ? null : 'openModal(\'modal-ekyc\')',
+          user.status === 'active'
+            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Aktif</span>'
+            : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
+      + row(ICONS.shield,
+          'Verified T20',
+          isVerified ? 'Anda telah disahkan sebagai T20' : 'Mohon pengesahan T20',
+          isVerified ? null : 'openModal(\'modal-t20\')',
+          isVerified
+            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>'
+            : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
+    )
+
+    // ── Profil ──
+    + section('Profil',
+        row(ICONS.profile, 'Edit Profil', 'Kemaskini maklumat peribadi anda', 'go(\'profile\')')
+      + row(ICONS.eye,
+          'Privasi Profil',
+          'Siapa boleh melihat profil anda',
+          'openModal(\'modal-privacy\')')
+      + row(ICONS.globe,
+          'Bahasa',
+          'Bahasa Melayu',
+          'openModal(\'modal-language\')')
+    )
+
+    // ── Langganan ──
+    + section('Langganan',
+        row(ICONS.payment,
+          'Urus Langganan',
+          'Pelan semasa: ' + tier,
+          'go(\'payment\')',
+          '<span class="badge ' + (tier === 'GOLD' ? 'b-gld' : tier === 'PLATINUM' ? 'b-plt' : tier === 'PREMIUM' ? 'b-prm' : 'b-rah') + '" style="margin-right:4px">' + tier + '</span>')
+    )
+
+    // ── Mod Wali ──
+    + section('Mod Wali/Mahram',
+        row(ICONS.users,
+          'Urus Mod Wali',
+          user.wali_mode_enabled ? 'Mod wali aktif' : 'Tidak aktif — wali tidak terlibat',
+          'openModal(\'modal-wali\')',
+          '<span style="width:36px;height:20px;border-radius:10px;background:' + (user.wali_mode_enabled ? 'var(--e4)' : 'var(--s2)') + ';display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:4px"><span style="width:14px;height:14px;border-radius:50%;background:#fff;transform:translateX(' + (user.wali_mode_enabled ? '8px' : '-8px') + ');transition:transform .2s"></span></span>')
+    )
+
+    // ── Zon Bahaya ──
+    + '<div class="card" style="border:1px solid #FECACA;margin-bottom:20px">'
+    + '<div style="font-size:11px;font-weight:600;color:#EF4444;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Zon Bahaya</div>'
+    + '<div style="display:flex;align-items:center;gap:14px;padding:13px 10px;border-radius:var(--rb);cursor:pointer;transition:background .15s" onclick="openModal(\'modal-pause\')" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
+    + '<span style="color:#F97316;flex-shrink:0">' + ICONS.notif + '</span>'
+    + '<div style="flex:1"><div style="font-size:14px;font-weight:500;color:#F97316">Jeda Akaun</div><div style="font-size:12px;color:#F87171">Profil disembunyikan sementara, boleh diaktif semula</div></div>' + ICONS.chevron + '</div>'
+    + '<div style="display:flex;align-items:center;gap:14px;padding:13px 10px;border-radius:var(--rb);cursor:pointer;transition:background .15s" onclick="openModal(\'modal-delete\')" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
+    + '<span style="color:#EF4444;flex-shrink:0">' + ICONS.trash + '</span>'
+    + '<div style="flex:1"><div style="font-size:14px;font-weight:500;color:#EF4444">Padam Akaun</div><div style="font-size:12px;color:#F87171">Hak Untuk Dilupakan (PDPA) — tidak boleh diundur</div></div>' + ICONS.chevron + '</div>'
     + '</div>'
 
-    // Profil
-    + '<div class="card" style="margin-bottom:14px">'
-    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Profil</div>'
-    + row(ICONS.profile, 'Edit Profil',          null,                    'go(\'profile\')')
-    + row(ICONS.eye,     'Privasi Profil',        'Siapa boleh lihat profil anda', null)
-    + row(ICONS.globe,   'Bahasa',                'Bahasa Melayu',         null)
-    + '</div>'
+    + '<button class="btn bg" style="width:100%;color:#EF4444;justify-content:center;gap:8px;margin-bottom:40px" onclick="apiLogout()">'
+    + ICONS.logout + ' Log Keluar</button>'
 
-    // Langganan
-    + '<div class="card" style="margin-bottom:14px">'
-    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Langganan</div>'
-    + row(ICONS.payment, 'Urus Langganan',       'Pelan semasa: ' + (user.current_tier || 'Rahmah').toUpperCase(), 'go(\'payment\')')
-    + '</div>'
+    // ══ MODALS ══
+    + modal('modal-password', 'Tukar Kata Laluan',
+        '<div style="margin-bottom:14px"><label class="lbl">Kata Laluan Semasa</label><input id="s-pw-curr" class="inp" type="password" placeholder="Kata laluan semasa"></div>'
+      + '<div style="margin-bottom:14px"><label class="lbl">Kata Laluan Baharu</label><input id="s-pw-new" class="inp" type="password" placeholder="Min 8 aksara, huruf besar &amp; nombor"></div>'
+      + '<div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan Baharu</label><input id="s-pw-conf" class="inp" type="password" placeholder="Ulang kata laluan baharu"></div>'
+      + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitChangePassword()">Tukar Kata Laluan</button>')
 
-    // Mod Wali
-    + '<div class="card" style="margin-bottom:14px">'
-    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Mod Wali/Mahram</div>'
-    + row(ICONS.users, 'Urus Mod Wali', 'Tidak aktif', null)
-    + '</div>'
+    + modal('modal-ekyc', 'e-KYC — Pengesahan Identiti',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Sahkan identiti anda menggunakan MyKad untuk mendapat akses penuh.</p>'
+      + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px">'
+      + '<p style="font-size:13px;color:var(--g7);line-height:1.7">&#10003; Gambar hadapan MyKad<br>&#10003; Swafoto masa nyata (Liveness)<br>&#10003; Proses ~2 minit<br>&#10003; Data dienkripsi AES-256</p></div>'
+      + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="closeModal(\'modal-ekyc\');go(\'gallery\')">Mulakan e-KYC Sekarang</button>')
 
-    // Zon Bahaya
-    + '<div class="card" style="border:1px solid #FECACA;margin-bottom:14px">'
-    + '<div style="font-size:11px;font-weight:600;color:#EF4444;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Zon Bahaya</div>'
-    + '<div style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:var(--rb);cursor:pointer" onclick="pauseAccount()" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
-    + ICONS.notif + '<div><div style="font-size:14px;font-weight:500;color:#F97316">Jeda Akaun</div><div style="font-size:12px;color:#F87171">Profil disembunyikan sementara</div></div></div>'
-    + '<div style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:var(--rb);cursor:pointer" onclick="deleteAccount()" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
-    + ICONS.trash + '<div><div style="font-size:14px;font-weight:500;color:#EF4444">Padam Akaun</div><div style="font-size:12px;color:#F87171">Hak Untuk Dilupakan (PDPA)</div></div></div>'
-    + '</div>'
+    + modal('modal-t20', 'Mohon Pengesahan T20',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">T20 bermaksud pendapatan isi rumah melebihi RM10,000/bulan. Pengesahan ini memperkukuh kredibiliti profil anda.</p>'
+      + '<div style="margin-bottom:14px"><label class="lbl">Nama Majikan / Syarikat</label><input id="t20-employer" class="inp" type="text" placeholder="Contoh: Petronas, Bank Negara"></div>'
+      + '<div style="margin-bottom:14px"><label class="lbl">Jawatan</label><input id="t20-position" class="inp" type="text" placeholder="Contoh: Pengurus Kanan"></div>'
+      + '<div style="margin-bottom:20px"><label class="lbl">Dokumen Sokongan</label><p style="font-size:12px;color:var(--im);margin-top:4px">Slip gaji / surat tawaran. Hantar kepada admin@jodohku.my untuk semakan.</p></div>'
+      + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitT20Request()">Hantar Permohonan</button>')
 
-    + '<button class="btn bg" style="width:100%;color:#EF4444;justify-content:center;gap:8px" onclick="apiLogout()">'
-    + ICONS.logout + ' Log Keluar</button></div>';
+    + modal('modal-privacy', 'Tetapan Privasi Profil',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Pilih siapa yang boleh melihat profil anda.</p>'
+      + ['Semua pengguna berdaftar','Hanya padanan 85%+ sahaja','Pengguna Gold dan ke atas sahaja'].map(function(opt, i) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--rs);border:1px solid var(--s2);margin-bottom:8px;cursor:pointer" onclick="selectPrivacy(this,' + i + ')">'
+            + '<div style="width:20px;height:20px;border-radius:50%;border:2px solid ' + (i===0?'var(--g5)':'var(--s2)') + ';display:flex;align-items:center;justify-content:center" id="priv-radio-' + i + '">'
+            + (i===0?'<div style="width:10px;height:10px;border-radius:50%;background:var(--g5)"></div>':'')
+            + '</div><span style="font-size:14px">' + opt + '</span></div>';
+        }).join('')
+      + '<button class="btn bp" style="width:100%;padding:13px 0;margin-top:8px" onclick="closeModal(\'modal-privacy\');showToast(\'Tetapan privasi disimpan.\',\'success\')">Simpan</button>')
+
+    + modal('modal-language', 'Tetapan Bahasa',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Pilih bahasa paparan.</p>'
+      + ['Bahasa Melayu','English'].map(function(lang, i) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--rs);border:1px solid ' + (i===0?'var(--g5)':'var(--s2)') + ';margin-bottom:8px;cursor:pointer;background:' + (i===0?'var(--g50)':'#fff') + '">'
+            + '<div style="width:20px;height:20px;border-radius:50%;border:2px solid ' + (i===0?'var(--g5)':'var(--s2)') + ';display:flex;align-items:center;justify-content:center">'
+            + (i===0?'<div style="width:10px;height:10px;border-radius:50%;background:var(--g5)"></div>':'')
+            + '</div><span style="font-size:14px;font-weight:' + (i===0?'600':'400') + '">' + lang + (i===0?' (Semasa)':'') + '</span></div>';
+        }).join('')
+      + '<button class="btn bp" style="width:100%;padding:13px 0;margin-top:8px" onclick="closeModal(\'modal-language\');showToast(\'Bahasa dikemaskini.\',\'success\')">Simpan</button>')
+
+    + modal('modal-wali', 'Mod Wali/Mahram',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Apabila diaktifkan, wali anda akan menerima pemberitahuan dan boleh memantau perbualan anda.</p>'
+      + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px">'
+      + '<p style="font-size:13px;color:var(--g7);line-height:1.7">&#10003; Wali terima notifikasi setiap mesej<br>&#10003; Wali boleh menamatkan perbualan<br>&#10003; Lebih amanah dan terkawal</p></div>'
+      + '<div style="margin-bottom:14px"><label class="lbl">Emel Wali/Mahram</label><input id="wali-email" class="inp" type="email" placeholder="wali@contoh.com"></div>'
+      + '<div style="margin-bottom:14px"><label class="lbl">Nama Wali</label><input id="wali-name" class="inp" type="text" placeholder="Contoh: Ahmad bin Ibrahim"></div>'
+      + '<div style="margin-bottom:20px"><label class="lbl">Hubungan</label>'
+      + '<select id="wali-relation" class="inp" style="cursor:pointer"><option value="">-- Pilih --</option><option value="father">Bapa</option><option value="brother">Abang/Adik Lelaki</option><option value="uncle">Pak Cik</option><option value="grandfather">Datuk</option><option value="guardian">Penjaga</option></select></div>'
+      + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitWaliInvite()">Jemput Wali</button>')
+
+    + modal('modal-pause', 'Jeda Akaun',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Profil anda akan disembunyikan dari galeri sehingga anda aktifkan semula. Data dan padanan anda akan dikekalkan.</p>'
+      + '<div class="card" style="background:#FEF2F2;border:1px solid #FECACA;margin-bottom:20px">'
+      + '<p style="font-size:13px;color:#B91C1C;line-height:1.7">&#9888; Langganan aktif anda akan terus berjalan semasa jeda.<br>&#9888; Anda masih akan dicaj sehingga tarikh tamat.</p></div>'
+      + '<button class="btn" style="width:100%;padding:13px 0;background:#F97316;color:#fff;margin-bottom:10px" onclick="confirmPause()">Ya, Jeda Akaun Saya</button>'
+      + '<button class="btn bg" style="width:100%;padding:13px 0" onclick="closeModal(\'modal-pause\')">Batal</button>')
+
+    + modal('modal-delete', 'Padam Akaun',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Tindakan ini <strong>tidak boleh diundur</strong>. Semua data anda akan dipadamkan dalam masa 30 hari mengikut PDPA.</p>'
+      + '<div class="card" style="background:#FEF2F2;border:1px solid #FECACA;margin-bottom:20px">'
+      + '<p style="font-size:13px;color:#B91C1C;line-height:1.7">&#10005; Semua padanan dan perbualan dipadamkan<br>&#10005; Langganan aktif tidak boleh direfund<br>&#10005; Akaun tidak boleh dipulihkan</p></div>'
+      + '<div style="margin-bottom:20px"><label class="lbl">Taip <strong>PADAM</strong> untuk mengesahkan</label><input id="delete-confirm" class="inp" placeholder="PADAM"></div>'
+      + '<button class="btn" style="width:100%;padding:13px 0;background:#EF4444;color:#fff;margin-bottom:10px" onclick="confirmDelete()">Padam Akaun Saya</button>'
+      + '<button class="btn bg" style="width:100%;padding:13px 0" onclick="closeModal(\'modal-delete\')">Batal</button>')
+
+    + '</div>';
+}
+
+/* ── Modal Helper ── */
+function modal(id, title, content) {
+  return '<div id="' + id + '" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);padding:20px;overflow-y:auto">'
+    + '<div style="background:#fff;border-radius:var(--r);max-width:480px;margin:40px auto;padding:28px;box-shadow:var(--sh2);position:relative">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">'
+    + '<h2 style="font-family:var(--fd);font-weight:600;font-size:20px">' + title + '</h2>'
+    + '<button onclick="closeModal(\'' + id + '\')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;color:var(--im)">'
+    + ICONS.x + '</button></div>'
+    + content
+    + '</div></div>';
+}
+
+function openModal(id) {
+  var el = document.getElementById(id);
+  if (el) { el.style.display = 'block'; document.body.style.overflow = 'hidden'; }
+}
+
+function closeModal(id) {
+  var el = document.getElementById(id);
+  if (el) { el.style.display = 'none'; document.body.style.overflow = ''; }
+}
+
+function selectPrivacy(el, idx) {
+  for (var i = 0; i < 3; i++) {
+    var r = document.getElementById('priv-radio-' + i);
+    if (r) r.innerHTML = '';
+    if (r) r.style.borderColor = 'var(--s2)';
+  }
+  var r = document.getElementById('priv-radio-' + idx);
+  if (r) { r.innerHTML = '<div style="width:10px;height:10px;border-radius:50%;background:var(--g5)"></div>'; r.style.borderColor = 'var(--g5)'; }
+}
+
+async function submitChangePassword() {
+  var curr = (document.getElementById('s-pw-curr') || {}).value || '';
+  var newPw = (document.getElementById('s-pw-new') || {}).value || '';
+  var conf = (document.getElementById('s-pw-conf') || {}).value || '';
+  if (!curr || !newPw) return showToast('Sila isi semua medan.', 'warn');
+  if (newPw !== conf) return showToast('Kata laluan baharu tidak sepadan.', 'warn');
+  if (newPw.length < 8 || !/[A-Z]/.test(newPw) || !/[0-9]/.test(newPw)) return showToast('Kata laluan baharu tidak memenuhi syarat.', 'warn');
+  var btn = document.querySelector('#modal-password .btn.bp');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menukar...'; }
+  var res = await apiFetch('/settings/password', { method: 'PUT', body: JSON.stringify({ current_password: curr, new_password: newPw }) });
+  if (btn) { btn.disabled = false; btn.textContent = 'Tukar Kata Laluan'; }
+  if (res && res.ok) { closeModal('modal-password'); showToast('Kata laluan berjaya ditukar!', 'success'); }
+  else { var d = res ? await res.json() : {}; showToast(d.detail || 'Gagal menukar kata laluan.', 'error'); }
+}
+
+async function submitT20Request() {
+  var employer = (document.getElementById('t20-employer') || {}).value || '';
+  var position = (document.getElementById('t20-position') || {}).value || '';
+  if (!employer || !position) return showToast('Sila isi semua medan.', 'warn');
+  closeModal('modal-t20');
+  showToast('Permohonan T20 dihantar. Admin akan menghubungi anda dalam 2-3 hari bekerja.', 'success');
+}
+
+async function submitWaliInvite() {
+  var email    = (document.getElementById('wali-email') || {}).value || '';
+  var name     = (document.getElementById('wali-name') || {}).value || '';
+  var relation = (document.getElementById('wali-relation') || {}).value || '';
+  if (!email || !name || !relation) return showToast('Sila isi semua medan.', 'warn');
+  var btn = document.querySelector('#modal-wali .btn.bp');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menghantar...'; }
+  var res = await apiFetch('/wali/invite', { method: 'POST', body: JSON.stringify({ wali_email: email, wali_name: name, relation: relation }) });
+  if (btn) { btn.disabled = false; btn.textContent = 'Jemput Wali'; }
+  if (res && res.ok) { closeModal('modal-wali'); showToast('Jemputan wali dihantar ke ' + email, 'success'); }
+  else { var d = res ? await res.json() : {}; showToast(d.detail || 'Gagal menghantar jemputan.', 'error'); }
+}
+
+async function confirmPause() {
+  var res = await apiFetch('/settings/pause', { method: 'POST' });
+  if (res && res.ok) { closeModal('modal-pause'); showToast('Akaun dijeda. Log masuk semula untuk mengaktifkan.', 'info'); setTimeout(apiLogout, 1500); }
+  else showToast('Gagal menjeda akaun.', 'error');
+}
+
+async function confirmDelete() {
+  var input = (document.getElementById('delete-confirm') || {}).value || '';
+  if (input !== 'PADAM') return showToast('Sila taip PADAM untuk mengesahkan.', 'warn');
+  var res = await apiFetch('/settings/delete', { method: 'DELETE' });
+  if (res && res.ok) { closeModal('modal-delete'); showToast('Akaun dipadamkan. Selamat tinggal.', 'info'); setTimeout(apiLogout, 2000); }
+  else showToast('Gagal memadam akaun.', 'error');
 }
 
 /* ── Success Wall Page ── */
