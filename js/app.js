@@ -366,36 +366,75 @@ function buildProfilePage() {
   var completion = user.profile_completion || 0;
   var badgeClass = tier === 'GOLD' ? 'b-gld' : tier === 'PLATINUM' ? 'b-plt' : tier === 'PREMIUM' ? 'b-prm' : 'b-rah';
 
-  var chips = [];
-  if (user.state_of_residence) chips.push(user.state_of_residence);
-  if (user.education_level)    chips.push(user.education_level);
-  if (user.occupation)         chips.push(user.occupation);
-  if (user.marital_status)     chips.push(user.marital_status);
-  if (user.age)                chips.push(user.age + ' tahun');
+  var states = ['johor','kedah','kelantan','melaka','negeri_sembilan','pahang','perak','perlis','pulau_pinang','sabah','sarawak','selangor','terengganu','wp_kuala_lumpur','wp_putrajaya','wp_labuan'];
+  var eduLevels = ['spm','diploma','ijazah','master','phd','lain'];
+  var incomeRanges = ['below_2k','2k_5k','5k_10k','10k_20k','above_20k'];
+  var maritalOpts = ['bujang','duda','janda'];
+  var hobbyOpts = ['Mendaki','Fotografi','Membaca','Melancong','Gym','Memasak','Muzik','Sukan','Berkebun','Memasak','Melukis','Mengembara'];
 
-  var hobbies = user.hobbies || [];
+  function sel(id, opts, val, label) {
+    return '<div style="margin-bottom:14px"><label class="lbl">' + label + '</label>'
+      + '<select id="' + id + '" class="inp" style="cursor:pointer">'
+      + '<option value="">-- Pilih --</option>'
+      + opts.map(function(o) { return '<option value="' + o + '"' + (val === o ? ' selected' : '') + '>' + o.replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase()}) + '</option>'; }).join('')
+      + '</select></div>';
+  }
+
+  function inp(id, val, label, type, placeholder) {
+    return '<div style="margin-bottom:14px"><label class="lbl">' + label + '</label>'
+      + '<input id="' + id + '" class="inp" type="' + (type||'text') + '" value="' + (val||'') + '" placeholder="' + (placeholder||'') + '"></div>';
+  }
+
+  var selectedHobbies = user.hobbies || [];
 
   return '<div style="max-width:620px;margin:0 auto">'
-    + '<div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)">'
-    + '<div style="height:140px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
+    // ── Header card ──
+    + '<div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:20px">'
+    + '<div style="height:120px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
     + '<div style="position:absolute;bottom:-36px;left:20px"><div style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2)">'
     + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
     + '</div></div></div>'
-    + '<div style="padding:48px 20px 20px">'
-    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">'
+    + '<div style="padding:44px 20px 20px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div><div style="display:flex;align-items:center;gap:10px">'
     + '<span style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">' + code + '</span>'
     + '<span class="badge ' + badgeClass + '">' + tier + '</span></div>'
-    + (chips.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">' + chips.map(function(c) { return '<span class="chip">' + c + '</span>'; }).join('') + '</div>' : '')
-    + (user.bio_text ? '<p style="font-size:14px;color:var(--is);line-height:1.6;margin-top:14px">' + user.bio_text + '</p>' : '')
-    + '</div></div>'
-    + '<div class="card" style="margin-top:16px;background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2)">'
-    + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' + ICONS.sparkle
-    + '<span style="font-weight:600;font-size:14px;color:var(--g7)">Profil ' + completion + '% lengkap</span></div>'
+    + '<div style="font-size:13px;color:var(--im);margin-top:4px">' + user.email + '</div></div></div></div>'
+    // ── Completion banner ──
+    + '<div class="card" style="margin-bottom:20px;background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<div style="display:flex;align-items:center;gap:8px">' + ICONS.sparkle
+    + '<span style="font-weight:600;font-size:14px;color:var(--g7)">Profil ' + completion + '% lengkap</span></div></div>'
     + '<div class="progress"><div class="progress-fill" style="width:' + completion + '%"></div></div>'
-    + '<p style="font-size:13px;color:var(--g7);margin-top:8px">Lengkapkan profil untuk meningkatkan ketepatan padanan.</p></div>'
-    + (hobbies.length ? '<div class="card" style="margin-top:16px"><h3 style="font-family:var(--fd);font-weight:600;font-size:17px;margin-bottom:12px">Hobi &amp; Minat</h3>'
-    + '<div style="display:flex;flex-wrap:wrap;gap:8px">' + hobbies.map(function(h) { return '<span style="background:#E6F5ED;color:var(--e7);padding:5px 12px;border-radius:20px;font-size:13px;font-weight:500">' + h + '</span>'; }).join('') + '</div></div>' : '')
-    + '</div>';
+    + '<p style="font-size:12px;color:var(--g7);margin-top:6px">Lengkapkan profil untuk mendapat padanan yang lebih baik.</p></div>'
+    // ── Edit form ──
+    + '<div class="card" style="margin-bottom:20px">'
+    + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:20px">Maklumat Peribadi</h3>'
+    + inp('pf-display-name', user.display_name, 'Nama Paparan (max 16 aksara)', 'text', 'Contoh: Ahmad')
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + sel('pf-gender', ['lelaki','perempuan'], user.gender, 'Jantina')
+    + inp('pf-dob', user.date_of_birth, 'Tarikh Lahir', 'date', '')
+    + sel('pf-state', states, user.state_of_residence, 'Negeri Kediaman')
+    + sel('pf-edu', eduLevels, user.education_level, 'Tahap Pendidikan')
+    + inp('pf-job', user.occupation, 'Pekerjaan', 'text', 'Contoh: Jurutera')
+    + sel('pf-income', incomeRanges, user.income_range, 'Julat Pendapatan')
+    + sel('pf-marital', maritalOpts, user.marital_status, 'Status Perkahwinan')
+    + inp('pf-height', user.height_cm, 'Tinggi (cm)', 'number', '170')
+    + '</div>'
+    + '<div style="margin-bottom:14px"><label class="lbl">Bio (max 500 aksara)</label>'
+    + '<textarea id="pf-bio" class="inp" rows="3" style="resize:vertical" placeholder="Ceritakan sedikit tentang diri anda...">' + (user.bio_text || '') + '</textarea></div>'
+    + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveProfile()">Simpan Maklumat</button>'
+    + '</div>'
+    // ── Hobbies ──
+    + '<div class="card" style="margin-bottom:20px">'
+    + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:16px">Hobi &amp; Minat</h3>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'
+    + hobbyOpts.map(function(h) {
+        var active = selectedHobbies.indexOf(h) > -1;
+        return '<button data-active="' + (active ? '1' : '0') + '" onclick="toggleHobby(this,\'' + h + '\')" style="padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid ' + (active ? 'var(--g5)' : 'var(--s2)') + ';background:' + (active ? 'var(--g50)' : '#fff') + ';color:' + (active ? 'var(--g7)' : 'var(--is)') + '">' + h + '</button>';
+      }).join('')
+    + '</div>'
+    + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveHobbies()">Simpan Hobi</button>'
+    + '</div></div>';
 }
 
 /* ── Payment Page ── */
@@ -466,46 +505,59 @@ function buildNotifPage() {
 
 /* ── Settings Page ── */
 function buildSettingsPage() {
-  var sections = [
-    { t: 'Akaun & Keselamatan', items: [
-      { ic: ICONS.lock,    l: 'Tukar Kata Laluan' },
-      { ic: ICONS.shield,  l: 'e-KYC',       d: '&#10003; Disahkan' },
-      { ic: ICONS.shield,  l: 'Verified T20', d: 'Mohon pengesahan' },
-    ]},
-    { t: 'Keutamaan', items: [
-      { ic: ICONS.globe,   l: 'Bahasa',         d: 'Bahasa Melayu' },
-      { ic: ICONS.notif,   l: 'Notifikasi' },
-      { ic: ICONS.eye,     l: 'Privasi Profil' },
-    ]},
-    { t: 'Mod Wali/Mahram', items: [
-      { ic: ICONS.users, l: 'Urus Mod Wali', d: 'Tidak aktif' },
-    ]},
-  ];
+  var user = currentUser || Auth.getUser() || {};
 
-  var h = '<div style="max-width:620px;margin:0 auto">'
+  function row(ic, label, desc, action) {
+    return '<div style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:var(--rb);cursor:pointer;transition:background .15s" '
+      + (action ? 'onclick="' + action + '"' : '') + ' onmouseover="this.style.background=\'var(--s1)\'" onmouseout="this.style.background=\'\'">'
+      + '<span style="color:var(--is)">' + ic + '</span>'
+      + '<div style="flex:1"><div style="font-size:14px;font-weight:500">' + label + '</div>'
+      + (desc ? '<div style="font-size:12px;color:var(--im)">' + desc + '</div>' : '')
+      + '</div>' + ICONS.chevron + '</div>';
+  }
+
+  return '<div style="max-width:620px;margin:0 auto">'
     + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px;margin-bottom:20px">Tetapan</h1>'
-    + sections.map(function(s) {
-        return '<div class="card" style="margin-bottom:14px">'
-          + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">' + s.t + '</div>'
-          + s.items.map(function(it) {
-              return '<div style="display:flex;align-items:center;gap:14px;padding:10px 8px;border-radius:var(--rb);cursor:pointer">'
-                + '<span style="color:var(--is)">' + it.ic + '</span>'
-                + '<div style="flex:1"><div style="font-size:14px;font-weight:500">' + it.l + '</div>'
-                + (it.d ? '<div style="font-size:12px;color:var(--im)">' + it.d + '</div>' : '')
-                + '</div>' + ICONS.chevron + '</div>';
-            }).join('')
-          + '</div>';
-      }).join('')
+
+    // Akaun
+    + '<div class="card" style="margin-bottom:14px">'
+    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Akaun &amp; Keselamatan</div>'
+    + row(ICONS.lock,   'Tukar Kata Laluan',   null,                     'changePassword()')
+    + row(ICONS.shield, 'e-KYC',               user.is_verified ? '&#10003; Disahkan' : 'Belum disahkan', null)
+    + row(ICONS.shield, 'Verified T20',         'Mohon pengesahan',       null)
+    + '</div>'
+
+    // Profil
+    + '<div class="card" style="margin-bottom:14px">'
+    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Profil</div>'
+    + row(ICONS.profile, 'Edit Profil',          null,                    'go(\'profile\')')
+    + row(ICONS.eye,     'Privasi Profil',        'Siapa boleh lihat profil anda', null)
+    + row(ICONS.globe,   'Bahasa',                'Bahasa Melayu',         null)
+    + '</div>'
+
+    // Langganan
+    + '<div class="card" style="margin-bottom:14px">'
+    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Langganan</div>'
+    + row(ICONS.payment, 'Urus Langganan',       'Pelan semasa: ' + (user.current_tier || 'Rahmah').toUpperCase(), 'go(\'payment\')')
+    + '</div>'
+
+    // Mod Wali
+    + '<div class="card" style="margin-bottom:14px">'
+    + '<div style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Mod Wali/Mahram</div>'
+    + row(ICONS.users, 'Urus Mod Wali', 'Tidak aktif', null)
+    + '</div>'
+
+    // Zon Bahaya
     + '<div class="card" style="border:1px solid #FECACA;margin-bottom:14px">'
     + '<div style="font-size:11px;font-weight:600;color:#EF4444;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Zon Bahaya</div>'
-    + '<div style="display:flex;align-items:center;gap:14px;padding:10px 8px;cursor:pointer">'
-    + ICONS.trash
-    + '<div><div style="font-size:14px;font-weight:500;color:#EF4444">Padam Akaun</div>'
-    + '<div style="font-size:12px;color:#F87171">Hak Untuk Dilupakan (PDPA)</div></div></div></div>'
+    + '<div style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:var(--rb);cursor:pointer" onclick="pauseAccount()" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
+    + ICONS.notif + '<div><div style="font-size:14px;font-weight:500;color:#F97316">Jeda Akaun</div><div style="font-size:12px;color:#F87171">Profil disembunyikan sementara</div></div></div>'
+    + '<div style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-radius:var(--rb);cursor:pointer" onclick="deleteAccount()" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
+    + ICONS.trash + '<div><div style="font-size:14px;font-weight:500;color:#EF4444">Padam Akaun</div><div style="font-size:12px;color:#F87171">Hak Untuk Dilupakan (PDPA)</div></div></div>'
+    + '</div>'
+
     + '<button class="btn bg" style="width:100%;color:#EF4444;justify-content:center;gap:8px" onclick="apiLogout()">'
     + ICONS.logout + ' Log Keluar</button></div>';
-
-  return h;
 }
 
 /* ── Success Wall Page ── */
@@ -531,6 +583,112 @@ function buildSuccessPage() {
           + '<span class="badge b-ver" style="margin-top:8px">' + ICONS.check + ' Alumni Jodohku</span></div></div>';
       }).join('')
     + '</div>';
+}
+
+/* ══════════════════════════════════════
+   PROFILE SAVE
+══════════════════════════════════════ */
+function toggleHobby(btn, hobby) {
+  var active = btn.dataset.active === '1';
+  if (active) {
+    btn.dataset.active = '0';
+    btn.style.border = '1px solid var(--s2)';
+    btn.style.background = '#fff';
+    btn.style.color = 'var(--is)';
+  } else {
+    btn.dataset.active = '1';
+    btn.style.border = '1px solid var(--g5)';
+    btn.style.background = 'var(--g50)';
+    btn.style.color = 'var(--g7)';
+  }
+}
+
+async function saveProfile() {
+  var btn = document.querySelector('[onclick="saveProfile()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+
+  var data = {
+    display_name:      (document.getElementById('pf-display-name') || {}).value || null,
+    gender:            (document.getElementById('pf-gender') || {}).value || null,
+    date_of_birth:     (document.getElementById('pf-dob') || {}).value || null,
+    state_of_residence:(document.getElementById('pf-state') || {}).value || null,
+    education_level:   (document.getElementById('pf-edu') || {}).value || null,
+    occupation:        (document.getElementById('pf-job') || {}).value || null,
+    income_range:      (document.getElementById('pf-income') || {}).value || null,
+    marital_status:    (document.getElementById('pf-marital') || {}).value || null,
+    height_cm:         (document.getElementById('pf-height') || {}).value ? parseInt((document.getElementById('pf-height') || {}).value) : null,
+    bio_text:          (document.getElementById('pf-bio') || {}).value || null,
+  };
+
+  // Remove null values
+  Object.keys(data).forEach(function(k) { if (!data[k]) delete data[k]; });
+
+  var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify(data) });
+  if (btn) { btn.disabled = false; btn.textContent = 'Simpan Maklumat'; }
+
+  if (res && res.ok) {
+    var d = await res.json();
+    showToast('Profil berjaya disimpan!', 'success');
+    await apiLoadProfile();
+    _go('profile');
+  } else {
+    showToast('Gagal menyimpan profil. Cuba semula.', 'error');
+  }
+}
+
+async function saveHobbies() {
+  var btn = document.querySelector('[onclick="saveHobbies()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+
+  var hobbyBtns = document.querySelectorAll('[onclick^="toggleHobby"]');
+  var hobbies = [];
+  hobbyBtns.forEach(function(b) {
+    if (b.dataset.active === '1') hobbies.push(b.textContent.trim());
+  });
+
+  var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify({ hobbies: hobbies }) });
+  if (btn) { btn.disabled = false; btn.textContent = 'Simpan Hobi'; }
+
+  if (res && res.ok) {
+    showToast('Hobi berjaya disimpan!', 'success');
+    await apiLoadProfile();
+  } else {
+    showToast('Gagal menyimpan hobi.', 'error');
+  }
+}
+
+/* ══════════════════════════════════════
+   SETTINGS ACTIONS
+══════════════════════════════════════ */
+async function changePassword() {
+  var curr = prompt('Kata laluan semasa:');
+  if (!curr) return;
+  var newPw = prompt('Kata laluan baharu (min 8 aksara, huruf besar & nombor):');
+  if (!newPw) return;
+  if (newPw.length < 8 || !/[A-Z]/.test(newPw) || !/[0-9]/.test(newPw)) {
+    return showToast('Kata laluan baharu tidak memenuhi syarat.', 'warn');
+  }
+  var res = await apiFetch('/settings/password', {
+    method: 'PUT',
+    body: JSON.stringify({ current_password: curr, new_password: newPw })
+  });
+  if (res && res.ok) showToast('Kata laluan berjaya ditukar!', 'success');
+  else showToast('Gagal menukar kata laluan. Semak kata laluan semasa.', 'error');
+}
+
+async function pauseAccount() {
+  if (!confirm('Jeda akaun? Profil anda tidak akan dipaparkan sehingga anda aktifkan semula.')) return;
+  var res = await apiFetch('/settings/pause', { method: 'POST' });
+  if (res && res.ok) { showToast('Akaun dijeda.', 'info'); apiLogout(); }
+  else showToast('Gagal menjeda akaun.', 'error');
+}
+
+async function deleteAccount() {
+  if (!confirm('Padam akaun? Tindakan ini tidak boleh diundur.')) return;
+  var reason = prompt('Sebab pemadaman (pilihan):') || '';
+  var res = await apiFetch('/settings/delete', { method: 'DELETE', body: JSON.stringify({ reason: reason }) });
+  if (res && res.ok) { showToast('Akaun dipadamkan.', 'info'); apiLogout(); }
+  else showToast('Gagal memadam akaun.', 'error');
 }
 
 /* ══════════════════════════════════════
