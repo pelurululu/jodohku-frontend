@@ -1,0 +1,54 @@
+/* ══════════════════════════════════════
+   CSS VARIABLES
+   ══════════════════════════════════════ */
+
+:root {
+  /* Gold palette */
+  --g50: #FFF9E6;
+  --g100: #FFF0B3;
+  --g400: #FFD11A;
+  --g5: #C8A23C;
+  --g6: #A68732;
+  --g7: #856C28;
+  
+  /* Navy palette */
+  --n5: #1B2A4A;
+  --n7: #131D35;
+  --n9: #0A0F1D;
+  
+  /* Emerald palette */
+  --e4: #26AD62;
+  --e5: #1A7A45;
+  --e7: #10522E;
+  
+  /* Surface palette */
+  --s0: #FAFAF8;
+  --s1: #F5F3EF;
+  --s2: #EBE8E1;
+  --s95: #0A0A0C;
+  
+  /* Interface palette */
+  --ip: #1A1A2E;
+  --is: #4A4A68;
+  --im: #8A8AA3;
+  
+  /* Border radius */
+  --r: 16px;
+  --rs: 10px;
+  --rb: 12px;
+  
+  /* Typography */
+  --fd: 'Playfair Display', Georgia, serif;
+  --fb: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --fm: 'JetBrains Mono', monospace;
+  
+  /* Shadows */
+  --sh: 0 1px 3px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.06);
+  --sh2: 0 4px 16px rgba(0,0,0,.08), 0 16px 48px rgba(0,0,0,.12);
+  
+  /* Easing */
+  --ez: cubic-bezier(.16, 1, .3, 1);
+  
+  /* Layout */
+  --nav-h: 64px;
+}
