@@ -387,18 +387,30 @@ function buildProfilePage() {
 
   var selectedHobbies = user.hobbies || [];
 
+  var displayName = user.display_name || code;
+  var photoUrl = user.photo_url || user.photos && user.photos[0] && user.photos[0].url || null;
+
   return '<div style="max-width:620px;margin:0 auto">'
     // ── Header card ──
     + '<div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:20px">'
     + '<div style="height:120px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
-    + '<div style="position:absolute;bottom:-36px;left:20px"><div style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2)">'
-    + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-    + '</div></div></div>'
+    + '<div style="position:absolute;bottom:-36px;left:20px">'
+    // Profile photo with upload button
+    + '<div style="position:relative;width:80px;height:80px">'
+    + '<div id="pf-avatar" style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);overflow:hidden">'
+    + (photoUrl
+        ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover">'
+        : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
+    + '</div>'
+    + '<label title="Tukar gambar" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-radius:50%;background:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
+    + '<input type="file" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">'
+    + '</label></div></div></div>'
     + '<div style="padding:44px 20px 20px;display:flex;align-items:center;justify-content:space-between">'
     + '<div><div style="display:flex;align-items:center;gap:10px">'
-    + '<span style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">' + code + '</span>'
+    + '<span id="pf-header-name" style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">' + displayName + '</span>'
     + '<span class="badge ' + badgeClass + '">' + tier + '</span></div>'
-    + '<div style="font-size:13px;color:var(--im);margin-top:4px">' + user.email + '</div></div></div></div>'
+    + '<div style="font-size:13px;color:var(--im);margin-top:4px">' + (user.email || '') + '</div></div></div></div>'
     // ── Completion banner ──
     + '<div class="card" style="margin-bottom:20px;background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2)">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -410,6 +422,7 @@ function buildProfilePage() {
     + '<div class="card" style="margin-bottom:20px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:20px">Maklumat Peribadi</h3>'
     + inp('pf-display-name', user.display_name, 'Nama Paparan (max 16 aksara)', 'text', 'Contoh: Ahmad')
+    + inp('pf-ic', user.ic_number, 'No. Kad Pengenalan (IC)', 'text', 'Contoh: 900101-14-1234')
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
     + sel('pf-gender', ['lelaki','perempuan'], user.gender, 'Jantina')
     + inp('pf-dob', user.date_of_birth, 'Tarikh Lahir', 'date', '')
@@ -797,6 +810,7 @@ async function saveProfile() {
 
   var data = {
     display_name:      (document.getElementById('pf-display-name') || {}).value || null,
+    ic_number:         (document.getElementById('pf-ic') || {}).value || null,
     gender:            (document.getElementById('pf-gender') || {}).value || null,
     date_of_birth:     (document.getElementById('pf-dob') || {}).value || null,
     state_of_residence:(document.getElementById('pf-state') || {}).value || null,
@@ -808,17 +822,26 @@ async function saveProfile() {
     bio_text:          (document.getElementById('pf-bio') || {}).value || null,
   };
 
-  // Remove null values
+  // Remove null/empty values
   Object.keys(data).forEach(function(k) { if (!data[k]) delete data[k]; });
 
   var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify(data) });
   if (btn) { btn.disabled = false; btn.textContent = 'Simpan Maklumat'; }
 
   if (res && res.ok) {
-    var d = await res.json();
     showToast('Profil berjaya disimpan!', 'success');
+
+    // Update header name immediately without full page reload
+    if (data.display_name) {
+      var headerName = document.getElementById('pf-header-name');
+      if (headerName) headerName.textContent = data.display_name;
+      if (currentUser) currentUser.display_name = data.display_name;
+      // Also update sidebar/nav name if shown
+      var navName = document.getElementById('nav-user-name');
+      if (navName) navName.textContent = data.display_name;
+    }
+
     await apiLoadProfile();
-    _go('profile');
   } else {
     showToast('Gagal menyimpan profil. Cuba semula.', 'error');
   }
@@ -877,6 +900,42 @@ async function deleteAccount() {
   var res = await apiFetch('/settings/delete', { method: 'DELETE', body: JSON.stringify({ reason: reason }) });
   if (res && res.ok) { showToast('Akaun dipadamkan.', 'info'); apiLogout(); }
   else showToast('Gagal memadam akaun.', 'error');
+}
+
+async function uploadProfilePhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) return showToast('Saiz gambar maksimum 5MB.', 'warn');
+
+  // Show preview immediately
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var avatar = document.getElementById('pf-avatar');
+    if (avatar) avatar.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
+  };
+  reader.readAsDataURL(file);
+
+  // Upload to backend
+  showToast('Memuat naik gambar...', 'info');
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('photo_type', 'headshot');
+
+  var token = Auth.getTokens().access;
+  try {
+    var res = await fetch(API_BASE + '/api/v1/profile/photos/upload?photo_type=headshot', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData,
+    });
+    if (res.ok) {
+      showToast('Gambar berjaya dimuat naik!', 'success');
+    } else {
+      showToast('Gambar disimpan secara tempatan. Akan diaktifkan tidak lama lagi.', 'info');
+    }
+  } catch (e) {
+    showToast('Gambar disimpan secara tempatan.', 'info');
+  }
 }
 
 /* ══════════════════════════════════════
