@@ -180,6 +180,44 @@
 </div>
 </div>
 
+<!-- ======================= APP SHELL ======================= -->
+<div id="app-shell" style="display:none">
+  <!-- Persistent sidebar -->
+  <div class="side" id="app-sidebar">
+    <div class="side-hd">
+      <div class="logo" onclick="go('landing')">
+        <div class="logo-ic" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>
+        <div class="logo-tx" style="font-size:16px">Jodohku<b>.my</b></div>
+      </div>
+    </div>
+    <div class="side-user" id="sidebar-user-section"></div>
+    <nav class="side-nav" id="sidebar-nav"></nav>
+    <div class="side-bt">
+      <button class="nav-i" style="color:#EF4444;width:100%" onclick="apiLogout()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Log Keluar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Persistent main area -->
+  <div class="main" id="app-main">
+    <div class="topbar">
+      <div class="topbar-left"><button class="mob-menu-btn" onclick="openSidebar()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button></div>
+      <div class="topbar-center"><span id="topbar-title" style="font-family:var(--fm);font-weight:700;font-size:15px;color:var(--n5)">Jodohku.my</span></div>
+      <div class="topbar-right"><button class="icon-btn" onclick="go('notif')" id="topbar-notif-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button></div>
+    </div>
+    <!-- Page content area -->
+    <div class="pgc" id="page-content"></div>
+  </div>
+
+  <!-- Persistent bottom nav -->
+  <nav class="bottom-nav"><div class="bottom-nav-inner" id="bottom-nav-inner"></div></nav>
+</div>
+
+<!-- Sidebar overlay -->
+<div class="side-overlay" id="side-overlay" onclick="closeSidebar()"></div>
+
 <!-- ======================= APP PAGES ======================= -->
 <div id="pg-gallery"  class="pg"><div class="shell" id="shell-gallery"></div></div>
 <div id="pg-chat"     class="pg"><div class="shell" id="shell-chat"></div></div>
@@ -189,9 +227,6 @@
 <div id="pg-notif"    class="pg"><div class="shell" id="shell-notif"></div></div>
 <div id="pg-settings" class="pg"><div class="shell" id="shell-settings"></div></div>
 <div id="pg-success"  class="pg"><div class="shell" id="shell-success"></div></div>
-
-<!-- Sidebar overlay (mobile) -->
-<div class="side-overlay" id="side-overlay" onclick="closeSidebar()"></div>
 
 <!-- Load JS files in order -->
 <script src="js/icons.js"></script>
