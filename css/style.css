@@ -101,6 +101,7 @@ button{cursor:pointer;font-family:var(--fb)}
 
 /* ── App Shell ── */
 .shell{display:flex;min-height:100vh}
+#app-shell{display:none;min-height:100vh}
 .side{width:256px;background:#fff;border-right:1px solid var(--s2);display:flex;flex-direction:column;position:fixed;top:0;bottom:0;z-index:50;transition:transform .3s var(--ez)}
 .side-hd{padding:16px 18px;border-bottom:1px solid var(--s2);display:flex;align-items:center;justify-content:space-between}
 .side-user{padding:12px 18px;border-bottom:1px solid var(--s2)}
