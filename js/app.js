@@ -52,15 +52,30 @@ function closeSidebar() {
    NAVIGATION
 ══════════════════════════════════════ */
 function go(pg) {
-  document.querySelectorAll('.pg').forEach(function(p) { p.classList.remove('on'); });
   currentPage = pg;
-  var el = document.getElementById('pg-' + pg);
-  if (el) {
-    el.classList.add('on');
-    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
-  }
+
   var appPages = ['gallery','chat','profile','payment','notif','settings','quiz','success'];
-  if (appPages.indexOf(pg) > -1) buildAppPage(pg);
+  var isAppPage = appPages.indexOf(pg) > -1;
+
+  if (isAppPage) {
+    // Show persistent app shell, hide all other pages
+    document.querySelectorAll('.pg').forEach(function(p) { p.classList.remove('on'); });
+    var appShell = document.getElementById('app-shell');
+    if (appShell) appShell.style.display = 'flex';
+    // Scroll to top
+    var pc = document.getElementById('page-content');
+    if (pc) pc.scrollTop = 0;
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
+    buildAppPage(pg);
+  } else {
+    // Non-app pages (login, register, landing) — hide shell, show pg div
+    var appShell = document.getElementById('app-shell');
+    if (appShell) appShell.style.display = 'none';
+    document.querySelectorAll('.pg').forEach(function(p) { p.classList.remove('on'); });
+    var el = document.getElementById('pg-' + pg);
+    if (el) el.classList.add('on');
+  }
+
   closeSidebar();
 }
 
@@ -151,7 +166,7 @@ function sidebar(active) {
   var sideNav = document.getElementById('sidebar-nav');
   if (sideNav) {
     sideNav.innerHTML = items.map(function(i) {
-      return '<button class="nav-i' + (active === i.id ? ' on' : '') + '" onclick="closeSidebar();go('' + i.id + '')">'
+      return '<button class="nav-i' + (active === i.id ? ' on' : '') + '" onclick="closeSidebar();go(\'' + i.id + '\')">'
         + ICONS[i.icon] + '<span style="flex:1">' + i.label + '</span>'
         + (i.badge ? '<span class="nb">' + i.badge + '</span>' : '')
         + '</button>';
@@ -475,7 +490,7 @@ function buildProfilePage() {
     + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'
     + hobbyOpts.map(function(h) {
         var active = selectedHobbies.indexOf(h) > -1;
-        return '<button data-active="' + (active ? '1' : '0') + '" onclick="toggleHobby(this,'' + h + '')" style="padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid ' + (active ? 'var(--g5)' : 'var(--s2)') + ';background:' + (active ? 'var(--g50)' : '#fff') + ';color:' + (active ? 'var(--g7)' : 'var(--is)') + '">' + h + '</button>';
+        return '<button data-active="' + (active ? '1' : '0') + '" onclick="toggleHobby(this,\'' + h + '\')" style="padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid ' + (active ? 'var(--g5)' : 'var(--s2)') + ';background:' + (active ? 'var(--g50)' : '#fff') + ';color:' + (active ? 'var(--g7)' : 'var(--is)') + '">' + h + '</button>';
       }).join('')
     + '</div>'
     + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveHobbies()">Simpan Hobi</button>'
@@ -1368,5 +1383,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (Auth.isLoggedIn()) {
     currentUser = Auth.getUser();
     apiLoadNotifs();
+    go('gallery');
   }
 });
