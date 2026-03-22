@@ -59,7 +59,7 @@ function go(pg) {
     el.classList.add('on');
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
   }
-  var appPages = ['gallery','chat','profile','payment','notif','settings','success'];
+  var appPages = ['gallery','chat','profile','payment','notif','settings','quiz','success'];
   if (appPages.indexOf(pg) > -1) buildAppPage(pg);
   closeSidebar();
 }
@@ -67,7 +67,7 @@ function go(pg) {
 // Override go() with auth guard + data loading
 var _go = go;
 go = async function(pg) {
-  var protected_ = ['gallery','chat','profile','payment','notif','settings'];
+  var protected_ = ['gallery','chat','profile','payment','notif','settings','quiz'];
   if (protected_.indexOf(pg) > -1 && !Auth.isLoggedIn()) {
     showToast('Sila log masuk dahulu.', 'warn');
     return _go('login');
@@ -76,6 +76,7 @@ go = async function(pg) {
   if (pg === 'chat'    && Auth.isLoggedIn()) { await apiLoadConversations(); setupWS(); }
   if (pg === 'notif'   && Auth.isLoggedIn()) await apiLoadNotifs();
   if (pg === 'profile' && Auth.isLoggedIn()) await apiLoadProfile();
+  if (pg === 'quiz'    && Auth.isLoggedIn()) await apiLoadQuiz();
   _go(pg);
 };
 
@@ -121,19 +122,19 @@ function sidebar(active) {
 
   var items = [
     { id: 'gallery', label: 'Bilik Pameran', icon: 'gallery' },
+    { id: 'quiz',    label: 'Kuiz Serasi',   icon: 'sparkle' },
     { id: 'chat',    label: 'Sembang',       icon: 'chat',    badge: unreadN },
     { id: 'profile', label: 'Profil Saya',   icon: 'profile' },
     { id: 'payment', label: 'Langganan',     icon: 'payment' },
-    { id: 'success', label: 'Kisah Kejayaan',icon: 'success' },
     { id: 'notif',   label: 'Notifikasi',    icon: 'notif',   badge: unreadNotifs },
     { id: 'settings',label: 'Tetapan',       icon: 'settings' },
   ];
 
   var bnItems = [
     { id: 'gallery', label: 'Galeri',  icon: 'gallery' },
+    { id: 'quiz',    label: 'Kuiz',    icon: 'sparkle' },
     { id: 'chat',    label: 'Sembang', icon: 'chat',  badge: unreadN },
     { id: 'profile', label: 'Profil',  icon: 'profile' },
-    { id: 'notif',   label: 'Notif',   icon: 'notif', badge: unreadNotifs },
     { id: 'settings',label: 'Lagi',    icon: 'settings' },
   ];
 
@@ -208,6 +209,7 @@ function buildAppPage(pg) {
   else if (pg === 'payment') h += buildPaymentPage();
   else if (pg === 'notif') h += buildNotifPage();
   else if (pg === 'settings') h += buildSettingsPage();
+  else if (pg === 'quiz') h += buildQuizPage();
   else if (pg === 'success') h += buildSuccessPage();
 
   h += sideEnd;
@@ -935,6 +937,184 @@ async function uploadProfilePhoto(input) {
     }
   } catch (e) {
     showToast('Gambar disimpan secara tempatan.', 'info');
+  }
+}
+
+/* ══════════════════════════════════════
+   QUIZ PAGE
+══════════════════════════════════════ */
+var quizQuestions = [];
+var quizProgress = { answered: 0, total: 30, percentage: 0, gallery_unlocked: false };
+var quizCurrentIdx = 0;
+
+async function apiLoadQuiz() {
+  // Load progress first
+  var rp = await apiFetch('/quiz/progress');
+  if (rp && rp.ok) quizProgress = await rp.json();
+
+  // Load core questions
+  var rq = await apiFetch('/quiz/questions?batch=core');
+  if (rq && rq.ok) {
+    var d = await rq.json();
+    quizQuestions = d.questions || [];
+  }
+  buildAppPage('quiz');
+}
+
+function buildQuizPage() {
+  var answered = quizProgress.answered || 0;
+  var total = quizProgress.total || 30;
+  var pct = quizProgress.percentage || 0;
+  var unlocked = quizProgress.gallery_unlocked || false;
+
+  // Find first unanswered question
+  var unanswered = quizQuestions.filter(function(q) { return !q.already_answered; });
+  var current = unanswered[0] || null;
+
+  var h = '<div style="max-width:600px;margin:0 auto">';
+
+  // Header
+  h += '<div style="margin-bottom:20px">'
+    + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px;margin-bottom:6px">Kuiz Serasi</h1>'
+    + '<p style="font-size:14px;color:var(--is)">Jawab soalan untuk mendapat padanan terbaik anda.</p>'
+    + '</div>';
+
+  // Progress card
+  h += '<div class="card" style="margin-bottom:20px;background:' + (unlocked ? 'rgba(230,245,237,.5)' : 'rgba(255,249,230,.5)') + ';border:1px solid ' + (unlocked ? 'rgba(52,168,83,.2)' : 'rgba(200,162,60,.2)') + '">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    + '<div style="display:flex;align-items:center;gap:8px">' + ICONS.sparkle
+    + '<span style="font-weight:600;font-size:14px;color:' + (unlocked ? 'var(--e7)' : 'var(--g7)') + '">'
+    + answered + ' / ' + total + ' soalan dijawab</span></div>'
+    + '<span style="font-size:13px;font-weight:700;color:' + (unlocked ? 'var(--e7)' : 'var(--g7)') + '">' + pct + '%</span>'
+    + '</div>'
+    + '<div class="progress"><div class="progress-fill" style="width:' + pct + '%;background:' + (unlocked ? 'var(--e4)' : 'var(--g5)') + '"></div></div>'
+    + (unlocked
+        ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500">✓ Bilik Pameran telah dibuka! Teruskan untuk padanan lebih tepat.</p>'
+        : '<p style="font-size:12px;color:var(--g7);margin-top:8px">Jawab <strong>' + (10 - answered) + ' lagi</strong> soalan untuk membuka Bilik Pameran.</p>')
+    + '</div>';
+
+  // Question card
+  if (current) {
+    var domainLabels = {
+      communication: 'Komunikasi', empathy: 'Empati', stress_management: 'Pengurusan Tekanan',
+      future_planning: 'Perancangan Masa Depan', accepting_criticism: 'Menerima Kritikan',
+      discipline: 'Disiplin', financial_management: 'Kewangan', spirituality: 'Kerohanian',
+      cooperation: 'Kerjasama', forgiveness: 'Kemaafan', resilience: 'Ketabahan', leadership: 'Kepimpinan',
+    };
+    var domainLabel = domainLabels[current.domain] || current.domain;
+
+    h += '<div class="card" id="quiz-card" style="margin-bottom:20px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
+      + '<span style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;background:var(--s1);padding:4px 10px;border-radius:20px">' + domainLabel + '</span>'
+      + '<span style="font-size:11px;color:var(--im)">Soalan ' + (answered + 1) + '</span>'
+      + '</div>'
+      + '<p style="font-size:17px;font-weight:500;color:var(--n5);line-height:1.6;margin-bottom:24px">' + current.text_ms + '</p>'
+      + '<p style="font-size:12px;color:var(--im);margin-bottom:16px;text-align:center">1 = Sangat Tidak Setuju &nbsp;|&nbsp; 5 = Sangat Setuju</p>'
+      + '<div style="display:flex;gap:10px;justify-content:center" id="quiz-answers">'
+      + [1,2,3,4,5].map(function(s) {
+          var labels = ['','Sangat\nTidak Setuju','Tidak\nSetuju','Neutral','Setuju','Sangat\nSetuju'];
+          return '<button onclick="submitQuizAnswer(\'' + current.id + '\',' + s + ',this)" '
+            + 'style="flex:1;padding:14px 6px;border-radius:10px;border:2px solid var(--s2);background:#fff;cursor:pointer;font-weight:700;font-size:18px;color:var(--n5);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px">'
+            + s
+            + '<span style="font-size:9px;font-weight:400;color:var(--im);white-space:pre-line;text-align:center;line-height:1.2">' + labels[s] + '</span>'
+            + '</button>';
+        }).join('')
+      + '</div></div>';
+  } else if (answered >= total) {
+    h += '<div class="card" style="text-align:center;padding:40px;margin-bottom:20px">'
+      + ICONS.sparkle
+      + '<h3 style="font-family:var(--fd);font-weight:700;font-size:20px;margin:16px 0 8px;color:var(--n5)">Tahniah! Semua soalan dijawab.</h3>'
+      + '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Profil psikometrik anda telah lengkap. Padanan anda kini lebih tepat.</p>'
+      + '<button class="btn bp" onclick="go(\'gallery\')">Lihat Padanan Saya</button>'
+      + '</div>';
+  } else {
+    h += '<div class="card" style="text-align:center;padding:32px">'
+      + '<p style="color:var(--is)">Tiada soalan lagi untuk batch ini.</p>'
+      + '</div>';
+  }
+
+  // Score breakdown (if any answers)
+  if (answered > 0) {
+    h += '<div class="card" style="margin-bottom:20px">'
+      + '<h3 style="font-family:var(--fd);font-weight:600;font-size:16px;margin-bottom:16px">Profil Psikometrik Anda</h3>'
+      + '<div id="quiz-scores"><p style="color:var(--im);font-size:13px">Memuatkan...</p></div>'
+      + '</div>';
+    // Load scores async
+    setTimeout(loadQuizScores, 100);
+  }
+
+  h += '</div>';
+  return h;
+}
+
+async function loadQuizScores() {
+  var el = document.getElementById('quiz-scores');
+  if (!el) return;
+  var res = await apiFetch('/quiz/score');
+  if (!res || !res.ok) return;
+  var d = await res.json();
+  var domains = d.domains || {};
+  if (Object.keys(domains).length === 0) return;
+
+  var labels = {
+    communication: 'Komunikasi', empathy: 'Empati', stress_management: 'Pengurusan Tekanan',
+    future_planning: 'Perancangan Masa Depan', accepting_criticism: 'Menerima Kritikan',
+    discipline: 'Disiplin', financial_management: 'Kewangan', spirituality: 'Kerohanian',
+    cooperation: 'Kerjasama', forgiveness: 'Kemaafan', resilience: 'Ketabahan', leadership: 'Kepimpinan',
+  };
+
+  el.innerHTML = Object.keys(domains).map(function(domain) {
+    var score = domains[domain] || 0;
+    var pct = Math.round(score * 100);
+    var color = pct >= 70 ? 'var(--e4)' : pct >= 40 ? 'var(--g5)' : 'var(--s3)';
+    return '<div style="margin-bottom:12px">'
+      + '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      + '<span style="font-size:13px;color:var(--is)">' + (labels[domain] || domain) + '</span>'
+      + '<span style="font-size:13px;font-weight:600;color:var(--n5)">' + pct + '%</span>'
+      + '</div>'
+      + '<div class="progress"><div class="progress-fill" style="width:' + pct + '%;background:' + color + '"></div></div>'
+      + '</div>';
+  }).join('');
+}
+
+async function submitQuizAnswer(questionId, score, btn) {
+  // Visual feedback — highlight selected
+  var btns = document.querySelectorAll('#quiz-answers button');
+  btns.forEach(function(b) {
+    b.style.border = '2px solid var(--s2)';
+    b.style.background = '#fff';
+    b.style.color = 'var(--n5)';
+    b.disabled = true;
+  });
+  btn.style.border = '2px solid var(--g5)';
+  btn.style.background = 'var(--g50)';
+  btn.style.color = 'var(--g7)';
+
+  var res = await apiFetch('/quiz/answer', {
+    method: 'POST',
+    body: JSON.stringify({ question_id: questionId, score: score }),
+  });
+
+  if (res && res.ok) {
+    var d = await res.json();
+    quizProgress = d.progress || quizProgress;
+
+    // Mark question as answered
+    quizQuestions = quizQuestions.map(function(q) {
+      if (q.id === questionId) q.already_answered = true;
+      return q;
+    });
+
+    // Short delay then rebuild page
+    setTimeout(function() {
+      buildAppPage('quiz');
+      if (quizProgress.gallery_unlocked && quizProgress.answered === 10) {
+        showToast('Bilik Pameran telah dibuka! 🎉', 'success');
+      }
+    }, 400);
+  } else {
+    showToast('Gagal menyimpan jawapan. Cuba semula.', 'error');
+    btns.forEach(function(b) { b.disabled = false; });
   }
 }
 
