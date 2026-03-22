@@ -116,6 +116,8 @@ function renderRegSteps() {
 function sidebar(active) {
   var user = currentUser || Auth.getUser();
   var codeName = user && user.code_name ? user.code_name : '---';
+  var displayName = (user && user.display_name) ? user.display_name : codeName;
+  var photoUrl = user && user.photo_url || (user && user.photos && user.photos[0] && user.photos[0].url) || null;
   var tier     = user && user.current_tier ? user.current_tier.toUpperCase() : 'RAHMAH';
   var completion = user && user.profile_completion ? user.profile_completion : 0;
   var unreadNotifs = notifs.filter(function(n) { return !n.read; }).length;
@@ -139,7 +141,7 @@ function sidebar(active) {
   ];
 
   var navHtml = items.map(function(i) {
-    return '<button class="nav-i' + (active === i.id ? ' on' : '') + '" onclick="go(\'' + i.id + '\')">'
+    return '<button class="nav-i' + (active === i.id ? ' on' : '') + '" onclick="closeSidebar();go(\'' + i.id + '\')">'
       + ICONS[i.icon] + '<span style="flex:1">' + i.label + '</span>'
       + (i.badge ? '<span class="nb">' + i.badge + '</span>' : '')
       + '</button>';
@@ -158,14 +160,15 @@ function sidebar(active) {
     + '<div class="logo-ic" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>'
     + '<div class="logo-tx" style="font-size:16px">Jodohku<b>.my</b></div></div></div>'
     + '<div class="side-user"><div style="display:flex;align-items:center;gap:10px">'
-    + '<div class="side-av">' + codeName.slice(0, 2) + '</div>'
-    + '<div><div style="font-family:var(--fm);font-size:13px;font-weight:600">' + codeName + '</div>'
+    + (photoUrl ? '<div class="side-av" style="background:none;overflow:hidden"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>' : '<div class="side-av">' + displayName.slice(0, 2).toUpperCase() + '</div>')
+    + '<div><div id="sidebar-display-name" style="font-family:var(--fm);font-size:13px;font-weight:600">' + displayName + '</div>'
     + '<div class="badge ' + badgeClass + '" style="font-size:8px;padding:2px 8px;margin-top:3px">' + tier + '</div></div></div>'
     + '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--im)"><span>Profil</span><span>' + completion + '%</span></div>'
     + '<div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:' + completion + '%"></div></div></div></div>'
     + '<nav class="side-nav">' + navHtml + '</nav>'
     + '<div class="side-bt"><button class="nav-i" style="color:#EF4444;width:100%" onclick="apiLogout()">' + ICONS.logout + ' <span>Log Keluar</span></button></div>'
     + '</div>'
+    + '<div class="side-overlay" id="side-overlay" onclick="closeSidebar()"></div>'
     + '<div class="main">'
     + '<div class="topbar">'
     + '<div class="topbar-left"><button class="mob-menu-btn" onclick="openSidebar()">' + ICONS.menu + '</button></div>'
@@ -523,7 +526,7 @@ function buildSettingsPage() {
   var user = currentUser || Auth.getUser() || {};
   var tier = (user.current_tier || 'rahmah').toUpperCase();
   var isVerified = user.is_verified_t20 || false;
-  var eKYCStatus = user.status === 'active' ? '&#10003; Disahkan' : 'Belum disahkan';
+  var icVerified = user.ic_number ? true : false;
 
   function row(ic, label, desc, action, badge) {
     return '<div style="display:flex;align-items:center;gap:14px;padding:13px 10px;border-radius:var(--rb);cursor:' + (action ? 'pointer' : 'default') + ';transition:background .15s" '
@@ -553,11 +556,11 @@ function buildSettingsPage() {
           'Tukar kata laluan akaun anda',
           'openModal(\'modal-password\')')
       + row(ICONS.shield,
-          'e-KYC (Pengesahan Identiti)',
-          eKYCStatus,
-          user.status === 'active' ? null : 'openModal(\'modal-ekyc\')',
-          user.status === 'active'
-            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Aktif</span>'
+          'Pengesahan No. IC',
+          icVerified ? '&#10003; IC disahkan' : 'Masukkan No. Kad Pengenalan',
+          'openModal(\'modal-ic\')',
+          icVerified
+            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>'
             : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
       + row(ICONS.shield,
           'Verified T20',
@@ -620,11 +623,11 @@ function buildSettingsPage() {
       + '<div style="margin-bottom:20px"><label class="lbl">Sahkan Kata Laluan Baharu</label><input id="s-pw-conf" class="inp" type="password" placeholder="Ulang kata laluan baharu"></div>'
       + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitChangePassword()">Tukar Kata Laluan</button>')
 
-    + modal('modal-ekyc', 'e-KYC — Pengesahan Identiti',
-        '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Sahkan identiti anda menggunakan MyKad untuk mendapat akses penuh.</p>'
-      + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px">'
-      + '<p style="font-size:13px;color:var(--g7);line-height:1.7">&#10003; Gambar hadapan MyKad<br>&#10003; Swafoto masa nyata (Liveness)<br>&#10003; Proses ~2 minit<br>&#10003; Data dienkripsi AES-256</p></div>'
-      + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="closeModal(\'modal-ekyc\');go(\'gallery\')">Mulakan e-KYC Sekarang</button>')
+    + modal('modal-ic', 'Pengesahan No. Kad Pengenalan',
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Masukkan nombor IC anda untuk mengesahkan identiti. Maklumat ini tidak dipaparkan kepada pengguna lain.</p>'
+      + '<div style="margin-bottom:14px"><label class="lbl">No. Kad Pengenalan (tanpa sempang)</label><input id="ic-number" class="inp" type="text" placeholder="Contoh: 900101141234" maxlength="12" inputmode="numeric"></div>'
+      + '<p style="font-size:12px;color:var(--im);margin-bottom:20px">&#9432; IC anda disimpan secara selamat dan dienkripsi. Hanya digunakan untuk pengesahan identiti.</p>'
+      + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitICVerification()">Sahkan IC</button>')
 
     + modal('modal-t20', 'Mohon Pengesahan T20',
         '<p style="color:var(--is);font-size:14px;margin-bottom:16px">T20 bermaksud pendapatan isi rumah melebihi RM10,000/bulan. Pengesahan ini memperkukuh kredibiliti profil anda.</p>'
@@ -726,6 +729,24 @@ async function submitChangePassword() {
   if (btn) { btn.disabled = false; btn.textContent = 'Tukar Kata Laluan'; }
   if (res && res.ok) { closeModal('modal-password'); showToast('Kata laluan berjaya ditukar!', 'success'); }
   else { var d = res ? await res.json() : {}; showToast(d.detail || 'Gagal menukar kata laluan.', 'error'); }
+}
+
+async function submitICVerification() {
+  var ic = (document.getElementById('ic-number') || {}).value || '';
+  ic = ic.replace(/[-\s]/g, '');
+  if (ic.length !== 12 || !/^\d{12}$/.test(ic)) {
+    return showToast('Sila masukkan nombor IC yang sah (12 digit).', 'warn');
+  }
+  var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify({ ic_number: ic }) });
+  if (res && res.ok) {
+    showToast('IC berjaya disahkan!', 'success');
+    closeModal('modal-ic');
+    if (currentUser) currentUser.ic_number = ic;
+    await apiLoadProfile();
+    _go('settings');
+  } else {
+    showToast('Gagal menyimpan IC. Cuba semula.', 'error');
+  }
 }
 
 async function submitT20Request() {
@@ -838,9 +859,11 @@ async function saveProfile() {
       var headerName = document.getElementById('pf-header-name');
       if (headerName) headerName.textContent = data.display_name;
       if (currentUser) currentUser.display_name = data.display_name;
-      // Also update sidebar/nav name if shown
-      var navName = document.getElementById('nav-user-name');
-      if (navName) navName.textContent = data.display_name;
+      // Update sidebar name
+      var sidebarName = document.getElementById('sidebar-display-name');
+      if (sidebarName) sidebarName.textContent = data.display_name;
+      // Persist to localStorage
+      Auth.setUser(currentUser);
     }
 
     await apiLoadProfile();
@@ -923,7 +946,7 @@ async function uploadProfilePhoto(input) {
   formData.append('file', file);
   formData.append('photo_type', 'headshot');
 
-  var token = Auth.getTokens().access;
+  var token = Auth.getToken();
   try {
     var res = await fetch(API_BASE + '/api/v1/profile/photos/upload?photo_type=headshot', {
       method: 'POST',
@@ -956,7 +979,9 @@ async function apiLoadQuiz() {
   var rq = await apiFetch('/quiz/questions?batch=core');
   if (rq && rq.ok) {
     var d = await rq.json();
-    quizQuestions = d.questions || [];
+    // FIX: ensure quizQuestions is always an array
+    var raw = d.questions || d || [];
+    quizQuestions = Array.isArray(raw) ? raw : (raw.questions || []);
   }
   buildAppPage('quiz');
 }
