@@ -118,67 +118,63 @@ function sidebar(active) {
   var codeName = user && user.code_name ? user.code_name : '---';
   var displayName = (user && user.display_name) ? user.display_name : codeName;
   var photoUrl = user && user.photo_url || (user && user.photos && user.photos[0] && user.photos[0].url) || null;
-  var tier     = user && user.current_tier ? user.current_tier.toUpperCase() : 'RAHMAH';
+  var tier = user && user.current_tier ? user.current_tier.toUpperCase() : 'RAHMAH';
   var completion = user && user.profile_completion ? user.profile_completion : 0;
   var unreadNotifs = notifs.filter(function(n) { return !n.read; }).length;
+  var badgeClass = tier === 'GOLD' ? 'b-gld' : tier === 'PLATINUM' ? 'b-plt' : tier === 'PREMIUM' ? 'b-prm' : tier === 'SOVEREIGN' ? 'b-sov' : 'b-rah';
 
   var items = [
     { id: 'gallery', label: 'Bilik Pameran', icon: 'gallery' },
     { id: 'quiz',    label: 'Kuiz Serasi',   icon: 'sparkle' },
-    { id: 'chat',    label: 'Sembang',       icon: 'chat',    badge: unreadN },
+    { id: 'chat',    label: 'Sembang',       icon: 'chat',  badge: unreadN },
     { id: 'profile', label: 'Profil Saya',   icon: 'profile' },
     { id: 'payment', label: 'Langganan',     icon: 'payment' },
-    { id: 'notif',   label: 'Notifikasi',    icon: 'notif',   badge: unreadNotifs },
+    { id: 'notif',   label: 'Notifikasi',    icon: 'notif', badge: unreadNotifs },
     { id: 'settings',label: 'Tetapan',       icon: 'settings' },
   ];
 
-  var bnItems = [
-    { id: 'gallery', label: 'Galeri',  icon: 'gallery' },
-    { id: 'quiz',    label: 'Kuiz',    icon: 'sparkle' },
-    { id: 'chat',    label: 'Sembang', icon: 'chat',  badge: unreadN },
-    { id: 'profile', label: 'Profil',  icon: 'profile' },
-    { id: 'settings',label: 'Lagi',    icon: 'settings' },
-  ];
+  // Update persistent sidebar user section
+  var userSection = document.getElementById('sidebar-user-section');
+  if (userSection) {
+    var avatarHtml = photoUrl
+      ? '<div class="side-av" style="background:none;overflow:hidden"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
+      : '<div class="side-av">' + displayName.slice(0, 2).toUpperCase() + '</div>';
+    userSection.innerHTML = '<div style="display:flex;align-items:center;gap:10px">'
+      + avatarHtml
+      + '<div><div id="sidebar-display-name" style="font-family:var(--fm);font-size:13px;font-weight:600">' + displayName + '</div>'
+      + '<div class="badge ' + badgeClass + '" style="font-size:8px;padding:2px 8px;margin-top:3px">' + tier + '</div></div></div>'
+      + '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--im)"><span>Profil</span><span>' + completion + '%</span></div>'
+      + '<div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:' + completion + '%"></div></div></div>';
+  }
 
-  var navHtml = items.map(function(i) {
-    return '<button class="nav-i' + (active === i.id ? ' on' : '') + '" onclick="closeSidebar();go(\'' + i.id + '\')">'
-      + ICONS[i.icon] + '<span style="flex:1">' + i.label + '</span>'
-      + (i.badge ? '<span class="nb">' + i.badge + '</span>' : '')
-      + '</button>';
-  }).join('');
+  // Update persistent sidebar nav
+  var sideNav = document.getElementById('sidebar-nav');
+  if (sideNav) {
+    sideNav.innerHTML = items.map(function(i) {
+      return '<button class="nav-i' + (active === i.id ? ' on' : '') + '" onclick="closeSidebar();go('' + i.id + '')">'
+        + ICONS[i.icon] + '<span style="flex:1">' + i.label + '</span>'
+        + (i.badge ? '<span class="nb">' + i.badge + '</span>' : '')
+        + '</button>';
+    }).join('');
+  }
 
-  var bnHtml = bnItems.map(function(i) {
-    return '<button class="bn-item' + (active === i.id ? ' on' : '') + '" onclick="go(\'' + i.id + '\')">'
-      + (i.badge ? '<span class="bn-badge">' + i.badge + '</span>' : '')
-      + ICONS[i.icon] + '<span>' + i.label + '</span></button>';
-  }).join('');
+  // Show app shell
+  var appShell = document.getElementById('app-shell');
+  if (appShell) appShell.style.display = 'flex';
 
-  var badgeClass = tier === 'GOLD' ? 'b-gld' : tier === 'PLATINUM' ? 'b-plt' : tier === 'PREMIUM' ? 'b-prm' : tier === 'SOVEREIGN' ? 'b-sov' : 'b-rah';
+  // Update topbar title
+  var titles = { gallery:'Bilik Pameran', quiz:'Kuiz Serasi', chat:'Sembang', profile:'Profil Saya', payment:'Langganan', notif:'Notifikasi', settings:'Tetapan' };
+  var titleEl = document.getElementById('topbar-title');
+  if (titleEl) titleEl.textContent = titles[active] || 'Jodohku.my';
 
-  return '<div class="side" id="app-sidebar">'
-    + '<div class="side-hd"><div class="logo" onclick="go(\'landing\')">'
-    + '<div class="logo-ic" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></div>'
-    + '<div class="logo-tx" style="font-size:16px">Jodohku<b>.my</b></div></div></div>'
-    + '<div class="side-user"><div style="display:flex;align-items:center;gap:10px">'
-    + (photoUrl ? '<div class="side-av" style="background:none;overflow:hidden"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>' : '<div class="side-av">' + displayName.slice(0, 2).toUpperCase() + '</div>')
-    + '<div><div id="sidebar-display-name" style="font-family:var(--fm);font-size:13px;font-weight:600">' + displayName + '</div>'
-    + '<div class="badge ' + badgeClass + '" style="font-size:8px;padding:2px 8px;margin-top:3px">' + tier + '</div></div></div>'
-    + '<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--im)"><span>Profil</span><span>' + completion + '%</span></div>'
-    + '<div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:' + completion + '%"></div></div></div></div>'
-    + '<nav class="side-nav">' + navHtml + '</nav>'
-    + '<div class="side-bt"><button class="nav-i" style="color:#EF4444;width:100%" onclick="apiLogout()">' + ICONS.logout + ' <span>Log Keluar</span></button></div>'
-    + '</div>'
-    + '<div class="side-overlay" id="side-overlay" onclick="closeSidebar()"></div>'
-    + '<div class="main">'
-    + '<div class="topbar">'
-    + '<div class="topbar-left"><button class="mob-menu-btn" onclick="openSidebar()">' + ICONS.menu + '</button></div>'
-    + '<div class="topbar-right"><button class="icon-btn" onclick="go(\'notif\')" title="Notifikasi">' + ICONS.notif + (unreadNotifs ? '<span class="notif-dot"></span>' : '') + '</button></div>'
-    + '</div>'
-    + '<div class="pgc' + (active === 'chat' ? ' no-pad' : '') + '">';
+  // Update page content chat padding
+  var pc = document.getElementById('page-content');
+  if (pc) {
+    pc.className = active === 'chat' ? 'pgc no-pad' : 'pgc';
+  }
 }
 
-var sideEnd = '</div></div>'
-  + '<nav class="bottom-nav"><div class="bottom-nav-inner" id="bottom-nav-inner"></div></nav>';
+var sideEnd = '';
 
 function buildBottomNav(active) {
   var unreadNotifs = notifs.filter(function(n) { return !n.read; }).length;
@@ -202,22 +198,23 @@ function buildBottomNav(active) {
    BUILD APP PAGES
 ══════════════════════════════════════ */
 function buildAppPage(pg) {
-  var shell = document.getElementById('shell-' + pg);
-  if (!shell) return;
-  var h = sidebar(pg);
-
-  if (pg === 'gallery') h += buildGalleryPage();
-  else if (pg === 'chat') h += buildChatPage();
-  else if (pg === 'profile') h += buildProfilePage();
-  else if (pg === 'payment') h += buildPaymentPage();
-  else if (pg === 'notif') h += buildNotifPage();
-  else if (pg === 'settings') h += buildSettingsPage();
-  else if (pg === 'quiz') h += buildQuizPage();
-  else if (pg === 'success') h += buildSuccessPage();
-
-  h += sideEnd;
-  shell.innerHTML = h;
+  sidebar(pg);
   buildBottomNav(pg);
+
+  var pageContent = document.getElementById('page-content');
+  if (!pageContent) return;
+
+  var h = '';
+  if (pg === 'gallery') h = buildGalleryPage();
+  else if (pg === 'chat') h = buildChatPage();
+  else if (pg === 'profile') h = buildProfilePage();
+  else if (pg === 'payment') h = buildPaymentPage();
+  else if (pg === 'notif') h = buildNotifPage();
+  else if (pg === 'settings') h = buildSettingsPage();
+  else if (pg === 'quiz') h = buildQuizPage();
+  else if (pg === 'success') h = buildSuccessPage();
+
+  pageContent.innerHTML = h;
 
   if (pg === 'chat') {
     var cm = document.getElementById('chat-msgs');
@@ -375,9 +372,21 @@ function buildProfilePage() {
   var eduLevels = ['spm','diploma','ijazah','master','phd','lain'];
   var incomeRanges = ['below_2k','2k_5k','5k_10k','10k_20k','above_20k'];
   var maritalOpts = ['bujang','duda','janda'];
-  var hobbyOpts = ['Mendaki','Fotografi','Membaca','Melancong','Gym','Memasak','Muzik','Sukan','Berkebun','Memasak','Melukis','Mengembara'];
+  var hobbyOpts = ['Mendaki','Fotografi','Membaca','Melancong','Gym','Memasak','Muzik','Sukan','Berkebun','Melukis','Mengembara','Masak'];
 
-  function sel(id, opts, val, label) {
+  // Permanent = set once, cannot change. Editable = can always change.
+  var isPermanent = {
+    gender: !!(user.gender),
+    date_of_birth: !!(user.date_of_birth),
+    marital_status: !!(user.marital_status),
+  };
+
+  function sel(id, opts, val, label, locked) {
+    if (locked && val) {
+      return '<div style="margin-bottom:14px"><label class="lbl">' + label + ' <span style="font-size:10px;color:var(--g5);font-weight:600">&#128274; Tetap</span></label>'
+        + '<div class="inp" style="background:var(--s1);color:var(--is);cursor:not-allowed">'
+        + val.replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase()}) + '</div></div>';
+    }
     return '<div style="margin-bottom:14px"><label class="lbl">' + label + '</label>'
       + '<select id="' + id + '" class="inp" style="cursor:pointer">'
       + '<option value="">-- Pilih --</option>'
@@ -385,26 +394,30 @@ function buildProfilePage() {
       + '</select></div>';
   }
 
-  function inp(id, val, label, type, placeholder) {
+  function inp(id, val, label, type, placeholder, locked) {
+    if (locked && val) {
+      return '<div style="margin-bottom:14px"><label class="lbl">' + label + ' <span style="font-size:10px;color:var(--g5);font-weight:600">&#128274; Tetap</span></label>'
+        + '<div class="inp" style="background:var(--s1);color:var(--is);cursor:not-allowed">' + val + '</div></div>';
+    }
     return '<div style="margin-bottom:14px"><label class="lbl">' + label + '</label>'
       + '<input id="' + id + '" class="inp" type="' + (type||'text') + '" value="' + (val||'') + '" placeholder="' + (placeholder||'') + '"></div>';
   }
 
   var selectedHobbies = user.hobbies || [];
-
   var displayName = user.display_name || code;
-  var photoUrl = user.photo_url || user.photos && user.photos[0] && user.photos[0].url || null;
+  var photoUrl = user.photo_url || (user.photos && user.photos[0] && user.photos[0].url) || null;
+  var answered = quizProgress.answered || 0;
+  var quizPct = quizProgress.percentage || 0;
+  var quizUnlocked = quizProgress.gallery_unlocked || false;
 
   return '<div style="max-width:620px;margin:0 auto">'
     // ── Header card ──
     + '<div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:20px">'
     + '<div style="height:120px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
     + '<div style="position:absolute;bottom:-36px;left:20px">'
-    // Profile photo with upload button
     + '<div style="position:relative;width:80px;height:80px">'
     + '<div id="pf-avatar" style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);overflow:hidden">'
-    + (photoUrl
-        ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover">'
+    + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover">'
         : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
     + '</div>'
     + '<label title="Tukar gambar" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-radius:50%;background:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)">'
@@ -416,6 +429,7 @@ function buildProfilePage() {
     + '<span id="pf-header-name" style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">' + displayName + '</span>'
     + '<span class="badge ' + badgeClass + '">' + tier + '</span></div>'
     + '<div style="font-size:13px;color:var(--im);margin-top:4px">' + (user.email || '') + '</div></div></div></div>'
+
     // ── Completion banner ──
     + '<div class="card" style="margin-bottom:20px;background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2)">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -423,38 +437,69 @@ function buildProfilePage() {
     + '<span style="font-weight:600;font-size:14px;color:var(--g7)">Profil ' + completion + '% lengkap</span></div></div>'
     + '<div class="progress"><div class="progress-fill" style="width:' + completion + '%"></div></div>'
     + '<p style="font-size:12px;color:var(--g7);margin-top:6px">Lengkapkan profil untuk mendapat padanan yang lebih baik.</p></div>'
-    // ── Edit form ──
+
+    // ── SECTION 1: Maklumat Tetap (permanent) ──
+    + '<div class="card" style="margin-bottom:20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin:0">Maklumat Asas</h3>'
+    + '<span style="font-size:11px;color:var(--im);background:var(--s1);padding:4px 10px;border-radius:20px">&#128274; Tetap selepas disimpan</span>'
+    + '</div>'
+    + '<p style="font-size:12px;color:var(--im);margin-bottom:16px;padding:10px;background:#FFF9E6;border-radius:var(--rs);border-left:3px solid var(--g5)">Maklumat ini penting untuk padanan yang tepat dan <strong>tidak boleh diubah</strong> selepas disimpan buat kali pertama.</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + sel('pf-gender', ['lelaki','perempuan'], user.gender, 'Jantina', isPermanent.gender)
+    + inp('pf-dob', user.date_of_birth, 'Tarikh Lahir', 'date', '', isPermanent.date_of_birth)
+    + sel('pf-marital', maritalOpts, user.marital_status, 'Status Perkahwinan', isPermanent.marital_status)
+    + inp('pf-height', user.height_cm, 'Tinggi (cm)', 'number', '170', false)
+    + '</div>'
+    + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="savePermanentFields()">Simpan Maklumat Asas</button>'
+    + '</div>'
+
+    // ── SECTION 2: Maklumat Boleh Ubah ──
     + '<div class="card" style="margin-bottom:20px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:20px">Maklumat Peribadi</h3>'
-    + inp('pf-display-name', user.display_name, 'Nama Paparan (max 16 aksara)', 'text', 'Contoh: Ahmad')
-    + inp('pf-ic', user.ic_number, 'No. Kad Pengenalan (IC)', 'text', 'Contoh: 900101-14-1234')
+    + inp('pf-display-name', user.display_name, 'Nama Paparan (max 16 aksara)', 'text', 'Contoh: Ahmad', false)
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + sel('pf-gender', ['lelaki','perempuan'], user.gender, 'Jantina')
-    + inp('pf-dob', user.date_of_birth, 'Tarikh Lahir', 'date', '')
-    + sel('pf-state', states, user.state_of_residence, 'Negeri Kediaman')
-    + sel('pf-edu', eduLevels, user.education_level, 'Tahap Pendidikan')
-    + inp('pf-job', user.occupation, 'Pekerjaan', 'text', 'Contoh: Jurutera')
-    + sel('pf-income', incomeRanges, user.income_range, 'Julat Pendapatan')
-    + sel('pf-marital', maritalOpts, user.marital_status, 'Status Perkahwinan')
-    + inp('pf-height', user.height_cm, 'Tinggi (cm)', 'number', '170')
+    + sel('pf-state', states, user.state_of_residence, 'Negeri Kediaman', false)
+    + sel('pf-edu', eduLevels, user.education_level, 'Tahap Pendidikan', false)
+    + inp('pf-job', user.occupation, 'Pekerjaan', 'text', 'Contoh: Jurutera', false)
+    + sel('pf-income', incomeRanges, user.income_range, 'Julat Pendapatan', false)
     + '</div>'
     + '<div style="margin-bottom:14px"><label class="lbl">Bio (max 500 aksara)</label>'
     + '<textarea id="pf-bio" class="inp" rows="3" style="resize:vertical" placeholder="Ceritakan sedikit tentang diri anda...">' + (user.bio_text || '') + '</textarea></div>'
     + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveProfile()">Simpan Maklumat</button>'
     + '</div>'
-    // ── Hobbies ──
+
+    // ── SECTION 3: Hobbies ──
     + '<div class="card" style="margin-bottom:20px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:16px">Hobi &amp; Minat</h3>'
     + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'
     + hobbyOpts.map(function(h) {
         var active = selectedHobbies.indexOf(h) > -1;
-        return '<button data-active="' + (active ? '1' : '0') + '" onclick="toggleHobby(this,\'' + h + '\')" style="padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid ' + (active ? 'var(--g5)' : 'var(--s2)') + ';background:' + (active ? 'var(--g50)' : '#fff') + ';color:' + (active ? 'var(--g7)' : 'var(--is)') + '">' + h + '</button>';
+        return '<button data-active="' + (active ? '1' : '0') + '" onclick="toggleHobby(this,'' + h + '')" style="padding:7px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid ' + (active ? 'var(--g5)' : 'var(--s2)') + ';background:' + (active ? 'var(--g50)' : '#fff') + ';color:' + (active ? 'var(--g7)' : 'var(--is)') + '">' + h + '</button>';
       }).join('')
     + '</div>'
     + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveHobbies()">Simpan Hobi</button>'
-    + '</div></div>';
-}
+    + '</div>'
 
+    // ── SECTION 4: Kuiz Psikometrik ──
+    + '<div class="card" style="margin-bottom:20px;border:1px solid ' + (quizUnlocked ? 'rgba(52,168,83,.2)' : 'rgba(200,162,60,.2)') + ';background:' + (quizUnlocked ? 'rgba(230,245,237,.3)' : 'rgba(255,249,230,.3)') + '">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+    + '<div style="display:flex;align-items:center;gap:10px">' + ICONS.sparkle
+    + '<div><div style="font-weight:600;font-size:15px">Kuiz Serasi</div>'
+    + '<div style="font-size:12px;color:var(--im)">' + answered + '/30 soalan dijawab</div></div></div>'
+    + '<button class="btn bp" style="padding:8px 16px;font-size:13px" onclick="openQuizModal()">'    + (answered === 0 ? 'Mula Kuiz' : answered >= 30 ? '&#10003; Selesai' : 'Teruskan') + '</button>'
+    + '</div>'
+    + '<div class="progress"><div class="progress-fill" style="width:' + quizPct + '%;background:' + (quizUnlocked ? 'var(--e4)' : 'var(--g5)') + '"></div></div>'
+    + (quizUnlocked
+        ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500">&#10003; Bilik Pameran telah dibuka!</p>'
+        : '<p style="font-size:12px;color:var(--g7);margin-top:8px">Jawab ' + Math.max(0, 10 - answered) + ' lagi soalan untuk membuka Bilik Pameran.</p>')
+    + '</div>'
+
+    // ── Quiz Modal ──
+    + modal('modal-quiz', 'Kuiz Serasi', buildQuizModalContent())
+
+    + '</div>';
+}
 /* ── Payment Page ── */
 function buildPaymentPage() {
   var user = currentUser || Auth.getUser() || {};
@@ -692,7 +737,7 @@ function modal(id, title, content) {
     + '<h2 style="font-family:var(--fd);font-weight:600;font-size:20px">' + title + '</h2>'
     + '<button onclick="closeModal(\'' + id + '\')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:8px;color:var(--im)">'
     + ICONS.x + '</button></div>'
-    + content
+    + '<div id="' + id + '-content">' + content + '</div>'
     + '</div></div>';
 }
 
@@ -809,6 +854,120 @@ function buildSuccessPage() {
     + '</div>';
 }
 
+function buildQuizModalContent() {
+  var unanswered = Array.isArray(quizQuestions) ? quizQuestions.filter(function(q) { return !q.already_answered; }) : [];
+  var current = unanswered[0] || null;
+  var answered = quizProgress.answered || 0;
+  var total = quizProgress.total || 30;
+
+  if (!current && answered >= total) {
+    return '<div style="text-align:center;padding:20px">' + ICONS.sparkle
+      + '<h3 style="margin:12px 0 8px">Tahniah! Semua soalan selesai.</h3>'
+      + '<p style="color:var(--is);font-size:14px">Profil psikometrik anda lengkap.</p></div>';
+  }
+  if (!current) {
+    return '<p style="color:var(--is)">Tiada soalan tersedia. Cuba muat semula.</p>';
+  }
+
+  var domainLabels = { communication:'Komunikasi', empathy:'Empati', stress_management:'Pengurusan Tekanan', future_planning:'Perancangan Masa Depan', accepting_criticism:'Menerima Kritikan', discipline:'Disiplin', financial_management:'Kewangan', spirituality:'Kerohanian', cooperation:'Kerjasama', forgiveness:'Kemaafan', resilience:'Ketabahan', leadership:'Kepimpinan' };
+
+  return '<div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--im);margin-bottom:16px">'
+    + '<span>' + domainLabels[current.domain] + '</span><span>' + (answered + 1) + ' / ' + total + '</span></div>'
+    + '<div class="progress" style="margin-bottom:20px"><div class="progress-fill" style="width:' + Math.round((answered/total)*100) + '%"></div></div>'
+    + '<p style="font-size:16px;font-weight:500;color:var(--n5);line-height:1.6;margin-bottom:20px">' + current.text_ms + '</p>'
+    + '<p style="font-size:11px;color:var(--im);margin-bottom:12px;text-align:center">1 = Sangat Tidak Setuju &nbsp;•&nbsp; 5 = Sangat Setuju</p>'
+    + '<div style="display:flex;gap:8px" id="quiz-modal-answers">'
+    + [1,2,3,4,5].map(function(s) {
+        return '<button onclick="submitQuizAnswerModal(\'' + current.id + '\',' + s + ',this)" '
+          + 'style="flex:1;padding:16px 4px;border-radius:10px;border:2px solid var(--s2);background:#fff;cursor:pointer;font-weight:700;font-size:20px;color:var(--n5);transition:all .15s">'
+          + s + '</button>';
+      }).join('')
+    + '</div></div>';
+}
+
+async function openQuizModal() {
+  // Load quiz data first if not loaded
+  if (!Array.isArray(quizQuestions) || quizQuestions.length === 0) {
+    var rp = await apiFetch('/quiz/progress');
+    if (rp && rp.ok) quizProgress = await rp.json();
+    var rq = await apiFetch('/quiz/questions?batch=core');
+    if (rq && rq.ok) {
+      var d = await rq.json();
+      var raw = d.questions || d || [];
+      quizQuestions = Array.isArray(raw) ? raw : [];
+    }
+    // Also get extended if core done
+    if ((quizProgress.answered || 0) >= 10) {
+      var rq2 = await apiFetch('/quiz/questions?batch=extended');
+      if (rq2 && rq2.ok) {
+        var d2 = await rq2.json();
+        var raw2 = d2.questions || d2 || [];
+        var extended = Array.isArray(raw2) ? raw2 : [];
+        // Merge without duplicates
+        var ids = quizQuestions.map(function(q) { return q.id; });
+        extended.forEach(function(q) { if (ids.indexOf(q.id) === -1) quizQuestions.push(q); });
+      }
+    }
+  }
+  // Update modal content and open
+  var mc = document.getElementById('modal-quiz-content');
+  if (mc) mc.innerHTML = buildQuizModalContent();
+  openModal('modal-quiz');
+}
+
+async function submitQuizAnswerModal(questionId, score, btn) {
+  var btns = document.querySelectorAll('#quiz-modal-answers button');
+  btns.forEach(function(b) { b.style.border = '2px solid var(--s2)'; b.style.background = '#fff'; b.disabled = true; });
+  btn.style.border = '2px solid var(--g5)';
+  btn.style.background = 'var(--g50)';
+
+  var res = await apiFetch('/quiz/answer', { method: 'POST', body: JSON.stringify({ question_id: questionId, score: score }) });
+  if (res && res.ok) {
+    var d = await res.json();
+    quizProgress = d.progress || quizProgress;
+    quizQuestions = quizQuestions.map(function(q) { if (q.id === questionId) q.already_answered = true; return q; });
+
+    setTimeout(function() {
+      var mc = document.getElementById('modal-quiz-content');
+      if (mc) mc.innerHTML = buildQuizModalContent();
+      if (quizProgress.gallery_unlocked && quizProgress.answered === 10) {
+        showToast('Bilik Pameran dibuka! 🎉', 'success');
+      }
+      // Refresh profile page quiz section
+      var pfPage = document.getElementById('page-content');
+      if (pfPage && currentPage === 'profile') buildAppPage('profile');
+    }, 350);
+  } else {
+    btns.forEach(function(b) { b.disabled = false; });
+    showToast('Gagal simpan. Cuba semula.', 'error');
+  }
+}
+
+async function savePermanentFields() {
+  var user = currentUser || Auth.getUser() || {};
+  var data = {};
+
+  // Only include if not already locked
+  if (!user.gender) { var g = (document.getElementById('pf-gender') || {}).value; if (g) data.gender = g; }
+  if (!user.date_of_birth) { var d = (document.getElementById('pf-dob') || {}).value; if (d) data.date_of_birth = d; }
+  if (!user.marital_status) { var m = (document.getElementById('pf-marital') || {}).value; if (m) data.marital_status = m; }
+  // Height is always editable
+  var h = (document.getElementById('pf-height') || {}).value;
+  if (h) data.height_cm = parseInt(h);
+
+  if (Object.keys(data).length === 0) return showToast('Tiada perubahan untuk disimpan.', 'info');
+
+  var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify(data) });
+  if (res && res.ok) {
+    showToast('Maklumat asas disimpan! Sesetengah medan kini berkunci.', 'success');
+    await apiLoadProfile();
+    buildAppPage('profile');
+  } else {
+    showToast('Gagal menyimpan. Cuba semula.', 'error');
+  }
+}
+
 /* ══════════════════════════════════════
    PROFILE SAVE
 ══════════════════════════════════════ */
@@ -831,21 +990,16 @@ async function saveProfile() {
   var btn = document.querySelector('[onclick="saveProfile()"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
 
+  // Only editable fields — permanent fields (gender, dob, marital) handled by savePermanentFields
   var data = {
     display_name:      (document.getElementById('pf-display-name') || {}).value || null,
-    ic_number:         (document.getElementById('pf-ic') || {}).value || null,
-    gender:            (document.getElementById('pf-gender') || {}).value || null,
-    date_of_birth:     (document.getElementById('pf-dob') || {}).value || null,
     state_of_residence:(document.getElementById('pf-state') || {}).value || null,
     education_level:   (document.getElementById('pf-edu') || {}).value || null,
     occupation:        (document.getElementById('pf-job') || {}).value || null,
     income_range:      (document.getElementById('pf-income') || {}).value || null,
-    marital_status:    (document.getElementById('pf-marital') || {}).value || null,
-    height_cm:         (document.getElementById('pf-height') || {}).value ? parseInt((document.getElementById('pf-height') || {}).value) : null,
     bio_text:          (document.getElementById('pf-bio') || {}).value || null,
   };
 
-  // Remove null/empty values
   Object.keys(data).forEach(function(k) { if (!data[k]) delete data[k]; });
 
   var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify(data) });
@@ -853,19 +1007,13 @@ async function saveProfile() {
 
   if (res && res.ok) {
     showToast('Profil berjaya disimpan!', 'success');
-
-    // Update header name immediately without full page reload
     if (data.display_name) {
       var headerName = document.getElementById('pf-header-name');
       if (headerName) headerName.textContent = data.display_name;
-      if (currentUser) currentUser.display_name = data.display_name;
-      // Update sidebar name
       var sidebarName = document.getElementById('sidebar-display-name');
       if (sidebarName) sidebarName.textContent = data.display_name;
-      // Persist to localStorage
-      Auth.setUser(currentUser);
+      if (currentUser) { currentUser.display_name = data.display_name; Auth.setUser(currentUser); }
     }
-
     await apiLoadProfile();
   } else {
     showToast('Gagal menyimpan profil. Cuba semula.', 'error');
