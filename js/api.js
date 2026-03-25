@@ -323,3 +323,50 @@ async function apiLoadSubscription() {
   if (!res || !res.ok) return null;
   return await res.json();
 }
+
+/* ══════════════
+   MATCHMAKER
+══════════════ */
+async function apiLoadMatchmaker() {
+  /* Reuse gallery profiles for now; also check pending match requests */
+  if (profiles.length === 0) await apiLoadGallery();
+  matcherProfiles = profiles.slice(); /* copy */
+
+  /* Load pending match requests from notifications */
+  await apiLoadNotifs();
+  pendingMatchRequests = [];
+  notifs.forEach(function(n) {
+    if (n.type === 'match_request' && !n.responded && !n.read_responded) {
+      /* Build a lightweight requester profile from notification data */
+      var req = {
+        id:        n.from_user_id || n.id,
+        notif_id:  n.id,
+        code:      n.from_code_name || n.from_user || '???',
+        age:       n.from_age || '?',
+        state:     n.from_state || '',
+        score:     n.from_score || '?',
+        photo_url: n.from_photo_url || null,
+        hue:       n.hue || 220,
+      };
+      pendingMatchRequests.push(req);
+    }
+  });
+}
+
+async function apiSendMatchRequest(targetUserId) {
+  return await apiFetch('/matching/send-request', {
+    method: 'POST',
+    body: JSON.stringify({ target_user_id: targetUserId }),
+  });
+}
+
+async function apiRespondToMatch(notifId, accept, fromUserId) {
+  return await apiFetch('/matching/respond', {
+    method: 'POST',
+    body: JSON.stringify({
+      notification_id: notifId,
+      accept: accept,
+      from_user_id: fromUserId || null,
+    }),
+  });
+}
