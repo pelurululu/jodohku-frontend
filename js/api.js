@@ -290,7 +290,11 @@ async function apiMarkAllRead() {
 async function apiLoadProfile() {
   var res = await apiFetch('/profile/me');
   if (!res || !res.ok) return;
-  currentUser = await res.json();
+  var fresh = await res.json();
+  // Preserve locally cached photo if server doesn't return one
+  var cachedPhoto = currentUser && currentUser.photo_url;
+  currentUser = fresh;
+  if (!currentUser.photo_url && cachedPhoto) currentUser.photo_url = cachedPhoto;
   Auth.setUser(currentUser);
 }
 
@@ -315,7 +319,8 @@ async function apiCreateBill(tier) {
   } else if (res.ok && d.message) {
     showToast(d.message, 'success');
   } else {
-    showToast(d.error || 'Gagal membuat pembayaran.', 'error');
+    // d.detail comes from FastAPI HTTPException, d.error from our service
+    showToast(d.detail || d.error || 'Gagal membuat pembayaran. Sila hubungi sokongan.', 'error');
   }
   return d;
 }
