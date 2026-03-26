@@ -155,21 +155,23 @@ async function apiLoadGallery(reset) {
   var d = await res.json();
   var items = (d.profiles || d.items || []).map(function(p) {
     return {
-      id:     p.user_id || p.id,
-      code:   p.code_name || p.code || '???',
-      name:   p.display_name || p.name || '',
-      age:    p.age || '?',
-      state:  p.state_of_residence || p.state || '',
-      edu:    p.education_level || p.edu || '',
-      job:    p.occupation || p.job || '',
-      status: p.marital_status || p.status || '',
-      tier:   (p.current_tier || p.tier || 'rahmah').toLowerCase(),
-      t20:    p.is_verified_t20 || false,
-      score:  p.compatibility_score ? Math.round(p.compatibility_score * 100) : '?',
-      online: p.is_online || false,
-      bio:    p.bio_text || p.bio || '',
-      tip:    p.wingman_tip || '',
-      hue:    p.hue || 220,
+      id:        p.user_id || p.id,
+      code:      p.code_name || p.code || '???',
+      name:      p.display_name || p.name || '',
+      age:       p.age || '?',
+      state:     p.state_of_residence || p.state || '',
+      edu:       p.education_level || p.edu || '',
+      job:       p.occupation || p.job || '',
+      status:    p.marital_status || p.status || '',
+      tier:      (p.current_tier || p.tier || 'rahmah').toLowerCase(),
+      t20:       p.is_verified_t20 || false,
+      score:     p.compatibility_score ? Math.round(p.compatibility_score * 100) : '?',
+      online:    p.is_online || false,
+      bio:       p.bio_text || p.bio || '',
+      tip:       p.wingman_tip || '',
+      hue:       p.hue || 220,
+      photo_url: (p.photos && p.photos[0] && p.photos[0].url) || p.photo_url || null,
+      photos:    p.photos || [],
     };
   });
   profiles = reset ? items : profiles.concat(items);
@@ -322,51 +324,4 @@ async function apiLoadSubscription() {
   var res = await apiFetch('/payment/subscription');
   if (!res || !res.ok) return null;
   return await res.json();
-}
-
-/* ══════════════
-   MATCHMAKER
-══════════════ */
-async function apiLoadMatchmaker() {
-  /* Reuse gallery profiles for now; also check pending match requests */
-  if (profiles.length === 0) await apiLoadGallery();
-  matcherProfiles = profiles.slice(); /* copy */
-
-  /* Load pending match requests from notifications */
-  await apiLoadNotifs();
-  pendingMatchRequests = [];
-  notifs.forEach(function(n) {
-    if (n.type === 'match_request' && !n.responded && !n.read_responded) {
-      /* Build a lightweight requester profile from notification data */
-      var req = {
-        id:        n.from_user_id || n.id,
-        notif_id:  n.id,
-        code:      n.from_code_name || n.from_user || '???',
-        age:       n.from_age || '?',
-        state:     n.from_state || '',
-        score:     n.from_score || '?',
-        photo_url: n.from_photo_url || null,
-        hue:       n.hue || 220,
-      };
-      pendingMatchRequests.push(req);
-    }
-  });
-}
-
-async function apiSendMatchRequest(targetUserId) {
-  return await apiFetch('/matching/send-request', {
-    method: 'POST',
-    body: JSON.stringify({ target_user_id: targetUserId }),
-  });
-}
-
-async function apiRespondToMatch(notifId, accept, fromUserId) {
-  return await apiFetch('/matching/respond', {
-    method: 'POST',
-    body: JSON.stringify({
-      notification_id: notifId,
-      accept: accept,
-      from_user_id: fromUserId || null,
-    }),
-  });
 }
