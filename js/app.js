@@ -119,7 +119,7 @@ function renderRegSteps() {
   var h = '';
   for (var i = 1; i <= 3; i++) {
     var cls = i < regStepN ? 'done' : i === regStepN ? 'on' : 'wait';
-    h += '<div class="step-dot ' + cls + '">' + (i < regStepN ? '&#10003;' : i) + '</div>';
+    h += '<div class="step-dot ' + cls + '">' + (i < regStepN ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : i) + '</div>';
     if (i < 3) h += '<div class="step-line' + (i < regStepN ? ' done' : '') + '"></div>';
   }
   c.innerHTML = h;
@@ -272,8 +272,8 @@ function buildGalleryPage() {
       + '</div>'
       + '<div class="pcard-info">'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<div><div style="font-family:var(--fm);font-weight:700;font-size:18px;color:var(--n5)">' + (p.name || p.code) + '</div>'
-      + '<div style="color:var(--im);font-size:13px">' + p.code + '</div></div>'
+      + '<div><div style="font-family:var(--fm);font-weight:700;font-size:18px;color:var(--n5)">' + (p.name || 'Ahli Jodohku') + '</div>'
+      + '<div style="color:var(--im);font-size:13px">' + p.age + ' tahun' + (p.state ? ' &bull; ' + p.state.replace(/_/g,' ') : '') + '</div></div>'
       + '<div style="font-family:var(--fd);font-weight:600;font-size:26px;color:var(--im)">' + p.age + '</div>'
       + '</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0">'
@@ -284,9 +284,8 @@ function buildGalleryPage() {
       + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.55;margin-bottom:12px">' + p.bio.slice(0,120) + (p.bio.length>120?'...':'') + '</p>' : '')
       + (p.tip ? '<div class="wtip">' + ICONS.sparkle + '<span>' + p.tip + '</span></div>' : '')
       + '<div class="pcard-acts" onclick="event.stopPropagation()">'
-      + '<button class="btn bg" style="border:1px solid var(--s2)" data-pid="' + p.id + '" onclick="handleReject(this)">' + ICONS.x + '</button>'
-      + '<button class="btn bg" style="border:1px solid var(--s2);color:' + (isFav?'var(--g5)':'var(--im)') + '" data-pid="' + p.id + '" onclick="handleFav(this)">' + ICONS.bookmark + '</button>'
-      + '<button class="btn bp lam" data-pid="' + p.id + '" data-name="' + (p.name||p.code) + '" onclick="handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
+      + '<button class="btn bg" style="border:1px solid var(--s2);flex:1;justify-content:center" data-pid="' + p.id + '" onclick="handleReject(this)">' + ICONS.x + ' Tolak</button>'
+      + '<button class="btn bp lam" style="flex:2;justify-content:center" data-pid="' + p.id + '" data-name="' + (p.name||p.code) + '" onclick="handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
       + '</div></div></div>';
   });
 
@@ -393,16 +392,55 @@ function rejectProfile(userId) {
 }
 
 // ── Send Lamar Request ──
-async function sendLamarRequest(userId, name) {
-  var msg = prompt('Hantar mesej lamar kepada ' + (name||'calon') + ':') ;
-  if (msg === null) return;
-  if (!msg.trim()) msg = 'Assalamualaikum, saya berminat untuk berkenalan. Semoga kita boleh berkomunikasi lebih lanjut.';
+function sendLamarRequest(userId, name) {
+  // Build inline lamar modal instead of browser prompt
+  var existing = document.getElementById('lamar-modal');
+  if (existing) existing.remove();
+  var defaultMsg = 'Assalamualaikum, saya berminat untuk berkenalan. Semoga kita boleh berkomunikasi lebih lanjut.';
+  var modal = document.createElement('div');
+  modal.id = 'lamar-modal';
+  modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = '<div style="background:#fff;border-radius:16px;width:100%;max-width:420px;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.35)">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    + '<div style="font-family:var(--fm);font-weight:700;font-size:18px;color:var(--n5)">Hantar Lamaran</div>'
+    + '<button onclick="document.getElementById(\'lamar-modal\').remove()" style="width:28px;height:28px;border-radius:50%;background:var(--s1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">' + ICONS.x + '</button>'
+    + '</div>'
+    + '<p style="font-size:13px;color:var(--im);margin-bottom:12px">Kepada: <strong>' + (name || 'Ahli Jodohku') + '</strong></p>'
+    + '<textarea id="lamar-msg" rows="4" class="inp" style="resize:none;font-size:14px;line-height:1.6" placeholder="Tulis mesej lamaran anda...">' + defaultMsg + '</textarea>'
+    + '<div style="display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:14px">'
+    + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:12px" onclick="document.getElementById(\'lamar-modal\').remove()">Batal</button>'
+    + '<button id="lamar-send-btn" class="btn bp" style="justify-content:center;padding:12px" onclick="submitLamar(\'' + userId + '\',\'' + (name||'') + '\')">' + ICONS.send + ' Hantar</button>'
+    + '</div></div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+}
+
+async function submitLamar(userId, name) {
+  var msgEl = document.getElementById('lamar-msg');
+  var btn   = document.getElementById('lamar-send-btn');
+  var msg   = msgEl ? msgEl.value.trim() : '';
+  if (!msg) msg = 'Assalamualaikum, saya berminat untuk berkenalan.';
+  if (btn) { btn.disabled = true; btn.textContent = 'Menghantar...'; }
 
   var res = await apiFetch('/chat/initiate', {
     method: 'POST',
     body: JSON.stringify({ target_user_id: userId, message: { content: msg, is_ice_breaker: false } })
   });
+
+  var modal = document.getElementById('lamar-modal');
+  if (modal) modal.remove();
+
   if (res && res.ok) {
+    // Send notification to the target user
+    await apiFetch('/notifications/send', {
+      method: 'POST',
+      body: JSON.stringify({
+        recipient_user_id: userId,
+        type: 'lamar_received',
+        title: 'Anda menerima lamaran baharu',
+        body: (currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang') + ' telah menghantar lamaran kepada anda.',
+      })
+    });
     showToast('Permintaan lamar dihantar!', 'success');
     profiles = profiles.filter(function(p){ return p.id !== userId; });
     buildAppPage('gallery');
@@ -437,10 +475,10 @@ function viewProfile(userId) {
       + photos.map(function(_,i){ return '<div id="pmd'+i+'" style="height:3px;border-radius:2px;flex:1;max-width:40px;background:'+(i===0?'#fff':'rgba(255,255,255,.4)')+';transition:background .2s"></div>'; }).join('')
       + '</div>' : '';
 
-  var html = '<div id="profile-view-modal" style="display:flex;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:0">'
-    + '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto">'
+  var html = '<div id="profile-view-modal" style="display:flex;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">'
+    + '<div style="background:#fff;border-radius:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.35)">'
     // Photo area
-    + '<div style="position:relative;background:#111;overflow:hidden">'
+    + '<div style="position:relative;background:#111;overflow:hidden;border-radius:20px 20px 0 0">'
     + '<div id="pm-photo-wrap">' + photoPart(0) + '</div>'
     + dotsHtml
     + (photos.length > 1 ? '<div style="position:absolute;inset:0;display:flex;cursor:pointer"><div style="flex:1" onclick="pmPrev()"></div><div style="flex:1" onclick="pmNext()"></div></div>' : '')
@@ -450,13 +488,12 @@ function viewProfile(userId) {
     // Info
     + '<div style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    + '<div><div style="font-family:var(--fm);font-weight:700;font-size:22px">' + (p.name||p.code) + '</div>'
-    + '<div style="color:var(--im);font-size:13px">' + p.code + (p.age ? ' &bull; ' + p.age + ' tahun' : '') + '</div></div>'
+    + '<div><div style="font-family:var(--fm);font-weight:700;font-size:22px">' + (p.name || 'Ahli Jodohku') + '</div>'
+    + '<div style="color:var(--im);font-size:13px">' + (p.age ? p.age + ' tahun' : '') + (p.state ? ' &bull; ' + p.state.replace(/_/g,' ') : '') + '</div></div>'
     + '<div style="display:flex;gap:6px"><span class="badge ' + tierClass + '">' + p.tier.toUpperCase() + '</span>'
     + (p.t20 ? '<span class="badge b-ver">T20</span>' : '') + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">'
-    + (p.state ? '<span class="chip">' + ICONS.pin + p.state.replace(/_/g,' ') + '</span>' : '')
     + (p.edu   ? '<span class="chip">' + ICONS.edu + p.edu.replace(/_/g,' ') + '</span>' : '')
     + (p.job   ? '<span class="chip">' + ICONS.work + p.job + '</span>' : '')
     + (p.status? '<span class="chip">' + p.status + '</span>' : '')
@@ -464,8 +501,8 @@ function viewProfile(userId) {
     + '</div>'
     + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.6;margin-bottom:16px">' + p.bio + '</p>' : '')
     + (p.tip ? '<div class="wtip" style="margin-bottom:16px">' + ICONS.sparkle + '<span>' + p.tip + '</span></div>' : '')
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:13px" data-pid="' + p.id + '" onclick="closeProfileModal();handleFav(this)">' + ICONS.bookmark + ' Simpan</button>'
+    + '<div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">'
+    + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:13px" onclick="closeProfileModal();rejectProfile(\'' + p.id + '\')">' + ICONS.x + ' Tolak</button>'
     + '<button class="btn bp" style="justify-content:center;padding:13px" data-pid="' + p.id + '" data-name="' + (p.name||p.code) + '" onclick="closeProfileModal();handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
     + '</div></div></div></div>';
 
@@ -498,6 +535,18 @@ function pmNext() {
 function closeProfileModal() {
   var m = document.getElementById('profile-view-modal');
   if (m) m.remove();
+}
+
+function viewOwnPhoto(url) {
+  var existing = document.getElementById('photo-lightbox');
+  if (existing) existing.remove();
+  var lb = document.createElement('div');
+  lb.id = 'photo-lightbox';
+  lb.style.cssText = 'display:flex;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.92);align-items:center;justify-content:center;cursor:zoom-out';
+  lb.innerHTML = '<img src="' + url + '" style="max-width:92vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6)">'
+    + '<button onclick="document.getElementById(\'photo-lightbox\').remove()" style="position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">' + ICONS.x + '</button>';
+  lb.addEventListener('click', function(e) { if (e.target === lb) lb.remove(); });
+  document.body.appendChild(lb);
 }
 
 
@@ -565,7 +614,7 @@ function buildChatPage() {
       h += '<div class="msg ' + (m.mine ? 'mine' : 'them') + '">'
         + (m.ice ? '<div class="msg-ice">&#10052; Ice Breaker</div>' : '')
         + '<div class="msg-b">' + (m.content || m.text || '') + '</div>'
-        + '<div class="msg-t">' + (m.time || '') + (m.mine ? ' &#10003;&#10003;' : '') + '</div>'
+        + '<div class="msg-t">' + (m.time || '') + (m.mine ? ' <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>' : '') + '</div>'
         + '</div>';
     });
     h += '</div>';
@@ -600,7 +649,7 @@ function buildProfilePage() {
 
   function sel(id, opts, val, label, locked) {
     if (locked && val) {
-      return '<div style="margin-bottom:14px"><label class="lbl">' + label + ' <span style="font-size:10px;color:var(--g5);font-weight:600">&#128274; Tetap</span></label>'
+      return '<div style="margin-bottom:14px"><label class="lbl">' + label + ' <span style="font-size:10px;color:var(--g5);font-weight:600"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Tetap</span></label>'
         + '<div class="inp" style="background:var(--s1);color:var(--is);cursor:not-allowed">'
         + val.replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase()}) + '</div></div>';
     }
@@ -613,7 +662,7 @@ function buildProfilePage() {
 
   function inp(id, val, label, type, placeholder, locked) {
     if (locked && val) {
-      return '<div style="margin-bottom:14px"><label class="lbl">' + label + ' <span style="font-size:10px;color:var(--g5);font-weight:600">&#128274; Tetap</span></label>'
+      return '<div style="margin-bottom:14px"><label class="lbl">' + label + ' <span style="font-size:10px;color:var(--g5);font-weight:600"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Tetap</span></label>'
         + '<div class="inp" style="background:var(--s1);color:var(--is);cursor:not-allowed">' + val + '</div></div>';
     }
     return '<div style="margin-bottom:14px"><label class="lbl">' + label + '</label>'
@@ -633,7 +682,7 @@ function buildProfilePage() {
     + '<div style="height:120px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
     + '<div style="position:absolute;bottom:-36px;left:20px">'
     + '<div style="position:relative;width:80px;height:80px">'
-    + '<div id="pf-avatar" style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);overflow:hidden">'
+    + '<div id="pf-avatar" style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);overflow:hidden;cursor:' + (photoUrl ? 'pointer' : 'default') + '"' + (photoUrl ? ' onclick="viewOwnPhoto(\'' + photoUrl + '\')" title="Lihat gambar penuh"' : '') + '>'
     + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover">'
         : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
     + '</div>'
@@ -659,7 +708,7 @@ function buildProfilePage() {
     + '<div class="card" style="margin-bottom:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin:0">Maklumat Asas</h3>'
-    + '<span style="font-size:11px;color:var(--im);background:var(--s1);padding:4px 10px;border-radius:20px">&#128274; Tetap selepas disimpan</span>'
+    + '<span style="font-size:11px;color:var(--im);background:var(--s1);padding:4px 10px;border-radius:20px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Tetap selepas disimpan</span>'
     + '</div>'
     + '<p style="font-size:12px;color:var(--im);margin-bottom:16px;padding:10px;background:#FFF9E6;border-radius:var(--rs);border-left:3px solid var(--g5)">Maklumat ini penting untuk padanan yang tepat dan <strong>tidak boleh diubah</strong> selepas disimpan buat kali pertama.</p>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
@@ -703,12 +752,12 @@ function buildProfilePage() {
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
     + '<div style="display:flex;align-items:center;gap:10px">' + ICONS.sparkle
     + '<div><div style="font-weight:600;font-size:15px">Kuiz Serasi</div>'
-    + '<div style="font-size:12px;color:var(--im)">' + answered + '/30 soalan dijawab</div></div></div>'
-    + '<button class="btn bp" style="padding:8px 16px;font-size:13px" onclick="openQuizModal()">'    + (answered === 0 ? 'Mula Kuiz' : answered >= 10 ? '&#10003; Selesai' : 'Teruskan') + '</button>'
+    + '<div style="font-size:12px;color:var(--im)">' + answered + '/10 soalan dijawab</div></div></div>'
+    + '<button class="btn bp" style="padding:8px 16px;font-size:13px" onclick="openQuizModal()">'    + (answered === 0 ? 'Mula Kuiz' : answered >= 10 ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Selesai' : 'Teruskan') + '</button>'
     + '</div>'
     + '<div class="progress"><div class="progress-fill" style="width:' + quizPct + '%;background:' + (quizUnlocked ? 'var(--e4)' : 'var(--g5)') + '"></div></div>'
     + (quizUnlocked
-        ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500">&#10003; Bilik Pameran telah dibuka!</p>'
+        ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Bilik Pameran telah dibuka!</p>'
         : '<p style="font-size:12px;color:var(--g7);margin-top:8px">Jawab ' + Math.max(0, 10 - (quizProgress.answered||0)) + ' lagi soalan untuk membuka Bilik Pameran.</p>')
     + '</div>'
 
@@ -819,17 +868,17 @@ function buildSettingsPage() {
           'openModal(\'modal-password\')')
       + row(ICONS.shield,
           'Pengesahan No. IC',
-          icVerified ? '&#10003; IC disahkan' : 'Masukkan No. Kad Pengenalan',
+          icVerified ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> IC disahkan' : 'Masukkan No. Kad Pengenalan',
           'openModal(\'modal-ic\')',
           icVerified
-            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>'
+            ? '<span class="badge b-ver" style="margin-right:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Disahkan</span>'
             : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
       + row(ICONS.shield,
           'Verified T20',
           isVerified ? 'Anda telah disahkan sebagai T20' : 'Mohon pengesahan T20',
           isVerified ? null : 'openModal(\'modal-t20\')',
           isVerified
-            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>'
+            ? '<span class="badge b-ver" style="margin-right:4px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Disahkan</span>'
             : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
     )
 
@@ -921,7 +970,7 @@ function buildSettingsPage() {
     + modal('modal-wali', 'Mod Wali/Mahram',
         '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Apabila diaktifkan, wali anda akan menerima pemberitahuan dan boleh memantau perbualan anda.</p>'
       + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px">'
-      + '<p style="font-size:13px;color:var(--g7);line-height:1.7">&#10003; Wali terima notifikasi setiap mesej<br>&#10003; Wali boleh menamatkan perbualan<br>&#10003; Lebih amanah dan terkawal</p></div>'
+      + '<p style="font-size:13px;color:var(--g7);line-height:1.7"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Wali terima notifikasi setiap mesej<br><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Wali boleh menamatkan perbualan<br><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Lebih amanah dan terkawal</p></div>'
       + '<div style="margin-bottom:14px"><label class="lbl">Emel Wali/Mahram</label><input id="wali-email" class="inp" type="email" placeholder="wali@contoh.com"></div>'
       + '<div style="margin-bottom:14px"><label class="lbl">Nama Wali</label><input id="wali-name" class="inp" type="text" placeholder="Contoh: Ahmad bin Ibrahim"></div>'
       + '<div style="margin-bottom:20px"><label class="lbl">Hubungan</label>'
@@ -1116,15 +1165,7 @@ async function openQuizModal() {
     }
     // Also get extended if core done
     if ((quizProgress.answered || 0) >= 10) {
-      var rq2 = await apiFetch('/quiz/questions?batch=extended');
-      if (rq2 && rq2.ok) {
-        var d2 = await rq2.json();
-        var raw2 = d2.questions || d2 || [];
-        var extended = Array.isArray(raw2) ? raw2 : [];
-        // Merge without duplicates
-        var ids = quizQuestions.map(function(q) { return q.id; });
-        extended.forEach(function(q) { if (ids.indexOf(q.id) === -1) quizQuestions.push(q); });
-      }
+      // Quiz complete — no extended questions
     }
   }
   // Update modal content and open
