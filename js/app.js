@@ -1333,36 +1333,234 @@ async function deleteAccount() {
   else showToast('Gagal memadam akaun.', 'error');
 }
 
-async function uploadProfilePhoto(input) {
+// ── Photo Crop Modal (Twitter-style) ──
+var _cropImg = null, _cropX = 0, _cropY = 0, _cropSize = 0, _cropScale = 1;
+var _dragStart = null, _cropOffX = 0, _cropOffY = 0;
+
+function uploadProfilePhoto(input) {
   var file = input.files[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) return showToast('Saiz gambar maksimum 3MB.', 'warn');
-
-  showToast('Memuat naik gambar...', 'info');
-
+  if (file.size > 10 * 1024 * 1024) return showToast('Saiz gambar maksimum 10MB.', 'warn');
   var reader = new FileReader();
-  reader.onload = async function(e) {
-    var base64 = e.target.result;
+  reader.onload = function(e) { openCropModal(e.target.result); };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
 
-    // Show preview immediately
-    var avatar = document.getElementById('pf-avatar');
-    if (avatar) avatar.innerHTML = '<img src="' + base64 + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+function openCropModal(src) {
+  var existing = document.getElementById('crop-modal');
+  if (existing) existing.remove();
 
-    // Save to backend as photo_url
-    var res = await apiFetch('/profile/me', {
+  var modal = document.createElement('div');
+  modal.id = 'crop-modal';
+  modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.88);flex-direction:column;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = ''
+    + '<div style="width:100%;max-width:480px;background:#1a1a1a;border-radius:16px;overflow:hidden">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.1)">'
+    + '<button onclick="closeCropModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:14px;padding:4px 8px;border-radius:20px;border:1px solid rgba(255,255,255,.3)">Batal</button>'
+    + '<span style="color:#fff;font-weight:600;font-size:15px">Edit Gambar Profil</span>'
+    + '<button onclick="applyCrop()" style="background:#fff;border:none;color:#000;cursor:pointer;font-size:14px;font-weight:700;padding:4px 14px;border-radius:20px">Guna</button>'
+    + '</div>'
+    // Canvas area
+    + '<div style="position:relative;width:100%;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden" id="crop-stage" style="height:340px">'
+    + '<canvas id="crop-canvas" style="display:block;touch-action:none;cursor:grab;max-width:100%"></canvas>'
+    // Circle overlay
+    + '<div id="crop-overlay" style="position:absolute;inset:0;pointer-events:none">'
+    + '<svg id="crop-svg" style="position:absolute;inset:0;width:100%;height:100%"></svg>'
+    + '</div>'
+    + '</div>'
+    // Controls
+    + '<div style="padding:16px 20px;border-top:1px solid rgba(255,255,255,.1)">'
+    + '<div style="display:flex;align-items:center;gap:12px">'
+    + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    + '<input id="crop-zoom" type="range" min="100" max="300" value="100" style="flex:1;accent-color:#fff" oninput="setCropZoom(this.value)">'
+    + '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>'
+    + '</div>'
+    + '<p style="color:rgba(255,255,255,.4);font-size:12px;text-align:center;margin-top:10px">Seret untuk laraskan. Zum untuk membesar.</p>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(modal);
+
+  var canvas = document.getElementById('crop-canvas');
+  var img = new Image();
+  img.onload = function() {
+    _cropImg = img;
+    _cropScale = 1;
+
+    // Size canvas to fit viewport nicely
+    var maxW = Math.min(480, window.innerWidth - 32);
+    var maxH = 320;
+    var ratio = Math.min(maxW / img.width, maxH / img.height);
+    canvas.width  = Math.round(img.width  * ratio);
+    canvas.height = Math.round(img.height * ratio);
+
+    // Circle is 70% of smaller canvas dimension
+    _cropSize = Math.round(Math.min(canvas.width, canvas.height) * 0.7);
+    _cropX = (canvas.width  - _cropSize) / 2;
+    _cropY = (canvas.height - _cropSize) / 2;
+
+    drawCrop();
+    drawOverlay();
+    bindCropEvents(canvas);
+  };
+  img.src = src;
+}
+
+function drawCrop() {
+  var canvas = document.getElementById('crop-canvas');
+  if (!canvas || !_cropImg) return;
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  var s = _cropScale;
+  var iw = _cropImg.width  * (canvas.width  / _cropImg.width)  * s;
+  var ih = _cropImg.height * (canvas.height / _cropImg.height) * s;
+  var ox = _cropOffX + (canvas.width  - iw) / 2;
+  var oy = _cropOffY + (canvas.height - ih) / 2;
+
+  ctx.drawImage(_cropImg, ox, oy, iw, ih);
+}
+
+function drawOverlay() {
+  var svg = document.getElementById('crop-svg');
+  var canvas = document.getElementById('crop-canvas');
+  if (!svg || !canvas) return;
+  var W = canvas.width, H = canvas.height;
+  var cx = _cropX + _cropSize/2, cy = _cropY + _cropSize/2, r = _cropSize/2;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.innerHTML = '<defs><mask id="cm"><rect width="' + W + '" height="' + H + '" fill="white"/>'
+    + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="black"/></mask></defs>'
+    + '<rect width="' + W + '" height="' + H + '" fill="rgba(0,0,0,.55)" mask="url(#cm)"/>'
+    + '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2"/>';
+}
+
+function setCropZoom(val) {
+  _cropScale = val / 100;
+  drawCrop();
+}
+
+function bindCropEvents(canvas) {
+  var dragging = false, startX, startY, startOX, startOY;
+
+  canvas.addEventListener('mousedown', function(e) {
+    dragging = true; startX = e.clientX; startY = e.clientY;
+    startOX = _cropOffX; startOY = _cropOffY;
+    canvas.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    _cropOffX = startOX + (e.clientX - startX);
+    _cropOffY = startOY + (e.clientY - startY);
+    drawCrop();
+  });
+  window.addEventListener('mouseup', function() { dragging = false; canvas.style.cursor = 'grab'; });
+
+  // Touch
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+      dragging = true; startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      startOX = _cropOffX; startOY = _cropOffY;
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchmove', function(e) {
+    if (!dragging || e.touches.length !== 1) return;
+    _cropOffX = startOX + (e.touches[0].clientX - startX);
+    _cropOffY = startOY + (e.touches[0].clientY - startY);
+    drawCrop();
+  }, {passive:true});
+  canvas.addEventListener('touchend', function() { dragging = false; });
+
+  // Pinch zoom
+  var initDist = 0, initScale = 1;
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 2) {
+      initDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      initScale = _cropScale;
+    }
+  }, {passive:true});
+  canvas.addEventListener('touchmove', function(e) {
+    if (e.touches.length === 2) {
+      var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      _cropScale = Math.min(3, Math.max(1, initScale * (dist / initDist)));
+      var slider = document.getElementById('crop-zoom');
+      if (slider) slider.value = Math.round(_cropScale * 100);
+      drawCrop();
+    }
+  }, {passive:true});
+}
+
+async function applyCrop() {
+  var canvas = document.getElementById('crop-canvas');
+  if (!canvas || !_cropImg) return;
+
+  // Render the cropped circle region to a 400x400 output canvas
+  var out = document.createElement('canvas');
+  out.width = 400; out.height = 400;
+  var ctx = out.getContext('2d');
+
+  // Clip to circle
+  ctx.beginPath();
+  ctx.arc(200, 200, 200, 0, Math.PI * 2);
+  ctx.clip();
+
+  // Work out what portion of the source image maps to the crop circle
+  var s = _cropScale;
+  var displayW = canvas.width, displayH = canvas.height;
+  var rendW = _cropImg.width  * (displayW / _cropImg.width)  * s;
+  var rendH = _cropImg.height * (displayH / _cropImg.height) * s;
+  var ox = _cropOffX + (displayW - rendW) / 2;
+  var oy = _cropOffY + (displayH - rendH) / 2;
+
+  // Map crop circle coords back to source image pixels
+  var scaleToSrc = _cropImg.width / rendW;
+  var srcX = (_cropX - ox) * scaleToSrc;
+  var srcY = (_cropY - oy) * scaleToSrc;
+  var srcS = _cropSize * scaleToSrc;
+
+  ctx.drawImage(_cropImg, srcX, srcY, srcS, srcS, 0, 0, 400, 400);
+
+  var base64 = out.toDataURL('image/jpeg', 0.88);
+  closeCropModal();
+
+  // Update avatar preview immediately
+  var avatar = document.getElementById('pf-avatar');
+  if (avatar) avatar.innerHTML = '<img src="' + base64 + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+
+  showToast('Menyimpan gambar...', 'info');
+  var res = await apiFetch('/profile/photo', {
+    method: 'POST',
+    body: JSON.stringify({ photo_data: base64, photo_type: 'headshot' })
+  });
+
+  if (res && res.ok) {
+    showToast('Gambar profil berjaya disimpan!', 'success');
+    if (!currentUser) currentUser = Auth.getUser() || {};
+    currentUser.photo_url = base64;
+    Auth.setUser(currentUser);
+    sidebar(currentPage);
+  } else {
+    // Fallback: save via profile PUT
+    var res2 = await apiFetch('/profile/me', {
       method: 'PUT',
       body: JSON.stringify({ photo_url: base64 })
     });
-
-    if (res && res.ok) {
+    if (res2 && res2.ok) {
       showToast('Gambar profil berjaya disimpan!', 'success');
-      if (currentUser) { currentUser.photo_url = base64; Auth.setUser(currentUser); }
+      if (!currentUser) currentUser = Auth.getUser() || {};
+      currentUser.photo_url = base64;
+      Auth.setUser(currentUser);
       sidebar(currentPage);
     } else {
-      showToast('Gambar tidak dapat disimpan. Cuba semula.', 'error');
+      showToast('Gagal menyimpan gambar. Cuba semula.', 'error');
     }
-  };
-  reader.readAsDataURL(file);
+  }
+}
+
+function closeCropModal() {
+  var m = document.getElementById('crop-modal');
+  if (m) m.remove();
+  _cropImg = null; _cropOffX = 0; _cropOffY = 0; _cropScale = 1;
 }
 
 /* ══════════════════════════════════════
