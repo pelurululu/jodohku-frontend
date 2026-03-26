@@ -4,21 +4,16 @@
    ══════════════════════════════════════ */
 
 /* ── State ── */
-var currentPage        = 'landing';
-var regStepN           = 1;
-var activeChatIdx      = 0;
-var unreadN            = 0;
-var favs               = new Set();
-var msgs               = [];
-var profiles           = [];
-var convos             = [];
-var notifs             = [];
-var currentUser        = Auth.getUser();
-var sentMatchRequests  = new Set();
-var pendingMatchRequests = [];
-var matcherProfiles    = [];
-var currentViewedProfile = null;
-var galleryPhotoIdx    = 0;
+var currentPage   = 'landing';
+var regStepN      = 1;
+var activeChatIdx = 0;
+var unreadN       = 0;
+var favs          = new Set();
+var msgs          = [];
+var profiles      = [];
+var convos        = [];
+var notifs        = [];
+var currentUser   = Auth.getUser();
 
 /* ══════════════════════════════════════
    MOBILE NAV
@@ -59,18 +54,21 @@ function closeSidebar() {
 function go(pg) {
   currentPage = pg;
 
-  var appPages = ['gallery','chat','profile','payment','notif','settings','quiz','success','matchmaker'];
+  var appPages = ['gallery','chat','profile','payment','notif','settings','quiz','success'];
   var isAppPage = appPages.indexOf(pg) > -1;
 
   if (isAppPage) {
+    // Show persistent app shell, hide all other pages
     document.querySelectorAll('.pg').forEach(function(p) { p.classList.remove('on'); });
     var appShell = document.getElementById('app-shell');
     if (appShell) appShell.style.display = 'flex';
+    // Scroll to top
     var pc = document.getElementById('page-content');
     if (pc) pc.scrollTop = 0;
     try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch(e) { window.scrollTo(0, 0); }
     buildAppPage(pg);
   } else {
+    // Non-app pages (login, register, landing) — hide shell, show pg div
     var appShell = document.getElementById('app-shell');
     if (appShell) appShell.style.display = 'none';
     document.querySelectorAll('.pg').forEach(function(p) { p.classList.remove('on'); });
@@ -84,20 +82,20 @@ function go(pg) {
 // Override go() with auth guard + data loading
 var _go = go;
 go = async function(pg) {
-  var protected_ = ['gallery','chat','profile','payment','notif','settings','quiz','matchmaker'];
+  var protected_ = ['gallery','chat','profile','payment','notif','settings','quiz'];
   if (protected_.indexOf(pg) > -1 && !Auth.isLoggedIn()) {
     showToast('Sila log masuk dahulu.', 'warn');
     return _go('login');
   }
-  if (pg === 'gallery'    && Auth.isLoggedIn() && profiles.length === 0) await apiLoadGallery();
-  if (pg === 'chat'       && Auth.isLoggedIn()) { await apiLoadConversations(); setupWS(); }
-  if (pg === 'notif'      && Auth.isLoggedIn()) await apiLoadNotifs();
-  if (pg === 'profile'    && Auth.isLoggedIn()) await apiLoadProfile();
-  if (pg === 'quiz'       && Auth.isLoggedIn()) await apiLoadQuiz();
-  if (pg === 'matchmaker' && Auth.isLoggedIn()) await apiLoadMatchmaker();
+  if (pg === 'gallery' && Auth.isLoggedIn() && profiles.length === 0) await apiLoadGallery();
+  if (pg === 'chat'    && Auth.isLoggedIn()) { await apiLoadConversations(); setupWS(); }
+  if (pg === 'notif'   && Auth.isLoggedIn()) await apiLoadNotifs();
+  if (pg === 'profile' && Auth.isLoggedIn()) await apiLoadProfile();
+  if (pg === 'quiz'    && Auth.isLoggedIn()) await apiLoadQuiz();
   _go(pg);
 };
 
+// Wire API handlers
 function sendMsg()     { apiSendMessage(); }
 function markRead(i)   { apiMarkRead(i); }
 function markAllRead() { apiMarkAllRead(); }
@@ -138,20 +136,18 @@ function sidebar(active) {
   var tier = user && user.current_tier ? user.current_tier.toUpperCase() : 'RAHMAH';
   var completion = user && user.profile_completion ? user.profile_completion : 0;
   var unreadNotifs = notifs.filter(function(n) { return !n.read; }).length;
-  var pendingCount = pendingMatchRequests.length;
   var badgeClass = tier === 'GOLD' ? 'b-gld' : tier === 'PLATINUM' ? 'b-plt' : tier === 'PREMIUM' ? 'b-prm' : tier === 'SOVEREIGN' ? 'b-sov' : 'b-rah';
 
-  /* Quiz removed from sidebar — accessible only from Profile page */
   var items = [
-    { id: 'gallery',    label: 'Bilik Pameran', icon: 'gallery' },
-    { id: 'matchmaker', label: 'Padanan',        icon: 'heart',   badge: pendingCount },
-    { id: 'chat',       label: 'Sembang',        icon: 'chat',    badge: unreadN },
-    { id: 'profile',    label: 'Profil Saya',    icon: 'profile' },
-    { id: 'payment',    label: 'Langganan',      icon: 'payment' },
-    { id: 'notif',      label: 'Notifikasi',     icon: 'notif',   badge: unreadNotifs },
-    { id: 'settings',   label: 'Tetapan',        icon: 'settings' },
+    { id: 'gallery', label: 'Bilik Pameran', icon: 'gallery' },
+    { id: 'chat',    label: 'Sembang',       icon: 'chat',  badge: unreadN },
+    { id: 'profile', label: 'Profil Saya',   icon: 'profile' },
+    { id: 'payment', label: 'Langganan',     icon: 'payment' },
+    { id: 'notif',   label: 'Notifikasi',    icon: 'notif', badge: unreadNotifs },
+    { id: 'settings',label: 'Tetapan',       icon: 'settings' },
   ];
 
+  // Update persistent sidebar user section
   var userSection = document.getElementById('sidebar-user-section');
   if (userSection) {
     var avatarHtml = photoUrl
@@ -165,6 +161,7 @@ function sidebar(active) {
       + '<div class="progress" style="margin-top:4px"><div class="progress-fill" style="width:' + completion + '%"></div></div></div>';
   }
 
+  // Update persistent sidebar nav
   var sideNav = document.getElementById('sidebar-nav');
   if (sideNav) {
     sideNav.innerHTML = items.map(function(i) {
@@ -175,17 +172,16 @@ function sidebar(active) {
     }).join('');
   }
 
+  // Show app shell
   var appShell = document.getElementById('app-shell');
   if (appShell) appShell.style.display = 'flex';
 
-  var titles = {
-    gallery: 'Bilik Pameran', matchmaker: 'Padanan', quiz: 'Kuiz Serasi',
-    chat: 'Sembang', profile: 'Profil Saya', payment: 'Langganan',
-    notif: 'Notifikasi', settings: 'Tetapan'
-  };
+  // Update topbar title
+  var titles = { gallery:'Bilik Pameran', quiz:'Kuiz Serasi', chat:'Sembang', profile:'Profil Saya', payment:'Langganan', notif:'Notifikasi', settings:'Tetapan' };
   var titleEl = document.getElementById('topbar-title');
   if (titleEl) titleEl.textContent = titles[active] || 'Jodohku.my';
 
+  // Update page content chat padding
   var pc = document.getElementById('page-content');
   if (pc) {
     pc.className = active === 'chat' ? 'pgc no-pad' : 'pgc';
@@ -196,13 +192,12 @@ var sideEnd = '';
 
 function buildBottomNav(active) {
   var unreadNotifs = notifs.filter(function(n) { return !n.read; }).length;
-  var pendingCount = pendingMatchRequests.length;
   var items = [
-    { id: 'gallery',    label: 'Galeri',   icon: 'gallery' },
-    { id: 'matchmaker', label: 'Padanan',  icon: 'heart',  badge: pendingCount },
-    { id: 'chat',       label: 'Sembang',  icon: 'chat',   badge: unreadN },
-    { id: 'profile',    label: 'Profil',   icon: 'profile' },
-    { id: 'notif',      label: 'Notif',    icon: 'notif',  badge: unreadNotifs },
+    { id: 'gallery', label: 'Galeri',  icon: 'gallery' },
+    { id: 'chat',    label: 'Sembang', icon: 'chat',  badge: unreadN },
+    { id: 'profile', label: 'Profil',  icon: 'profile' },
+    { id: 'notif',   label: 'Notif',   icon: 'notif', badge: unreadNotifs },
+    { id: 'settings',label: 'Lagi',    icon: 'settings' },
   ];
   var el = document.getElementById('bottom-nav-inner');
   if (!el) return;
@@ -224,15 +219,14 @@ function buildAppPage(pg) {
   if (!pageContent) return;
 
   var h = '';
-  if (pg === 'gallery')    h = buildGalleryPage();
-  else if (pg === 'chat')       h = buildChatPage();
-  else if (pg === 'profile')    h = buildProfilePage();
-  else if (pg === 'payment')    h = buildPaymentPage();
-  else if (pg === 'notif')      h = buildNotifPage();
-  else if (pg === 'settings')   h = buildSettingsPage();
-  else if (pg === 'quiz')       h = buildQuizPage();
-  else if (pg === 'success')    h = buildSuccessPage();
-  else if (pg === 'matchmaker') h = buildMatchmakerPage();
+  if (pg === 'gallery') h = buildGalleryPage();
+  else if (pg === 'chat') h = buildChatPage();
+  else if (pg === 'profile') h = buildProfilePage();
+  else if (pg === 'payment') h = buildPaymentPage();
+  else if (pg === 'notif') h = buildNotifPage();
+  else if (pg === 'settings') h = buildSettingsPage();
+  else if (pg === 'quiz') h = buildQuizPage();
+  else if (pg === 'success') h = buildSuccessPage();
 
   pageContent.innerHTML = h;
 
@@ -242,73 +236,57 @@ function buildAppPage(pg) {
   }
 }
 
-/* ══════════════════════════════════════
-   GALLERY PAGE
-══════════════════════════════════════ */
+/* ── Gallery Page ── */
 function buildGalleryPage() {
-  var h = '<div style="max-width:640px;margin:0 auto">'
+  var h = '<div style="max-width:680px;margin:0 auto">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">'
     + '<div><h1 style="font-family:var(--fd);font-weight:700;font-size:24px">Bilik Pameran</h1>'
-    + '<p style="color:var(--is);font-size:13px;margin-top:4px">Calon sekufu &#8805;85% keserasian</p></div>'
-    + '<button class="btn bg" style="border:1px solid var(--s2);gap:6px">' + ICONS.filter + ' Tapis</button>'
-    + '</div>';
+    + '<p style="color:var(--is);font-size:13px;margin-top:4px">Cadangan calon sekufu anda</p></div>'
+    + '<button class="btn bg" style="border:1px solid var(--s2);gap:6px" onclick="toggleGalleryFilter()">' + ICONS.filter + ' Tapis</button>'
+    + '</div>'
+    + '<div id="gallery-filter-panel" style="display:none">' + buildGalleryFilterPanel() + '</div>';
 
   if (profiles.length === 0) {
     h += '<div class="card" style="text-align:center;padding:48px 24px">'
       + '<div style="width:56px;height:56px;border-radius:50%;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' + ICONS.heart + '</div>'
       + '<h3 style="font-family:var(--fd);font-size:20px;margin-bottom:8px">Tiada Padanan Lagi</h3>'
-      + '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Lengkapkan profil anda untuk mendapat cadangan calon sekufu.</p>'
+      + '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Lengkapkan profil dan jawab kuiz untuk mendapat cadangan calon sekufu.</p>'
       + '<button class="btn bp" onclick="go(\'profile\')">Lengkapkan Profil</button></div>';
   }
 
   profiles.forEach(function(p, i) {
     var isFav = favs.has(p.id);
     var tierClass = p.tier === 'gold' ? 'b-gld' : p.tier === 'platinum' ? 'b-plt' : p.tier === 'premium' ? 'b-prm' : 'b-rah';
-    var alreadySent = sentMatchRequests.has(p.id);
+    var photoHtml = p.photo_url
+      ? '<img src="' + p.photo_url + '" style="width:100%;height:100%;object-fit:cover">'
+      : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,hsl(' + (p.hue||220) + ',35%,20%),hsl(' + ((p.hue||220)+40) + ',25%,13%))"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>';
 
-    /* Photo area — clickable to view full profile */
-    h += '<div class="pcard afu d' + (Math.min(i + 1, 5)) + '">'
-      + '<div class="pcard-ph" style="background:linear-gradient(135deg,hsl(' + p.hue + ',35%,20%),hsl(' + (p.hue + 40) + ',25%,13%));cursor:pointer" onclick="viewUserProfile(\'' + p.id + '\')">';
-
-    if (p.photo_url) {
-      h += '<img src="' + p.photo_url + '" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">';
-    } else {
-      h += '<div class="pcard-ph-inner"><div style="width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">'
-        + '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'
-        + '<div style="color:rgba(255,255,255,.4);font-size:11px;margin-top:8px">Tiada foto</div></div>';
-    }
-
-    h += '<div class="wm"></div>'
+    h += '<div class="pcard afu d' + (Math.min(i+1,5)) + '" data-pid="' + p.id + '" style="cursor:pointer" onclick="handleCardClick(this)">'
+      + '<div class="pcard-ph" style="position:relative;overflow:hidden">'
+      + photoHtml
+      + '<div class="wm"></div>'
       + '<div class="pcard-badges"><span class="badge ' + tierClass + '">' + p.tier.toUpperCase() + '</span>'
       + (p.t20 ? '<span class="badge b-ver">' + ICONS.shield + ' T20</span>' : '') + '</div>'
       + '<div class="pcard-score">' + ICONS.heart + ' <b>' + p.score + '%</b></div>'
       + (p.online ? '<div class="pcard-online"><span class="online-dot"></span>Dalam Talian</div>' : '')
-      /* Tap hint */
-      + '<div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.45);color:#fff;font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;backdrop-filter:blur(4px)">Ketik untuk lihat profil</div>'
       + '</div>'
-
       + '<div class="pcard-info">'
       + '<div style="display:flex;justify-content:space-between;align-items:center">'
-      + '<div><div style="font-family:var(--fm);font-weight:700;font-size:18px;color:var(--n5)">' + p.code + '</div>'
-      + (p.name ? '<div style="color:var(--is);font-size:14px">' + p.name + '</div>' : '') + '</div>'
+      + '<div><div style="font-family:var(--fm);font-weight:700;font-size:18px;color:var(--n5)">' + (p.name || p.code) + '</div>'
+      + '<div style="color:var(--im);font-size:13px">' + p.code + '</div></div>'
       + '<div style="font-family:var(--fd);font-weight:600;font-size:26px;color:var(--im)">' + p.age + '</div>'
       + '</div>'
       + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0">'
-      + (p.state  ? '<span class="chip">' + ICONS.pin  + p.state  + '</span>' : '')
-      + (p.edu    ? '<span class="chip">' + ICONS.edu  + p.edu    + '</span>' : '')
-      + (p.job    ? '<span class="chip">' + ICONS.work + p.job    + '</span>' : '')
-      + (p.status ? '<span class="chip">' + p.status + '</span>' : '')
+      + (p.state ? '<span class="chip">' + ICONS.pin + p.state.replace(/_/g,' ') + '</span>' : '')
+      + (p.edu   ? '<span class="chip">' + ICONS.edu + p.edu.replace(/_/g,' ')   + '</span>' : '')
+      + (p.job   ? '<span class="chip">' + ICONS.work + p.job + '</span>' : '')
       + '</div>'
-      + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.55">' + p.bio + '</p>' : '')
+      + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.55;margin-bottom:12px">' + p.bio.slice(0,120) + (p.bio.length>120?'...':'') + '</p>' : '')
       + (p.tip ? '<div class="wtip">' + ICONS.sparkle + '<span>' + p.tip + '</span></div>' : '')
-      + '<div class="pcard-acts">'
-      + '<button class="btn bg" style="border:1px solid var(--s2)" title="Abaikan">' + ICONS.x + '</button>'
-      + '<button class="btn bg" style="border:1px solid var(--s2);color:' + (isFav ? 'var(--g5)' : 'var(--im)') + '" onclick="toggleFav(\'' + p.id + '\')">' + ICONS.bookmark + '</button>'
-      + '<button class="btn ' + (alreadySent ? 'bg' : 'bp') + '" style="flex:1;' + (alreadySent ? 'border:1px solid var(--s2);color:var(--im)' : '') + '" '
-      + (alreadySent ? '' : 'onclick="sendMatchRequest(\'' + p.id + '\',' + i + ')"') + '>'
-      + (alreadySent ? ICONS.check + ' Dihantar' : ICONS.heart + ' Padanan')
-      + '</button>'
-      + '<button class="btn bp lam" onclick="activeChatIdx=0;go(\'chat\')">' + ICONS.chat + ' Sembang</button>'
+      + '<div class="pcard-acts" onclick="event.stopPropagation()">'
+      + '<button class="btn bg" style="border:1px solid var(--s2)" data-pid="' + p.id + '" onclick="handleReject(this)">' + ICONS.x + '</button>'
+      + '<button class="btn bg" style="border:1px solid var(--s2);color:' + (isFav?'var(--g5)':'var(--im)') + '" data-pid="' + p.id + '" onclick="handleFav(this)">' + ICONS.bookmark + '</button>'
+      + '<button class="btn bp lam" data-pid="' + p.id + '" data-name="' + (p.name||p.code) + '" onclick="handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
       + '</div></div></div>';
   });
 
@@ -316,302 +294,213 @@ function buildGalleryPage() {
     h += '<button class="btn bs" style="width:100%;padding:13px 0;margin-bottom:20px" onclick="apiLoadGallery(false)">'
       + ICONS.down + ' Lihat Lebih</button>';
   }
-
   h += '</div>';
   return h;
 }
 
-/* ══════════════════════════════════════
-   USER PROFILE MODAL (when clicking card)
-══════════════════════════════════════ */
-function viewUserProfile(id) {
-  var p = profiles.find(function(pr) { return String(pr.id) === String(id); });
-  if (!p) return;
-  currentViewedProfile = p;
+// ── Card click handlers using data attributes (no inline JS with dynamic IDs) ──
+function handleCardClick(el) { viewProfile(el.dataset.pid); }
+function handleReject(btn) { event.stopPropagation(); rejectProfile(btn.dataset.pid); }
+function handleFav(btn) { event.stopPropagation(); toggleFav(btn.dataset.pid); }
+function handleLamar(btn) { event.stopPropagation(); sendLamarRequest(btn.dataset.pid, btn.dataset.name); }
 
-  var photos = p.photos || [];
-  if (p.photo_url && photos.length === 0) photos = [{ url: p.photo_url }];
-  var photoIdx = 0;
-  var alreadySent = sentMatchRequests.has(p.id);
-  var tierClass = p.tier === 'gold' ? 'b-gld' : p.tier === 'platinum' ? 'b-plt' : p.tier === 'premium' ? 'b-prm' : 'b-rah';
-
-  function photoSlide(idx) {
-    return photos.length > 0
-      ? '<img id="uvp-photo" src="' + photos[idx].url + '" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0">'
-      : '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">'
-        + '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-        + '<div style="color:rgba(255,255,255,.3);font-size:12px">Tiada foto</div></div>';
-  }
-
-  var dotsHtml = '';
-  if (photos.length > 1) {
-    for (var di = 0; di < photos.length; di++) {
-      dotsHtml += '<span id="uvp-dot-' + di + '" style="width:' + (di===0?'20':'6') + 'px;height:6px;border-radius:3px;background:rgba(255,255,255,' + (di===0?'.9':'.4') + ');transition:all .25s"></span>';
-    }
-    dotsHtml = '<div style="position:absolute;bottom:52px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center">' + dotsHtml + '</div>';
-  }
-
-  var h = '<div id="modal-user-profile" style="position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);padding:20px;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center">'
-    + '<div style="background:#fff;border-radius:var(--r);max-width:440px;width:100%;margin:20px auto;overflow:hidden;box-shadow:var(--sh2)">'
-
-    /* Photo area */
-    + '<div id="uvp-gallery" style="position:relative;height:400px;background:linear-gradient(135deg,hsl(' + p.hue + ',35%,20%),hsl(' + (p.hue+40) + ',25%,13%));overflow:hidden;cursor:pointer" onclick="uvpNextPhoto(' + photos.length + ')">'
-    + photoSlide(0)
-
-    /* Left/right arrows if multiple photos */
-    + (photos.length > 1
-      ? '<button onclick="event.stopPropagation();uvpPrevPhoto(' + photos.length + ')" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.4);border:none;cursor:pointer;width:34px;height:34px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center">' + ICONS.back + '</button>'
-        + '<button onclick="event.stopPropagation();uvpNextPhoto(' + photos.length + ')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.4);border:none;cursor:pointer;width:34px;height:34px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>'
-      : '')
-
-    /* Top bar */
-    + '<div style="position:absolute;top:12px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 12px">'
-    + '<span class="badge ' + tierClass + '">' + p.tier.toUpperCase() + '</span>'
-    + '<button onclick="closeUserProfileModal()" style="background:rgba(0,0,0,.4);border:none;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff">' + ICONS.x + '</button>'
+function buildGalleryFilterPanel() {
+  var states = ['johor','kedah','kelantan','melaka','negeri_sembilan','pahang','perak','perlis','pulau_pinang','sabah','sarawak','selangor','terengganu','wp_kuala_lumpur'];
+  return '<div class="card" style="margin-bottom:20px">'
+    + '<h3 style="font-family:var(--fd);font-weight:600;font-size:16px;margin-bottom:16px">Tapis Carian</h3>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">'
+    + '<div><label class="lbl">Umur Min</label><input id="f-age-min" class="inp" type="number" placeholder="22" min="18" max="60"></div>'
+    + '<div><label class="lbl">Umur Max</label><input id="f-age-max" class="inp" type="number" placeholder="35" min="18" max="60"></div>'
+    + '<div><label class="lbl">Negeri</label><select id="f-state" class="inp" style="cursor:pointer"><option value="">Semua Negeri</option>'
+    + states.map(function(s){return '<option value="'+s+'">'+s.replace(/_/g,' ').replace(/\w/g,function(c){return c.toUpperCase()})+'</option>';}).join('')
+    + '</select></div>'
+    + '<div><label class="lbl">Status</label><select id="f-marital" class="inp" style="cursor:pointer"><option value="">Semua</option><option value="bujang">Bujang</option><option value="duda">Duda</option><option value="janda">Janda</option></select></div>'
+    + '<div><label class="lbl">Pendidikan Min</label><select id="f-edu" class="inp" style="cursor:pointer"><option value="">Semua</option><option value="spm">SPM</option><option value="diploma">Diploma</option><option value="ijazah">Ijazah</option><option value="master">Master</option><option value="phd">PhD</option></select></div>'
+    + '<div><label class="lbl">Pendapatan Min</label><select id="f-income" class="inp" style="cursor:pointer"><option value="">Semua</option><option value="below_2k">Bawah 2K</option><option value="2k_5k">2K-5K</option><option value="5k_10k">5K-10K</option><option value="10k_20k">10K-20K</option><option value="above_20k">Atas 20K</option></select></div>'
     + '</div>'
-
-    + dotsHtml
-
-    + '<div style="position:absolute;bottom:12px;right:12px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:20px;padding:5px 10px;font-family:var(--fm);font-weight:700;font-size:13px;color:var(--g7)">' + ICONS.heart + ' <b>' + p.score + '%</b></div>'
-    + (p.online ? '<div style="position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--e7)"><span class=\'online-dot\'></span>Dalam Talian</div>' : '')
-    + '</div>'
-
-    /* Info */
-    + '<div style="padding:20px">'
-    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">'
-    + '<div><div style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">' + p.code + '</div>'
-    + (p.name ? '<div style="font-size:14px;color:var(--is);margin-top:2px">' + p.name + '</div>' : '') + '</div>'
-    + '<div style="font-family:var(--fd);font-weight:600;font-size:32px;color:var(--im)">' + p.age + '</div>'
-    + '</div>'
-
-    + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'
-    + (p.state  ? '<span class="chip">' + ICONS.pin  + p.state  + '</span>' : '')
-    + (p.edu    ? '<span class="chip">' + ICONS.edu  + p.edu    + '</span>' : '')
-    + (p.job    ? '<span class="chip">' + ICONS.work + p.job    + '</span>' : '')
-    + (p.status ? '<span class="chip">' + p.status + '</span>' : '')
-    + '</div>'
-
-    + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.65;margin-bottom:14px">' + p.bio + '</p>' : '')
-    + (p.tip ? '<div class="wtip" style="margin-bottom:14px">' + ICONS.sparkle + '<span>' + p.tip + '</span></div>' : '')
-
-    /* Action buttons */
-    + '<div style="display:flex;gap:10px;margin-top:4px">'
-    + '<button class="btn ' + (alreadySent ? 'bg' : 'bp') + '" style="flex:2;padding:12px;' + (alreadySent ? 'border:1px solid var(--s2);color:var(--im)' : '') + '" '
-    + (alreadySent ? '' : 'onclick="closeUserProfileModal();sendMatchRequest(\'' + p.id + '\',-1)"') + '>'
-    + (alreadySent ? ICONS.check + ' Permintaan Dihantar' : ICONS.heart + ' Hantar Permintaan')
-    + '</button>'
-    + '<button class="btn bp" style="flex:1;padding:12px" onclick="closeUserProfileModal();activeChatIdx=0;go(\'chat\')">' + ICONS.chat + ' Sembang</button>'
-    + '</div>'
-    + '</div></div></div>';
-
-  document.body.insertAdjacentHTML('beforeend', h);
-  document.body.style.overflow = 'hidden';
-
-  /* Store photo array and idx on window for arrow navigation */
-  window._uvpPhotos = photos;
-  window._uvpIdx    = 0;
+    + '<div style="display:flex;gap:10px">'
+    + '<button class="btn bp" style="flex:1" onclick="applyGalleryFilter()">Guna Tapis</button>'
+    + '<button class="btn bg" style="border:1px solid var(--s2)" onclick="clearGalleryFilter()">Kosongkan</button>'
+    + '</div></div>';
 }
 
-function uvpNextPhoto(total) {
-  if (!window._uvpPhotos || window._uvpPhotos.length <= 1) return;
-  window._uvpIdx = (window._uvpIdx + 1) % total;
-  _uvpRender();
+function toggleGalleryFilter() {
+  var panel = document.getElementById('gallery-filter-panel');
+  if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
 }
-function uvpPrevPhoto(total) {
-  if (!window._uvpPhotos || window._uvpPhotos.length <= 1) return;
-  window._uvpIdx = (window._uvpIdx - 1 + total) % total;
-  _uvpRender();
+
+async function applyGalleryFilter() {
+  var ageMin  = (document.getElementById('f-age-min')||{}).value || '';
+  var ageMax  = (document.getElementById('f-age-max')||{}).value || '';
+  var state   = (document.getElementById('f-state')||{}).value || '';
+  var marital = (document.getElementById('f-marital')||{}).value || '';
+  var edu     = (document.getElementById('f-edu')||{}).value || '';
+  var income  = (document.getElementById('f-income')||{}).value || '';
+  var params  = [];
+  if (ageMin)  params.push('age_min='+ageMin);
+  if (ageMax)  params.push('age_max='+ageMax);
+  if (state)   params.push('states='+state);
+  if (marital) params.push('marital_status='+marital);
+  if (edu)     params.push('education_min='+edu);
+  if (income)  params.push('income_min='+income);
+  await apiLoadGalleryFiltered(params.length ? '&' + params.join('&') : '');
 }
-function _uvpRender() {
-  var idx = window._uvpIdx;
-  var photo = window._uvpPhotos[idx];
-  var img = document.getElementById('uvp-photo');
-  if (img && photo) img.src = photo.url;
-  // Update dots
-  window._uvpPhotos.forEach(function(_, di) {
-    var dot = document.getElementById('uvp-dot-' + di);
-    if (!dot) return;
-    dot.style.width = di === idx ? '20px' : '6px';
-    dot.style.background = 'rgba(255,255,255,' + (di === idx ? '.9' : '.4') + ')';
+
+function clearGalleryFilter() {
+  ['f-age-min','f-age-max','f-state','f-marital','f-edu','f-income'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  apiLoadGallery(true);
+}
+
+async function apiLoadGalleryFiltered(query) {
+  profiles = [];
+  var res = await apiFetch('/gallery/?page=1&page_size=10' + (query||''));
+  if (!res || !res.ok) return showToast('Gagal memuatkan.', 'error');
+  var d = await res.json();
+  profiles = mapProfiles(d.profiles || d.items || []);
+  buildAppPage('gallery');
+}
+
+function mapProfiles(arr) {
+  return arr.map(function(p) {
+    return {
+      id:        p.user_id || p.id,
+      code:      p.code_name || p.code || '???',
+      name:      p.display_name || p.name || '',
+      age:       p.age || '?',
+      state:     p.state_of_residence || p.state || '',
+      edu:       p.education_level || p.edu || '',
+      job:       p.occupation || p.job || '',
+      status:    p.marital_status || '',
+      tier:      (p.current_tier || p.tier || 'rahmah').toLowerCase(),
+      t20:       p.is_verified_t20 || false,
+      score:     p.compatibility_score ? Math.round(p.compatibility_score * 100) : '?',
+      online:    p.is_online || false,
+      bio:       p.bio_text || p.bio || '',
+      tip:       p.wingman_tip || '',
+      hue:       220,
+      photo_url: (p.photos && p.photos[0] && p.photos[0].url) || p.photo_url || null,
+      photos:    p.photos || [],
+    };
   });
 }
 
-function closeUserProfileModal() {
-  var m = document.getElementById('modal-user-profile');
-  if (m) m.remove();
-  document.body.style.overflow = '';
-  window._uvpPhotos = null;
-  window._uvpIdx    = 0;
+function rejectProfile(userId) {
+  apiFetch('/gallery/action', { method:'POST', body:JSON.stringify({ target_user_id:userId, action:'reject' }) });
+  profiles = profiles.filter(function(p){ return p.id !== userId; });
+  buildAppPage('gallery');
 }
 
-/* ══════════════════════════════════════
-   MATCHMAKER PAGE
-══════════════════════════════════════ */
-function buildMatchmakerPage() {
-  var h = '<div style="max-width:640px;margin:0 auto">';
+// ── Send Lamar Request ──
+async function sendLamarRequest(userId, name) {
+  var msg = prompt('Hantar mesej lamar kepada ' + (name||'calon') + ':') ;
+  if (msg === null) return;
+  if (!msg.trim()) msg = 'Assalamualaikum, saya berminat untuk berkenalan. Semoga kita boleh berkomunikasi lebih lanjut.';
 
-  /* Header */
-  h += '<div style="margin-bottom:20px">'
-    + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px">Padanan</h1>'
-    + '<p style="color:var(--is);font-size:13px;margin-top:4px">Hantar permintaan padanan kepada calon sekufu</p>'
-    + '</div>';
-
-  /* Incoming match requests */
-  if (pendingMatchRequests.length > 0) {
-    h += '<div style="margin-bottom:28px">'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
-      + '<span style="font-size:13px;font-weight:700;color:var(--n5)">Permintaan Masuk</span>'
-      + '<span style="background:#EF4444;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px">' + pendingMatchRequests.length + '</span>'
-      + '</div>';
-
-    pendingMatchRequests.forEach(function(req, i) {
-      h += '<div class="card afu" style="display:flex;align-items:center;gap:14px;margin-bottom:10px;border:1px solid rgba(200,162,60,.2);background:rgba(255,249,230,.3)">'
-        + '<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,hsl(' + (req.hue||220) + ',35%,20%),hsl(' + ((req.hue||220)+40) + ',25%,13%));display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer" onclick="viewMatchRequesterProfile(' + i + ')">'
-        + (req.photo_url
-            ? '<img src="' + req.photo_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
-            : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.65)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
-        + '</div>'
-        + '<div style="flex:1;min-width:0">'
-        + '<div style="font-family:var(--fm);font-weight:700;font-size:14px;color:var(--n5)">' + (req.code||'???') + '</div>'
-        + '<div style="font-size:12px;color:var(--im);margin-top:2px">' + (req.age||'?') + ' thn • ' + (req.state||'') + '</div>'
-        + '<div style="display:inline-flex;align-items:center;gap:4px;background:var(--g50);color:var(--g7);padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;margin-top:4px">' + ICONS.heart + ' ' + (req.score||'?') + '%</div>'
-        + '</div>'
-        + '<div style="display:flex;flex-direction:column;gap:7px">'
-        + '<button class="btn" style="padding:8px 14px;background:var(--e4);color:#fff;font-size:12px;white-space:nowrap" onclick="acceptMatchRequest(\'' + (req.notif_id||'') + '\',\'' + (req.id||'') + '\',' + i + ')">' + ICONS.check + ' Terima</button>'
-        + '<button class="btn bg" style="padding:8px 14px;border:1px solid #FECACA;color:#EF4444;font-size:12px" onclick="rejectMatchRequest(\'' + (req.notif_id||'') + '\',' + i + ')">' + ICONS.x + ' Tolak</button>'
-        + '</div>'
-        + '</div>';
-    });
-
-    h += '</div>';
-  }
-
-  /* Suggested matches grid */
-  var profs = matcherProfiles.length > 0 ? matcherProfiles : profiles;
-
-  h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-    + '<span style="font-size:13px;font-weight:700;color:var(--n5)">Cadangan Padanan</span>'
-    + '<span style="font-size:12px;color:var(--im)">' + profs.length + ' calon</span>'
-    + '</div>';
-
-  if (profs.length === 0) {
-    h += '<div class="card" style="text-align:center;padding:48px 24px">'
-      + '<div style="width:56px;height:56px;border-radius:50%;background:var(--g50);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' + ICONS.heart + '</div>'
-      + '<h3 style="font-family:var(--fd);font-size:20px;margin-bottom:8px">Tiada Cadangan Lagi</h3>'
-      + '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Lengkapkan profil anda untuk mendapat cadangan calon sekufu.</p>'
-      + '<button class="btn bp" onclick="go(\'profile\')">Lengkapkan Profil</button></div>';
+  var res = await apiFetch('/chat/initiate', {
+    method: 'POST',
+    body: JSON.stringify({ target_user_id: userId, message: { content: msg, is_ice_breaker: false } })
+  });
+  if (res && res.ok) {
+    showToast('Permintaan lamar dihantar!', 'success');
+    profiles = profiles.filter(function(p){ return p.id !== userId; });
+    buildAppPage('gallery');
   } else {
-    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
-
-    profs.forEach(function(p, i) {
-      var alreadySent = sentMatchRequests.has(p.id);
-      var tierClass = p.tier === 'gold' ? 'b-gld' : p.tier === 'platinum' ? 'b-plt' : p.tier === 'premium' ? 'b-prm' : 'b-rah';
-
-      h += '<div class="card afu d' + Math.min(i+1,5) + '" style="padding:16px;text-align:center;cursor:pointer" onclick="viewMatcherProfile(\'' + p.id + '\')">'
-
-        /* Photo circle */
-        + '<div style="position:relative;width:80px;height:80px;border-radius:50%;margin:0 auto 10px;overflow:hidden;background:linear-gradient(135deg,hsl(' + p.hue + ',35%,20%),hsl(' + (p.hue+40) + ',25%,13%));box-shadow:0 4px 12px rgba(0,0,0,.12)">'
-        + (p.photo_url
-            ? '<img src="' + p.photo_url + '" style="width:100%;height:100%;object-fit:cover">'
-            : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>')
-        + (p.online ? '<span style="position:absolute;bottom:3px;right:3px;width:14px;height:14px;background:var(--e4);border-radius:50%;border:2px solid #fff"></span>' : '')
-        + '</div>'
-
-        /* Name */
-        + '<div style="font-family:var(--fm);font-weight:700;font-size:14px;color:var(--n5);margin-bottom:2px">' + p.code + '</div>'
-        + '<div style="font-size:11px;color:var(--im);margin-bottom:6px">' + p.age + ' thn' + (p.state ? ' • ' + p.state : '') + '</div>'
-
-        /* Score */
-        + '<div style="display:inline-flex;align-items:center;gap:3px;background:var(--g50);color:var(--g7);padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-bottom:10px">'
-        + ICONS.heart + ' ' + p.score + '%</div>'
-
-        /* Match button — stop propagation so card click doesn't also fire */
-        + '<button class="btn ' + (alreadySent ? 'bg' : 'bp') + '" style="width:100%;padding:9px 0;font-size:12px;'
-        + (alreadySent ? 'border:1px solid var(--s2);color:var(--im)' : '') + '" '
-        + 'onclick="event.stopPropagation();' + (alreadySent ? '' : 'sendMatchRequest(\'' + p.id + '\',' + i + ')') + '">'
-        + (alreadySent ? ICONS.check + ' Dihantar' : ICONS.heart + ' Padanan')
-        + '</button>'
-        + '</div>';
-    });
-
-    h += '</div>';
+    showToast('Gagal menghantar lamar. Cuba semula.', 'error');
   }
-
-  h += '</div>';
-  return h;
 }
 
-/* Open full profile from Matchmaker grid */
-function viewMatcherProfile(id) {
-  var profs = matcherProfiles.length > 0 ? matcherProfiles : profiles;
-  /* inject into main profiles so viewUserProfile can find it */
-  var p = profs.find(function(pr) { return String(pr.id) === String(id); });
+// ── View Profile Modal (Tinder-style) ──
+var _pmPhotos = [], _pmIdx = 0;
+
+function viewProfile(userId) {
+  var p = profiles.find(function(x){ return x.id === userId; });
   if (!p) return;
-  if (!profiles.find(function(pr) { return String(pr.id) === String(id); })) {
-    profiles.push(p);
+
+  var photos = (p.photos && p.photos.length) ? p.photos : (p.photo_url ? [{url: p.photo_url}] : []);
+  _pmPhotos = photos;
+  _pmIdx = 0;
+
+  var tierClass = p.tier === 'gold' ? 'b-gld' : p.tier === 'platinum' ? 'b-plt' : p.tier === 'premium' ? 'b-prm' : 'b-rah';
+
+  function photoPart(idx) {
+    if (!photos.length) {
+      return '<div style="width:100%;height:320px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,hsl(220,35%,20%),hsl(260,25%,13%))">'
+        + '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>';
+    }
+    return '<img id="pm-img" src="' + photos[idx].url + '" style="width:100%;height:320px;object-fit:cover">';
   }
-  viewUserProfile(id);
+
+  var dotsHtml = photos.length > 1
+    ? '<div style="position:absolute;top:12px;left:0;right:0;display:flex;justify-content:center;gap:4px;padding:0 12px">'
+      + photos.map(function(_,i){ return '<div id="pmd'+i+'" style="height:3px;border-radius:2px;flex:1;max-width:40px;background:'+(i===0?'#fff':'rgba(255,255,255,.4)')+';transition:background .2s"></div>'; }).join('')
+      + '</div>' : '';
+
+  var html = '<div id="profile-view-modal" style="display:flex;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;padding:0">'
+    + '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto">'
+    // Photo area
+    + '<div style="position:relative;background:#111;overflow:hidden">'
+    + '<div id="pm-photo-wrap">' + photoPart(0) + '</div>'
+    + dotsHtml
+    + (photos.length > 1 ? '<div style="position:absolute;inset:0;display:flex;cursor:pointer"><div style="flex:1" onclick="pmPrev()"></div><div style="flex:1" onclick="pmNext()"></div></div>' : '')
+    + '<button onclick="closeProfileModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10">' + ICONS.x + '</button>'
+    + '<div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;backdrop-filter:blur(4px)">' + ICONS.heart + ' ' + p.score + '%</div>'
+    + '</div>'
+    // Info
+    + '<div style="padding:20px">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<div><div style="font-family:var(--fm);font-weight:700;font-size:22px">' + (p.name||p.code) + '</div>'
+    + '<div style="color:var(--im);font-size:13px">' + p.code + (p.age ? ' &bull; ' + p.age + ' tahun' : '') + '</div></div>'
+    + '<div style="display:flex;gap:6px"><span class="badge ' + tierClass + '">' + p.tier.toUpperCase() + '</span>'
+    + (p.t20 ? '<span class="badge b-ver">T20</span>' : '') + '</div>'
+    + '</div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">'
+    + (p.state ? '<span class="chip">' + ICONS.pin + p.state.replace(/_/g,' ') + '</span>' : '')
+    + (p.edu   ? '<span class="chip">' + ICONS.edu + p.edu.replace(/_/g,' ') + '</span>' : '')
+    + (p.job   ? '<span class="chip">' + ICONS.work + p.job + '</span>' : '')
+    + (p.status? '<span class="chip">' + p.status + '</span>' : '')
+    + (p.online? '<span class="chip" style="color:var(--e7)"><span class="online-dot" style="display:inline-block;margin-right:4px"></span>Dalam Talian</span>' : '')
+    + '</div>'
+    + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.6;margin-bottom:16px">' + p.bio + '</p>' : '')
+    + (p.tip ? '<div class="wtip" style="margin-bottom:16px">' + ICONS.sparkle + '<span>' + p.tip + '</span></div>' : '')
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:13px" data-pid="' + p.id + '" onclick="closeProfileModal();handleFav(this)">' + ICONS.bookmark + ' Simpan</button>'
+    + '<button class="btn bp" style="justify-content:center;padding:13px" data-pid="' + p.id + '" data-name="' + (p.name||p.code) + '" onclick="closeProfileModal();handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
+    + '</div></div></div></div>';
+
+  var existing = document.getElementById('profile-view-modal');
+  if (existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend', html);
+
+  // Close on backdrop click
+  document.getElementById('profile-view-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeProfileModal();
+  });
 }
 
-/* Open profile of someone who sent a match request */
-function viewMatchRequesterProfile(idx) {
-  var req = pendingMatchRequests[idx];
-  if (!req) return;
-  if (!profiles.find(function(pr) { return String(pr.id) === String(req.id); })) {
-    profiles.push(req);
-  }
-  viewUserProfile(req.id);
+function pmPrev() {
+  if (!_pmPhotos.length) return;
+  _pmIdx = (_pmIdx - 1 + _pmPhotos.length) % _pmPhotos.length;
+  var w = document.getElementById('pm-photo-wrap');
+  if (w) w.innerHTML = '<img id="pm-img" src="' + _pmPhotos[_pmIdx].url + '" style="width:100%;height:320px;object-fit:cover">';
+  _pmPhotos.forEach(function(_,i){ var d=document.getElementById('pmd'+i); if(d) d.style.background=i===_pmIdx?'#fff':'rgba(255,255,255,.4)'; });
 }
 
-/* ── Send Match Request ── */
-async function sendMatchRequest(targetId, cardIdx) {
-  if (sentMatchRequests.has(targetId)) return;
-  sentMatchRequests.add(targetId);
-
-  /* Optimistic UI — refresh current page */
-  if (currentPage === 'matchmaker') buildAppPage('matchmaker');
-  else if (currentPage === 'gallery') buildAppPage('gallery');
-
-  var result = await apiSendMatchRequest(targetId);
-  if (result && result.ok) {
-    showToast('Permintaan padanan dihantar! 💛', 'success');
-  } else {
-    sentMatchRequests.delete(targetId);
-    showToast('Gagal menghantar permintaan. Cuba semula.', 'error');
-    if (currentPage === 'matchmaker') buildAppPage('matchmaker');
-    else if (currentPage === 'gallery') buildAppPage('gallery');
-  }
+function pmNext() {
+  if (!_pmPhotos.length) return;
+  _pmIdx = (_pmIdx + 1) % _pmPhotos.length;
+  var w = document.getElementById('pm-photo-wrap');
+  if (w) w.innerHTML = '<img id="pm-img" src="' + _pmPhotos[_pmIdx].url + '" style="width:100%;height:320px;object-fit:cover">';
+  _pmPhotos.forEach(function(_,i){ var d=document.getElementById('pmd'+i); if(d) d.style.background=i===_pmIdx?'#fff':'rgba(255,255,255,.4)'; });
 }
 
-/* ── Accept Match Request ── */
-async function acceptMatchRequest(notifId, fromUserId, idx) {
-  var btn = event && event.target;
-  if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
-
-  var result = await apiRespondToMatch(notifId, true, fromUserId);
-  if (result && result.ok) {
-    pendingMatchRequests.splice(idx, 1);
-    showToast('Permintaan diterima! Pergi ke sembang untuk berbual. 💬', 'success');
-    buildAppPage('matchmaker');
-    /* Navigate to chat after short delay */
-    setTimeout(function() { go('chat'); }, 1800);
-  } else {
-    if (btn) { btn.disabled = false; btn.innerHTML = ICONS.check + ' Terima'; }
-    showToast('Gagal memproses. Cuba semula.', 'error');
-  }
+function closeProfileModal() {
+  var m = document.getElementById('profile-view-modal');
+  if (m) m.remove();
 }
 
-/* ── Reject Match Request ── */
-async function rejectMatchRequest(notifId, idx) {
-  pendingMatchRequests.splice(idx, 1);
-  buildAppPage('matchmaker');
-  await apiRespondToMatch(notifId, false, null);
-  showToast('Permintaan ditolak.', 'info');
-}
 
-/* ══════════════════════════════════════
-   CHAT PAGE
-══════════════════════════════════════ */
 function buildChatPage() {
   if (activeChatIdx >= convos.length) activeChatIdx = 0;
   var ac = convos.length > 0 ? convos[activeChatIdx] : null;
@@ -625,21 +514,19 @@ function buildChatPage() {
     h += '<div style="padding:48px 24px;text-align:center">'
       + '<div style="width:56px;height:56px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' + ICONS.chat + '</div>'
       + '<h3 style="font-family:var(--fd);font-size:18px;margin-bottom:8px">Tiada Perbualan Lagi</h3>'
-      + '<p style="color:var(--is);font-size:14px">Terima permintaan padanan untuk mula berbual.</p></div>';
+      + '<p style="color:var(--is);font-size:14px">Lamar calon dari Bilik Pameran untuk mula berbual.</p></div>';
   }
 
   convos.forEach(function(c, i) {
     var partner = c.partner || {};
     var code = partner.code || c.partner_code_name || '??';
-    var photoUrl = partner.photo_url || null;
     var online = partner.online || c.is_online || false;
     var lastMsg = c.last_message || c.lastMsg || '';
     var time = c.last_message_at ? new Date(c.last_message_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : (c.time || '');
     var unread = c.unread_count || c.unread || 0;
 
     h += '<div class="ch-i' + (i === activeChatIdx ? ' on' : '') + '" onclick="activeChatIdx=' + i + ';loadAndShowChat()">'
-      + '<div class="ch-av" style="overflow:hidden">'
-      + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : code.slice(0, 2))
+      + '<div class="ch-av">' + code.slice(0, 2)
       + (online ? '<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>' : '') + '</div>'
       + '<div class="ch-info"><div class="ch-name">' + code + '</div><div class="ch-last">' + lastMsg + '</div></div>'
       + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
@@ -649,6 +536,7 @@ function buildChatPage() {
 
   h += '</div></div>';
 
+  // Chat area
   h += '<div class="chat-area' + (ac ? ' active' : '') + '">';
 
   if (!ac) {
@@ -656,15 +544,13 @@ function buildChatPage() {
       + ICONS.chat + '<p style="font-size:14px">Pilih perbualan</p></div>';
   } else {
     var partner = ac.partner || {};
-    var code    = partner.code || ac.partner_code_name || '??';
-    var photoUrl = partner.photo_url || null;
+    var code   = partner.code || ac.partner_code_name || '??';
     var online  = partner.online || ac.is_online || false;
-    var score   = ac.compatibility_score ? Math.round(ac.compatibility_score * 100) : null;
+    var score   = partner.score || ac.compatibility_score ? Math.round((ac.compatibility_score || 0) * 100) : null;
 
     h += '<div class="chat-hd">'
       + '<button class="btn bg mob-back-btn" onclick="showChatList()" style="display:none;padding:6px 8px">' + ICONS.back + '</button>'
-      + '<div class="ch-av" style="width:38px;height:38px;font-size:10px;overflow:hidden">'
-      + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : code.slice(0, 2))
+      + '<div class="ch-av" style="width:38px;height:38px;font-size:10px">' + code.slice(0, 2)
       + (online ? '<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>' : '') + '</div>'
       + '<div style="flex:1"><div style="font-family:var(--fm);font-size:13px;font-weight:600">' + code + '</div>'
       + '<div style="font-size:12px;color:' + (online ? 'var(--e5)' : 'var(--im)') + '">' + (online ? 'Dalam Talian' : 'Luar Talian') + '</div></div>'
@@ -691,9 +577,7 @@ function buildChatPage() {
   return h;
 }
 
-/* ══════════════════════════════════════
-   PROFILE PAGE
-══════════════════════════════════════ */
+/* ── Profile Page ── */
 function buildProfilePage() {
   var user = currentUser || Auth.getUser() || {};
   var code  = user.code_name || '---';
@@ -707,6 +591,7 @@ function buildProfilePage() {
   var maritalOpts = ['bujang','duda','janda'];
   var hobbyOpts = ['Mendaki','Fotografi','Membaca','Melancong','Gym','Memasak','Muzik','Sukan','Berkebun','Melukis','Mengembara','Masak'];
 
+  // Permanent = set once, cannot change. Editable = can always change.
   var isPermanent = {
     gender: !!(user.gender),
     date_of_birth: !!(user.date_of_birth),
@@ -738,34 +623,31 @@ function buildProfilePage() {
   var selectedHobbies = user.hobbies || [];
   var displayName = user.display_name || code;
   var photoUrl = user.photo_url || (user.photos && user.photos[0] && user.photos[0].url) || null;
-  var photos = user.photos || [];
-  if (photoUrl && photos.length === 0) photos = [{ url: photoUrl, id: 'main' }];
   var answered = quizProgress.answered || 0;
   var quizPct = quizProgress.percentage || 0;
   var quizUnlocked = quizProgress.gallery_unlocked || false;
 
   return '<div style="max-width:620px;margin:0 auto">'
-
-    /* ── Header card ── */
+    // ── Header card ──
     + '<div style="background:#fff;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:20px">'
-    + '<div style="height:130px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
-    + '<div style="position:absolute;bottom:-40px;left:20px">'
-    + '<div style="position:relative;width:88px;height:88px">'
-    + '<div id="pf-avatar" style="width:88px;height:88px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);overflow:hidden">'
+    + '<div style="height:120px;background:linear-gradient(135deg,var(--n5),var(--n9));position:relative">'
+    + '<div style="position:absolute;bottom:-36px;left:20px">'
+    + '<div style="position:relative;width:80px;height:80px">'
+    + '<div id="pf-avatar" style="width:80px;height:80px;border-radius:50%;border:4px solid #fff;background:#E8ECF4;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh2);overflow:hidden">'
     + (photoUrl ? '<img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover">'
-        : '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
+        : '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--n5)" stroke-width="1.5" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
     + '</div>'
-    + '<label title="Tukar gambar" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)">'
+    + '<label title="Tukar gambar" style="position:absolute;bottom:0;right:0;width:24px;height:24px;border-radius:50%;background:var(--g5);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2)">'
     + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>'
     + '<input type="file" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">'
     + '</label></div></div></div>'
-    + '<div style="padding:48px 20px 20px;display:flex;align-items:center;justify-content:space-between">'
+    + '<div style="padding:44px 20px 20px;display:flex;align-items:center;justify-content:space-between">'
     + '<div><div style="display:flex;align-items:center;gap:10px">'
     + '<span id="pf-header-name" style="font-family:var(--fm);font-weight:700;font-size:22px;color:var(--n5)">' + displayName + '</span>'
     + '<span class="badge ' + badgeClass + '">' + tier + '</span></div>'
     + '<div style="font-size:13px;color:var(--im);margin-top:4px">' + (user.email || '') + '</div></div></div></div>'
 
-    /* ── Profile completion banner ── */
+    // ── Completion banner ──
     + '<div class="card" style="margin-bottom:20px;background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2)">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
     + '<div style="display:flex;align-items:center;gap:8px">' + ICONS.sparkle
@@ -773,41 +655,7 @@ function buildProfilePage() {
     + '<div class="progress"><div class="progress-fill" style="width:' + completion + '%"></div></div>'
     + '<p style="font-size:12px;color:var(--g7);margin-top:6px">Lengkapkan profil untuk mendapat padanan yang lebih baik.</p></div>'
 
-    /* ══════════════════════════════════════
-       PHOTO GALLERY (Tinder-style)
-    ══════════════════════════════════════ */
-    + '<div class="card" style="margin-bottom:20px">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-    + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px">Galeri Foto</h3>'
-    + '<span style="font-size:12px;color:var(--im);background:var(--s1);padding:4px 10px;border-radius:10px">' + photos.length + '/6 foto</span>'
-    + '</div>'
-    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'
-
-    /* Existing photos */
-    + photos.map(function(photo, idx) {
-        return '<div style="aspect-ratio:1;border-radius:var(--rs);overflow:hidden;position:relative;background:var(--s1)">'
-          + '<img src="' + photo.url + '" style="width:100%;height:100%;object-fit:cover">'
-          + (idx === 0 ? '<div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px">Utama</div>' : '')
-          + '<button onclick="deleteProfilePhoto(\'' + (photo.id||'') + '\',' + idx + ')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.45);border:none;cursor:pointer;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff">'
-          + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-          + '</button>'
-          + '</div>';
-      }).join('')
-
-    /* Add photo slot(s) */
-    + (photos.length < 6
-        ? '<label style="aspect-ratio:1;border-radius:var(--rs);border:2px dashed var(--s2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--im);transition:border-color .2s;background:var(--s1)" onmouseover="this.style.borderColor=\'var(--g5)\'" onmouseout="this.style.borderColor=\'var(--s2)\'">'
-          + '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-          + '<span style="font-size:10px;font-weight:500">Tambah Foto</span>'
-          + '<input type="file" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">'
-          + '</label>'
-        : '')
-
-    + '</div>'
-    + '<p style="font-size:11px;color:var(--im);margin-top:10px">Foto pertama digunakan sebagai foto utama. Maksimum 6 foto, saiz 5MB setiap satu.</p>'
-    + '</div>'
-
-    /* ── SECTION 1: Maklumat Asas (permanent) ── */
+    // ── SECTION 1: Maklumat Tetap (permanent) ──
     + '<div class="card" style="margin-bottom:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin:0">Maklumat Asas</h3>'
@@ -823,7 +671,7 @@ function buildProfilePage() {
     + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="savePermanentFields()">Simpan Maklumat Asas</button>'
     + '</div>'
 
-    /* ── SECTION 2: Maklumat Boleh Ubah ── */
+    // ── SECTION 2: Maklumat Boleh Ubah ──
     + '<div class="card" style="margin-bottom:20px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:20px">Maklumat Peribadi</h3>'
     + inp('pf-display-name', user.display_name, 'Nama Paparan (max 16 aksara)', 'text', 'Contoh: Ahmad', false)
@@ -838,7 +686,7 @@ function buildProfilePage() {
     + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveProfile()">Simpan Maklumat</button>'
     + '</div>'
 
-    /* ── SECTION 3: Hobbies ── */
+    // ── SECTION 3: Hobbies ──
     + '<div class="card" style="margin-bottom:20px">'
     + '<h3 style="font-family:var(--fd);font-weight:600;font-size:18px;margin-bottom:16px">Hobi &amp; Minat</h3>'
     + '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">'
@@ -850,40 +698,25 @@ function buildProfilePage() {
     + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="saveHobbies()">Simpan Hobi</button>'
     + '</div>'
 
-    /* ── SECTION 4: Kuiz Psikometrik ── */
+    // ── SECTION 4: Kuiz Psikometrik ──
     + '<div class="card" style="margin-bottom:20px;border:1px solid ' + (quizUnlocked ? 'rgba(52,168,83,.2)' : 'rgba(200,162,60,.2)') + ';background:' + (quizUnlocked ? 'rgba(230,245,237,.3)' : 'rgba(255,249,230,.3)') + '">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
     + '<div style="display:flex;align-items:center;gap:10px">' + ICONS.sparkle
     + '<div><div style="font-weight:600;font-size:15px">Kuiz Serasi</div>'
     + '<div style="font-size:12px;color:var(--im)">' + answered + '/30 soalan dijawab</div></div></div>'
-    + '<button class="btn bp" style="padding:8px 16px;font-size:13px" onclick="openQuizModal()">'
-    + (answered === 0 ? 'Mula Kuiz' : answered >= 30 ? '&#10003; Selesai' : 'Teruskan') + '</button>'
+    + '<button class="btn bp" style="padding:8px 16px;font-size:13px" onclick="openQuizModal()">'    + (answered === 0 ? 'Mula Kuiz' : answered >= 10 ? '&#10003; Selesai' : 'Teruskan') + '</button>'
     + '</div>'
     + '<div class="progress"><div class="progress-fill" style="width:' + quizPct + '%;background:' + (quizUnlocked ? 'var(--e4)' : 'var(--g5)') + '"></div></div>'
     + (quizUnlocked
         ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500">&#10003; Bilik Pameran telah dibuka!</p>'
-        : '<p style="font-size:12px;color:var(--g7);margin-top:8px">Jawab ' + Math.max(0, 10 - answered) + ' lagi soalan untuk membuka Bilik Pameran.</p>')
+        : '<p style="font-size:12px;color:var(--g7);margin-top:8px">Jawab ' + Math.max(0, 10 - (quizProgress.answered||0)) + ' lagi soalan untuk membuka Bilik Pameran.</p>')
     + '</div>'
 
-    /* ── Quiz Modal ── */
+    // ── Quiz Modal ──
     + modal('modal-quiz', 'Kuiz Serasi', buildQuizModalContent())
 
     + '</div>';
 }
-
-/* Delete a profile photo */
-async function deleteProfilePhoto(photoId, idx) {
-  if (!photoId) return;
-  var res = await apiFetch('/profile/photos/' + photoId, { method: 'DELETE' });
-  if (res && res.ok) {
-    showToast('Foto dipadamkan.', 'success');
-    await apiLoadProfile();
-    buildAppPage('profile');
-  } else {
-    showToast('Gagal memadam foto.', 'error');
-  }
-}
-
 /* ── Payment Page ── */
 function buildPaymentPage() {
   var user = currentUser || Auth.getUser() || {};
@@ -932,72 +765,22 @@ function buildNotifPage() {
   }
 
   notifs.forEach(function(n, i) {
-    var isMatchReq  = n.type === 'match_request';
-    var isMatchAcc  = n.type === 'match_accepted';
-    var ic = isMatchReq  ? ICONS.heart
-           : isMatchAcc  ? ICONS.check
-           : n.type === 'new_match'      ? ICONS.heart
-           : n.type === 'new_message'    ? ICONS.chat
+    var ic = n.type === 'new_match' ? ICONS.heart
+           : n.type === 'new_message' ? ICONS.chat
            : n.type === 'profile_viewed' ? ICONS.eye
            : ICONS.notif;
-
-    h += '<div class="card" onclick="markRead(' + i + ')" style="margin-bottom:8px;cursor:pointer;'
+    h += '<div class="card" onclick="markRead(' + i + ')" style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px;cursor:pointer;'
       + 'background:' + (n.read ? '#fff' : 'rgba(255,249,230,.3)') + ';'
       + 'border:' + (n.read ? 'none' : '1px solid rgba(200,162,60,.15)') + '">'
-      + '<div style="display:flex;align-items:flex-start;gap:14px">'
-      + '<div style="width:40px;height:40px;border-radius:50%;background:' + (isMatchReq ? 'var(--g50)' : isMatchAcc ? '#E6F5ED' : (n.read ? 'var(--s1)' : 'var(--g50)')) + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;color:' + (isMatchAcc ? 'var(--e7)' : 'var(--g7)') + '">' + ic + '</div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="font-weight:600;font-size:14px">' + (n.title || '') + '</div>'
+      + '<div style="width:38px;height:38px;border-radius:50%;background:' + (n.read ? 'var(--s1)' : 'var(--g50)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' + ic + '</div>'
+      + '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + (n.title || '') + '</div>'
       + '<div style="font-size:13px;color:var(--is);margin-top:2px">' + (n.body || '') + '</div>'
-      + '<div style="font-size:11px;color:var(--im);margin-top:4px">' + (n.time || '') + '</div>'
-
-      /* Accept/Reject buttons for incoming match requests */
-      + (isMatchReq && !n.responded
-          ? '<div style="display:flex;gap:8px;margin-top:10px" onclick="event.stopPropagation()">'
-            + '<button class="btn" style="padding:8px 16px;background:var(--e4);color:#fff;font-size:13px" onclick="acceptMatchFromNotif(' + i + ')">' + ICONS.check + ' Terima</button>'
-            + '<button class="btn bg" style="padding:8px 16px;border:1px solid #FECACA;color:#EF4444;font-size:13px" onclick="rejectMatchFromNotif(' + i + ')">' + ICONS.x + ' Tolak</button>'
-            + '</div>'
-          : '')
-
-      /* Go to chat button for accepted match */
-      + (isMatchAcc
-          ? '<div style="margin-top:10px" onclick="event.stopPropagation()">'
-            + '<button class="btn bp" style="padding:8px 16px;font-size:13px" onclick="go(\'chat\')">' + ICONS.chat + ' Pergi ke Sembang</button>'
-            + '</div>'
-          : '')
-
-      + '</div>'
+      + '<div style="font-size:11px;color:var(--im);margin-top:4px">' + (n.time || '') + '</div></div>'
       + (n.read ? '' : '<div style="width:8px;height:8px;background:var(--g5);border-radius:50%;margin-top:8px;flex-shrink:0"></div>')
-      + '</div></div>';
+      + '</div>';
   });
 
   return h + '</div>';
-}
-
-/* Handle match request accept/reject from notification list */
-async function acceptMatchFromNotif(idx) {
-  var n = notifs[idx];
-  if (!n) return;
-  var result = await apiRespondToMatch(n.id, true, n.from_user_id || '');
-  if (result && result.ok) {
-    notifs[idx].responded = true;
-    notifs[idx].read = true;
-    buildAppPage('notif');
-    showToast('Permintaan diterima! Pergi ke sembang. 💬', 'success');
-    setTimeout(function() { go('chat'); }, 1800);
-  } else {
-    showToast('Gagal memproses. Cuba semula.', 'error');
-  }
-}
-
-async function rejectMatchFromNotif(idx) {
-  var n = notifs[idx];
-  if (!n) return;
-  notifs[idx].responded = true;
-  notifs[idx].read = true;
-  buildAppPage('notif');
-  await apiRespondToMatch(n.id, false, null);
-  showToast('Permintaan ditolak.', 'info');
 }
 
 /* ── Settings Page ── */
@@ -1028,34 +811,60 @@ function buildSettingsPage() {
   return '<div style="max-width:620px;margin:0 auto">'
     + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px;margin-bottom:20px">Tetapan</h1>'
 
+    // ── Akaun & Keselamatan ──
     + section('Akaun &amp; Keselamatan',
-        row(ICONS.lock, 'Tukar Kata Laluan', 'Tukar kata laluan akaun anda', 'openModal(\'modal-password\')')
-      + row(ICONS.shield, 'Pengesahan No. IC',
-          icVerified ? '&#10003; IC disahkan' : 'Masukkan No. Kad Pengenalan', 'openModal(\'modal-ic\')',
-          icVerified ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>' : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
-      + row(ICONS.shield, 'Verified T20',
+        row(ICONS.lock,
+          'Tukar Kata Laluan',
+          'Tukar kata laluan akaun anda',
+          'openModal(\'modal-password\')')
+      + row(ICONS.shield,
+          'Pengesahan No. IC',
+          icVerified ? '&#10003; IC disahkan' : 'Masukkan No. Kad Pengenalan',
+          'openModal(\'modal-ic\')',
+          icVerified
+            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>'
+            : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
+      + row(ICONS.shield,
+          'Verified T20',
           isVerified ? 'Anda telah disahkan sebagai T20' : 'Mohon pengesahan T20',
           isVerified ? null : 'openModal(\'modal-t20\')',
-          isVerified ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>' : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
+          isVerified
+            ? '<span class="badge b-ver" style="margin-right:4px">&#10003; Disahkan</span>'
+            : '<span class="badge b-rah" style="margin-right:4px">Belum</span>')
     )
 
+    // ── Profil ──
     + section('Profil',
         row(ICONS.profile, 'Edit Profil', 'Kemaskini maklumat peribadi anda', 'go(\'profile\')')
-      + row(ICONS.eye, 'Privasi Profil', 'Siapa boleh melihat profil anda', 'openModal(\'modal-privacy\')')
-      + row(ICONS.globe, 'Bahasa', 'Bahasa Melayu', 'openModal(\'modal-language\')')
+      + row(ICONS.eye,
+          'Privasi Profil',
+          'Siapa boleh melihat profil anda',
+          'openModal(\'modal-privacy\')')
+      + row(ICONS.globe,
+          'Bahasa',
+          'Bahasa Melayu',
+          'openModal(\'modal-language\')')
     )
 
+    // ── Langganan ──
     + section('Langganan',
-        row(ICONS.payment, 'Urus Langganan', 'Pelan semasa: ' + tier, 'go(\'payment\')',
+        row(ICONS.payment,
+          'Urus Langganan',
+          'Pelan semasa: ' + tier,
+          'go(\'payment\')',
           '<span class="badge ' + (tier === 'GOLD' ? 'b-gld' : tier === 'PLATINUM' ? 'b-plt' : tier === 'PREMIUM' ? 'b-prm' : 'b-rah') + '" style="margin-right:4px">' + tier + '</span>')
     )
 
+    // ── Mod Wali ──
     + section('Mod Wali/Mahram',
-        row(ICONS.users, 'Urus Mod Wali',
-          user.wali_mode_enabled ? 'Mod wali aktif' : 'Tidak aktif — wali tidak terlibat', 'openModal(\'modal-wali\')',
+        row(ICONS.users,
+          'Urus Mod Wali',
+          user.wali_mode_enabled ? 'Mod wali aktif' : 'Tidak aktif — wali tidak terlibat',
+          'openModal(\'modal-wali\')',
           '<span style="width:36px;height:20px;border-radius:10px;background:' + (user.wali_mode_enabled ? 'var(--e4)' : 'var(--s2)') + ';display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:4px"><span style="width:14px;height:14px;border-radius:50%;background:#fff;transform:translateX(' + (user.wali_mode_enabled ? '8px' : '-8px') + ');transition:transform .2s"></span></span>')
     )
 
+    // ── Zon Bahaya ──
     + '<div class="card" style="border:1px solid #FECACA;margin-bottom:20px">'
     + '<div style="font-size:11px;font-weight:600;color:#EF4444;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Zon Bahaya</div>'
     + '<div style="display:flex;align-items:center;gap:14px;padding:13px 10px;border-radius:var(--rb);cursor:pointer;transition:background .15s" onclick="openModal(\'modal-pause\')" onmouseover="this.style.background=\'#FEF2F2\'" onmouseout="this.style.background=\'\'">'
@@ -1069,6 +878,7 @@ function buildSettingsPage() {
     + '<button class="btn bg" style="width:100%;color:#EF4444;justify-content:center;gap:8px;margin-bottom:40px" onclick="apiLogout()">'
     + ICONS.logout + ' Log Keluar</button>'
 
+    // ══ MODALS ══
     + modal('modal-password', 'Tukar Kata Laluan',
         '<div style="margin-bottom:14px"><label class="lbl">Kata Laluan Semasa</label><input id="s-pw-curr" class="inp" type="password" placeholder="Kata laluan semasa"></div>'
       + '<div style="margin-bottom:14px"><label class="lbl">Kata Laluan Baharu</label><input id="s-pw-new" class="inp" type="password" placeholder="Min 8 aksara, huruf besar &amp; nombor"></div>'
@@ -1076,13 +886,16 @@ function buildSettingsPage() {
       + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitChangePassword()">Tukar Kata Laluan</button>')
 
     + modal('modal-ic', 'Pengesahan No. Kad Pengenalan',
-        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Masukkan nombor IC anda untuk mengesahkan identiti.</p>'
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Masukkan nombor IC anda untuk mengesahkan identiti. Maklumat ini tidak dipaparkan kepada pengguna lain.</p>'
       + '<div style="margin-bottom:14px"><label class="lbl">No. Kad Pengenalan (tanpa sempang)</label><input id="ic-number" class="inp" type="text" placeholder="Contoh: 900101141234" maxlength="12" inputmode="numeric"></div>'
+      + '<p style="font-size:12px;color:var(--im);margin-bottom:20px">&#9432; IC anda disimpan secara selamat dan dienkripsi. Hanya digunakan untuk pengesahan identiti.</p>'
       + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitICVerification()">Sahkan IC</button>')
 
     + modal('modal-t20', 'Mohon Pengesahan T20',
-        '<div style="margin-bottom:14px"><label class="lbl">Nama Majikan / Syarikat</label><input id="t20-employer" class="inp" type="text" placeholder="Contoh: Petronas"></div>'
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">T20 bermaksud pendapatan isi rumah melebihi RM10,000/bulan. Pengesahan ini memperkukuh kredibiliti profil anda.</p>'
+      + '<div style="margin-bottom:14px"><label class="lbl">Nama Majikan / Syarikat</label><input id="t20-employer" class="inp" type="text" placeholder="Contoh: Petronas, Bank Negara"></div>'
       + '<div style="margin-bottom:14px"><label class="lbl">Jawatan</label><input id="t20-position" class="inp" type="text" placeholder="Contoh: Pengurus Kanan"></div>'
+      + '<div style="margin-bottom:20px"><label class="lbl">Dokumen Sokongan</label><p style="font-size:12px;color:var(--im);margin-top:4px">Slip gaji / surat tawaran. Hantar kepada admin@jodohku.my untuk semakan.</p></div>'
       + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitT20Request()">Hantar Permohonan</button>')
 
     + modal('modal-privacy', 'Tetapan Privasi Profil',
@@ -1096,8 +909,9 @@ function buildSettingsPage() {
       + '<button class="btn bp" style="width:100%;padding:13px 0;margin-top:8px" onclick="closeModal(\'modal-privacy\');showToast(\'Tetapan privasi disimpan.\',\'success\')">Simpan</button>')
 
     + modal('modal-language', 'Tetapan Bahasa',
-        ['Bahasa Melayu','English'].map(function(lang, i) {
-          return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--rs);border:1px solid ' + (i===0?'var(--g5)':'var(--s2)') + ';margin-bottom:8px;background:' + (i===0?'var(--g50)':'#fff') + '">'
+        '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Pilih bahasa paparan.</p>'
+      + ['Bahasa Melayu','English'].map(function(lang, i) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--rs);border:1px solid ' + (i===0?'var(--g5)':'var(--s2)') + ';margin-bottom:8px;cursor:pointer;background:' + (i===0?'var(--g50)':'#fff') + '">'
             + '<div style="width:20px;height:20px;border-radius:50%;border:2px solid ' + (i===0?'var(--g5)':'var(--s2)') + ';display:flex;align-items:center;justify-content:center">'
             + (i===0?'<div style="width:10px;height:10px;border-radius:50%;background:var(--g5)"></div>':'')
             + '</div><span style="font-size:14px;font-weight:' + (i===0?'600':'400') + '">' + lang + (i===0?' (Semasa)':'') + '</span></div>';
@@ -1106,6 +920,8 @@ function buildSettingsPage() {
 
     + modal('modal-wali', 'Mod Wali/Mahram',
         '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Apabila diaktifkan, wali anda akan menerima pemberitahuan dan boleh memantau perbualan anda.</p>'
+      + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px">'
+      + '<p style="font-size:13px;color:var(--g7);line-height:1.7">&#10003; Wali terima notifikasi setiap mesej<br>&#10003; Wali boleh menamatkan perbualan<br>&#10003; Lebih amanah dan terkawal</p></div>'
       + '<div style="margin-bottom:14px"><label class="lbl">Emel Wali/Mahram</label><input id="wali-email" class="inp" type="email" placeholder="wali@contoh.com"></div>'
       + '<div style="margin-bottom:14px"><label class="lbl">Nama Wali</label><input id="wali-name" class="inp" type="text" placeholder="Contoh: Ahmad bin Ibrahim"></div>'
       + '<div style="margin-bottom:20px"><label class="lbl">Hubungan</label>'
@@ -1113,12 +929,16 @@ function buildSettingsPage() {
       + '<button class="btn bp" style="width:100%;padding:13px 0" onclick="submitWaliInvite()">Jemput Wali</button>')
 
     + modal('modal-pause', 'Jeda Akaun',
-        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Profil anda akan disembunyikan dari galeri sehingga anda aktifkan semula.</p>'
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Profil anda akan disembunyikan dari galeri sehingga anda aktifkan semula. Data dan padanan anda akan dikekalkan.</p>'
+      + '<div class="card" style="background:#FEF2F2;border:1px solid #FECACA;margin-bottom:20px">'
+      + '<p style="font-size:13px;color:#B91C1C;line-height:1.7">&#9888; Langganan aktif anda akan terus berjalan semasa jeda.<br>&#9888; Anda masih akan dicaj sehingga tarikh tamat.</p></div>'
       + '<button class="btn" style="width:100%;padding:13px 0;background:#F97316;color:#fff;margin-bottom:10px" onclick="confirmPause()">Ya, Jeda Akaun Saya</button>'
       + '<button class="btn bg" style="width:100%;padding:13px 0" onclick="closeModal(\'modal-pause\')">Batal</button>')
 
     + modal('modal-delete', 'Padam Akaun',
-        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Tindakan ini <strong>tidak boleh diundur</strong>.</p>'
+        '<p style="color:var(--is);font-size:14px;margin-bottom:16px">Tindakan ini <strong>tidak boleh diundur</strong>. Semua data anda akan dipadamkan dalam masa 30 hari mengikut PDPA.</p>'
+      + '<div class="card" style="background:#FEF2F2;border:1px solid #FECACA;margin-bottom:20px">'
+      + '<p style="font-size:13px;color:#B91C1C;line-height:1.7">&#10005; Semua padanan dan perbualan dipadamkan<br>&#10005; Langganan aktif tidak boleh direfund<br>&#10005; Akaun tidak boleh dipulihkan</p></div>'
       + '<div style="margin-bottom:20px"><label class="lbl">Taip <strong>PADAM</strong> untuk mengesahkan</label><input id="delete-confirm" class="inp" placeholder="PADAM"></div>'
       + '<button class="btn" style="width:100%;padding:13px 0;background:#EF4444;color:#fff;margin-bottom:10px" onclick="confirmDelete()">Padam Akaun Saya</button>'
       + '<button class="btn bg" style="width:100%;padding:13px 0" onclick="closeModal(\'modal-delete\')">Batal</button>')
@@ -1176,7 +996,9 @@ async function submitChangePassword() {
 async function submitICVerification() {
   var ic = (document.getElementById('ic-number') || {}).value || '';
   ic = ic.replace(/[-\s]/g, '');
-  if (ic.length !== 12 || !/^\d{12}$/.test(ic)) return showToast('Sila masukkan nombor IC yang sah (12 digit).', 'warn');
+  if (ic.length !== 12 || !/^\d{12}$/.test(ic)) {
+    return showToast('Sila masukkan nombor IC yang sah (12 digit).', 'warn');
+  }
   var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify({ ic_number: ic }) });
   if (res && res.ok) {
     showToast('IC berjaya disahkan!', 'success');
@@ -1184,7 +1006,9 @@ async function submitICVerification() {
     if (currentUser) currentUser.ic_number = ic;
     await apiLoadProfile();
     _go('settings');
-  } else { showToast('Gagal menyimpan IC.', 'error'); }
+  } else {
+    showToast('Gagal menyimpan IC. Cuba semula.', 'error');
+  }
 }
 
 async function submitT20Request() {
@@ -1210,7 +1034,7 @@ async function submitWaliInvite() {
 
 async function confirmPause() {
   var res = await apiFetch('/settings/pause', { method: 'POST' });
-  if (res && res.ok) { closeModal('modal-pause'); showToast('Akaun dijeda.', 'info'); setTimeout(apiLogout, 1500); }
+  if (res && res.ok) { closeModal('modal-pause'); showToast('Akaun dijeda. Log masuk semula untuk mengaktifkan.', 'info'); setTimeout(apiLogout, 1500); }
   else showToast('Gagal menjeda akaun.', 'error');
 }
 
@@ -1218,7 +1042,7 @@ async function confirmDelete() {
   var input = (document.getElementById('delete-confirm') || {}).value || '';
   if (input !== 'PADAM') return showToast('Sila taip PADAM untuk mengesahkan.', 'warn');
   var res = await apiFetch('/settings/delete', { method: 'DELETE' });
-  if (res && res.ok) { closeModal('modal-delete'); showToast('Akaun dipadamkan.', 'info'); setTimeout(apiLogout, 2000); }
+  if (res && res.ok) { closeModal('modal-delete'); showToast('Akaun dipadamkan. Selamat tinggal.', 'info'); setTimeout(apiLogout, 2000); }
   else showToast('Gagal memadam akaun.', 'error');
 }
 
@@ -1251,7 +1075,7 @@ function buildQuizModalContent() {
   var unanswered = Array.isArray(quizQuestions) ? quizQuestions.filter(function(q) { return !q.already_answered; }) : [];
   var current = unanswered[0] || null;
   var answered = quizProgress.answered || 0;
-  var total = quizProgress.total || 30;
+  var total = 10; // Core questions only
 
   if (!current && answered >= total) {
     return '<div style="text-align:center;padding:20px">' + ICONS.sparkle
@@ -1280,6 +1104,7 @@ function buildQuizModalContent() {
 }
 
 async function openQuizModal() {
+  // Load quiz data first if not loaded
   if (!Array.isArray(quizQuestions) || quizQuestions.length === 0) {
     var rp = await apiFetch('/quiz/progress');
     if (rp && rp.ok) quizProgress = await rp.json();
@@ -1289,17 +1114,20 @@ async function openQuizModal() {
       var raw = d.questions || d || [];
       quizQuestions = Array.isArray(raw) ? raw : [];
     }
+    // Also get extended if core done
     if ((quizProgress.answered || 0) >= 10) {
       var rq2 = await apiFetch('/quiz/questions?batch=extended');
       if (rq2 && rq2.ok) {
         var d2 = await rq2.json();
         var raw2 = d2.questions || d2 || [];
         var extended = Array.isArray(raw2) ? raw2 : [];
+        // Merge without duplicates
         var ids = quizQuestions.map(function(q) { return q.id; });
         extended.forEach(function(q) { if (ids.indexOf(q.id) === -1) quizQuestions.push(q); });
       }
     }
   }
+  // Update modal content and open
   var mc = document.getElementById('modal-quiz-content');
   if (mc) mc.innerHTML = buildQuizModalContent();
   openModal('modal-quiz');
@@ -1323,6 +1151,7 @@ async function submitQuizAnswerModal(questionId, score, btn) {
       if (quizProgress.gallery_unlocked && quizProgress.answered === 10) {
         showToast('Bilik Pameran dibuka! 🎉', 'success');
       }
+      // Refresh profile page quiz section
       var pfPage = document.getElementById('page-content');
       if (pfPage && currentPage === 'profile') buildAppPage('profile');
     }, 350);
@@ -1335,18 +1164,25 @@ async function submitQuizAnswerModal(questionId, score, btn) {
 async function savePermanentFields() {
   var user = currentUser || Auth.getUser() || {};
   var data = {};
+
+  // Only include if not already locked
   if (!user.gender) { var g = (document.getElementById('pf-gender') || {}).value; if (g) data.gender = g; }
   if (!user.date_of_birth) { var d = (document.getElementById('pf-dob') || {}).value; if (d) data.date_of_birth = d; }
   if (!user.marital_status) { var m = (document.getElementById('pf-marital') || {}).value; if (m) data.marital_status = m; }
+  // Height is always editable
   var h = (document.getElementById('pf-height') || {}).value;
   if (h) data.height_cm = parseInt(h);
+
   if (Object.keys(data).length === 0) return showToast('Tiada perubahan untuk disimpan.', 'info');
+
   var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify(data) });
   if (res && res.ok) {
-    showToast('Maklumat asas disimpan!', 'success');
+    showToast('Maklumat asas disimpan! Sesetengah medan kini berkunci.', 'success');
     await apiLoadProfile();
     buildAppPage('profile');
-  } else { showToast('Gagal menyimpan. Cuba semula.', 'error'); }
+  } else {
+    showToast('Gagal menyimpan. Cuba semula.', 'error');
+  }
 }
 
 /* ══════════════════════════════════════
@@ -1370,17 +1206,22 @@ function toggleHobby(btn, hobby) {
 async function saveProfile() {
   var btn = document.querySelector('[onclick="saveProfile()"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+
+  // Only editable fields — permanent fields (gender, dob, marital) handled by savePermanentFields
   var data = {
-    display_name:       (document.getElementById('pf-display-name') || {}).value || null,
-    state_of_residence: (document.getElementById('pf-state') || {}).value || null,
-    education_level:    (document.getElementById('pf-edu') || {}).value || null,
-    occupation:         (document.getElementById('pf-job') || {}).value || null,
-    income_range:       (document.getElementById('pf-income') || {}).value || null,
-    bio_text:           (document.getElementById('pf-bio') || {}).value || null,
+    display_name:      (document.getElementById('pf-display-name') || {}).value || null,
+    state_of_residence:(document.getElementById('pf-state') || {}).value || null,
+    education_level:   (document.getElementById('pf-edu') || {}).value || null,
+    occupation:        (document.getElementById('pf-job') || {}).value || null,
+    income_range:      (document.getElementById('pf-income') || {}).value || null,
+    bio_text:          (document.getElementById('pf-bio') || {}).value || null,
   };
+
   Object.keys(data).forEach(function(k) { if (!data[k]) delete data[k]; });
+
   var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify(data) });
   if (btn) { btn.disabled = false; btn.textContent = 'Simpan Maklumat'; }
+
   if (res && res.ok) {
     showToast('Profil berjaya disimpan!', 'success');
     if (data.display_name) {
@@ -1391,70 +1232,115 @@ async function saveProfile() {
       if (currentUser) { currentUser.display_name = data.display_name; Auth.setUser(currentUser); }
     }
     await apiLoadProfile();
-  } else { showToast('Gagal menyimpan profil. Cuba semula.', 'error'); }
+  } else {
+    showToast('Gagal menyimpan profil. Cuba semula.', 'error');
+  }
 }
 
 async function saveHobbies() {
   var btn = document.querySelector('[onclick="saveHobbies()"]');
   if (btn) { btn.disabled = true; btn.textContent = 'Menyimpan...'; }
+
   var hobbyBtns = document.querySelectorAll('[onclick^="toggleHobby"]');
   var hobbies = [];
-  hobbyBtns.forEach(function(b) { if (b.dataset.active === '1') hobbies.push(b.textContent.trim()); });
+  hobbyBtns.forEach(function(b) {
+    if (b.dataset.active === '1') hobbies.push(b.textContent.trim());
+  });
+
   var res = await apiFetch('/profile/me', { method: 'PUT', body: JSON.stringify({ hobbies: hobbies }) });
   if (btn) { btn.disabled = false; btn.textContent = 'Simpan Hobi'; }
-  if (res && res.ok) { showToast('Hobi berjaya disimpan!', 'success'); await apiLoadProfile(); }
-  else showToast('Gagal menyimpan hobi.', 'error');
+
+  if (res && res.ok) {
+    showToast('Hobi berjaya disimpan!', 'success');
+    await apiLoadProfile();
+  } else {
+    showToast('Gagal menyimpan hobi.', 'error');
+  }
+}
+
+/* ══════════════════════════════════════
+   SETTINGS ACTIONS
+══════════════════════════════════════ */
+async function changePassword() {
+  var curr = prompt('Kata laluan semasa:');
+  if (!curr) return;
+  var newPw = prompt('Kata laluan baharu (min 8 aksara, huruf besar & nombor):');
+  if (!newPw) return;
+  if (newPw.length < 8 || !/[A-Z]/.test(newPw) || !/[0-9]/.test(newPw)) {
+    return showToast('Kata laluan baharu tidak memenuhi syarat.', 'warn');
+  }
+  var res = await apiFetch('/settings/password', {
+    method: 'PUT',
+    body: JSON.stringify({ current_password: curr, new_password: newPw })
+  });
+  if (res && res.ok) showToast('Kata laluan berjaya ditukar!', 'success');
+  else showToast('Gagal menukar kata laluan. Semak kata laluan semasa.', 'error');
+}
+
+async function pauseAccount() {
+  if (!confirm('Jeda akaun? Profil anda tidak akan dipaparkan sehingga anda aktifkan semula.')) return;
+  var res = await apiFetch('/settings/pause', { method: 'POST' });
+  if (res && res.ok) { showToast('Akaun dijeda.', 'info'); apiLogout(); }
+  else showToast('Gagal menjeda akaun.', 'error');
+}
+
+async function deleteAccount() {
+  if (!confirm('Padam akaun? Tindakan ini tidak boleh diundur.')) return;
+  var reason = prompt('Sebab pemadaman (pilihan):') || '';
+  var res = await apiFetch('/settings/delete', { method: 'DELETE', body: JSON.stringify({ reason: reason }) });
+  if (res && res.ok) { showToast('Akaun dipadamkan.', 'info'); apiLogout(); }
+  else showToast('Gagal memadam akaun.', 'error');
 }
 
 async function uploadProfilePhoto(input) {
   var file = input.files[0];
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) return showToast('Saiz gambar maksimum 5MB.', 'warn');
-
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var avatar = document.getElementById('pf-avatar');
-    if (avatar) avatar.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover">';
-  };
-  reader.readAsDataURL(file);
+  if (file.size > 3 * 1024 * 1024) return showToast('Saiz gambar maksimum 3MB.', 'warn');
 
   showToast('Memuat naik gambar...', 'info');
-  var formData = new FormData();
-  formData.append('file', file);
-  formData.append('photo_type', 'headshot');
 
-  var token = Auth.getToken();
-  try {
-    var res = await fetch(API_BASE + '/api/v1/profile/photos/upload?photo_type=headshot', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + token },
-      body: formData,
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    var base64 = e.target.result;
+
+    // Show preview immediately
+    var avatar = document.getElementById('pf-avatar');
+    if (avatar) avatar.innerHTML = '<img src="' + base64 + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+
+    // Save to backend as photo_url
+    var res = await apiFetch('/profile/me', {
+      method: 'PUT',
+      body: JSON.stringify({ photo_url: base64 })
     });
-    if (res.ok) {
-      showToast('Gambar berjaya dimuat naik!', 'success');
-      await apiLoadProfile();
-      buildAppPage('profile');
+
+    if (res && res.ok) {
+      showToast('Gambar profil berjaya disimpan!', 'success');
+      if (currentUser) { currentUser.photo_url = base64; Auth.setUser(currentUser); }
+      sidebar(currentPage);
     } else {
-      showToast('Gambar disimpan secara tempatan.', 'info');
+      showToast('Gambar tidak dapat disimpan. Cuba semula.', 'error');
     }
-  } catch (e) {
-    showToast('Gambar disimpan secara tempatan.', 'info');
-  }
+  };
+  reader.readAsDataURL(file);
 }
 
 /* ══════════════════════════════════════
-   QUIZ PAGE (standalone — accessible via Profile)
+   QUIZ PAGE
 ══════════════════════════════════════ */
 var quizQuestions = [];
-var quizProgress = { answered: 0, total: 30, percentage: 0, gallery_unlocked: false };
+var quizProgress = { answered: 0, total: 10, percentage: 0, gallery_unlocked: false };
 var quizCurrentIdx = 0;
 
 async function apiLoadQuiz() {
+  // Load progress first
   var rp = await apiFetch('/quiz/progress');
   if (rp && rp.ok) quizProgress = await rp.json();
+
+  // Load core questions
   var rq = await apiFetch('/quiz/questions?batch=core');
   if (rq && rq.ok) {
     var d = await rq.json();
+    // FIX: ensure quizQuestions is always an array
     var raw = d.questions || d || [];
     quizQuestions = Array.isArray(raw) ? raw : (raw.questions || []);
   }
@@ -1462,62 +1348,84 @@ async function apiLoadQuiz() {
 }
 
 function buildQuizPage() {
-  var answered = quizProgress.answered || 0;
-  var total = quizProgress.total || 30;
-  var pct = quizProgress.percentage || 0;
+  var answered = Math.min(quizProgress.answered || 0, 10);
+  var total = 10;
+  var pct = Math.min(Math.round(((quizProgress.answered||0)/10)*100), 100);
   var unlocked = quizProgress.gallery_unlocked || false;
+
+  // Find first unanswered question
   var unanswered = quizQuestions.filter(function(q) { return !q.already_answered; });
   var current = unanswered[0] || null;
 
   var h = '<div style="max-width:600px;margin:0 auto">';
 
+  // Header
   h += '<div style="margin-bottom:20px">'
     + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px;margin-bottom:6px">Kuiz Serasi</h1>'
     + '<p style="font-size:14px;color:var(--is)">Jawab soalan untuk mendapat padanan terbaik anda.</p>'
     + '</div>';
 
+  // Progress card
   h += '<div class="card" style="margin-bottom:20px;background:' + (unlocked ? 'rgba(230,245,237,.5)' : 'rgba(255,249,230,.5)') + ';border:1px solid ' + (unlocked ? 'rgba(52,168,83,.2)' : 'rgba(200,162,60,.2)') + '">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
     + '<div style="display:flex;align-items:center;gap:8px">' + ICONS.sparkle
-    + '<span style="font-weight:600;font-size:14px;color:' + (unlocked ? 'var(--e7)' : 'var(--g7)') + '">' + answered + ' / ' + total + ' soalan dijawab</span></div>'
+    + '<span style="font-weight:600;font-size:14px;color:' + (unlocked ? 'var(--e7)' : 'var(--g7)') + '">'
+    + answered + ' / ' + total + ' soalan dijawab</span></div>'
     + '<span style="font-size:13px;font-weight:700;color:' + (unlocked ? 'var(--e7)' : 'var(--g7)') + '">' + pct + '%</span>'
     + '</div>'
     + '<div class="progress"><div class="progress-fill" style="width:' + pct + '%;background:' + (unlocked ? 'var(--e4)' : 'var(--g5)') + '"></div></div>'
     + (unlocked
-        ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500">✓ Bilik Pameran telah dibuka!</p>'
+        ? '<p style="font-size:12px;color:var(--e7);margin-top:8px;font-weight:500">✓ Bilik Pameran telah dibuka! Teruskan untuk padanan lebih tepat.</p>'
         : '<p style="font-size:12px;color:var(--g7);margin-top:8px">Jawab <strong>' + (10 - answered) + ' lagi</strong> soalan untuk membuka Bilik Pameran.</p>')
     + '</div>';
 
+  // Question card
   if (current) {
-    var domainLabels = { communication:'Komunikasi', empathy:'Empati', stress_management:'Pengurusan Tekanan', future_planning:'Perancangan Masa Depan', accepting_criticism:'Menerima Kritikan', discipline:'Disiplin', financial_management:'Kewangan', spirituality:'Kerohanian', cooperation:'Kerjasama', forgiveness:'Kemaafan', resilience:'Ketabahan', leadership:'Kepimpinan' };
+    var domainLabels = {
+      communication: 'Komunikasi', empathy: 'Empati', stress_management: 'Pengurusan Tekanan',
+      future_planning: 'Perancangan Masa Depan', accepting_criticism: 'Menerima Kritikan',
+      discipline: 'Disiplin', financial_management: 'Kewangan', spirituality: 'Kerohanian',
+      cooperation: 'Kerjasama', forgiveness: 'Kemaafan', resilience: 'Ketabahan', leadership: 'Kepimpinan',
+    };
+    var domainLabel = domainLabels[current.domain] || current.domain;
+
     h += '<div class="card" id="quiz-card" style="margin-bottom:20px">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">'
-      + '<span style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;background:var(--s1);padding:4px 10px;border-radius:20px">' + (domainLabels[current.domain] || current.domain) + '</span>'
+      + '<span style="font-size:11px;font-weight:600;color:var(--im);text-transform:uppercase;letter-spacing:.06em;background:var(--s1);padding:4px 10px;border-radius:20px">' + domainLabel + '</span>'
       + '<span style="font-size:11px;color:var(--im)">Soalan ' + (answered + 1) + '</span>'
       + '</div>'
       + '<p style="font-size:17px;font-weight:500;color:var(--n5);line-height:1.6;margin-bottom:24px">' + current.text_ms + '</p>'
       + '<p style="font-size:12px;color:var(--im);margin-bottom:16px;text-align:center">1 = Sangat Tidak Setuju &nbsp;|&nbsp; 5 = Sangat Setuju</p>'
       + '<div style="display:flex;gap:10px;justify-content:center" id="quiz-answers">'
       + [1,2,3,4,5].map(function(s) {
+          var labels = ['','Sangat\nTidak Setuju','Tidak\nSetuju','Neutral','Setuju','Sangat\nSetuju'];
           return '<button onclick="submitQuizAnswer(\'' + current.id + '\',' + s + ',this)" '
-            + 'style="flex:1;padding:14px 6px;border-radius:10px;border:2px solid var(--s2);background:#fff;cursor:pointer;font-weight:700;font-size:18px;color:var(--n5);transition:all .15s">'
-            + s + '</button>';
+            + 'style="flex:1;padding:14px 6px;border-radius:10px;border:2px solid var(--s2);background:#fff;cursor:pointer;font-weight:700;font-size:18px;color:var(--n5);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px">'
+            + s
+            + '<span style="font-size:9px;font-weight:400;color:var(--im);white-space:pre-line;text-align:center;line-height:1.2">' + labels[s] + '</span>'
+            + '</button>';
         }).join('')
       + '</div></div>';
   } else if (answered >= total) {
     h += '<div class="card" style="text-align:center;padding:40px;margin-bottom:20px">'
       + ICONS.sparkle
-      + '<h3 style="font-family:var(--fd);font-weight:700;font-size:20px;margin:16px 0 8px">Tahniah! Semua soalan dijawab.</h3>'
-      + '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Profil psikometrik anda telah lengkap.</p>'
+      + '<h3 style="font-family:var(--fd);font-weight:700;font-size:20px;margin:16px 0 8px;color:var(--n5)">Tahniah! Semua soalan dijawab.</h3>'
+      + '<p style="color:var(--is);font-size:14px;margin-bottom:20px">Profil psikometrik anda telah lengkap. Padanan anda kini lebih tepat.</p>'
       + '<button class="btn bp" onclick="go(\'gallery\')">Lihat Padanan Saya</button>'
+      + '</div>';
+  } else {
+    h += '<div class="card" style="text-align:center;padding:32px">'
+      + '<p style="color:var(--is)">Tiada soalan lagi untuk batch ini.</p>'
       + '</div>';
   }
 
+  // Score breakdown (if any answers)
   if (answered > 0) {
     h += '<div class="card" style="margin-bottom:20px">'
       + '<h3 style="font-family:var(--fd);font-weight:600;font-size:16px;margin-bottom:16px">Profil Psikometrik Anda</h3>'
       + '<div id="quiz-scores"><p style="color:var(--im);font-size:13px">Memuatkan...</p></div>'
       + '</div>';
+    // Load scores async
     setTimeout(loadQuizScores, 100);
   }
 
@@ -1533,7 +1441,14 @@ async function loadQuizScores() {
   var d = await res.json();
   var domains = d.domains || {};
   if (Object.keys(domains).length === 0) return;
-  var labels = { communication:'Komunikasi', empathy:'Empati', stress_management:'Pengurusan Tekanan', future_planning:'Perancangan Masa Depan', accepting_criticism:'Menerima Kritikan', discipline:'Disiplin', financial_management:'Kewangan', spirituality:'Kerohanian', cooperation:'Kerjasama', forgiveness:'Kemaafan', resilience:'Ketabahan', leadership:'Kepimpinan' };
+
+  var labels = {
+    communication: 'Komunikasi', empathy: 'Empati', stress_management: 'Pengurusan Tekanan',
+    future_planning: 'Perancangan Masa Depan', accepting_criticism: 'Menerima Kritikan',
+    discipline: 'Disiplin', financial_management: 'Kewangan', spirituality: 'Kerohanian',
+    cooperation: 'Kerjasama', forgiveness: 'Kemaafan', resilience: 'Ketabahan', leadership: 'Kepimpinan',
+  };
+
   el.innerHTML = Object.keys(domains).map(function(domain) {
     var score = domains[domain] || 0;
     var pct = Math.round(score * 100);
@@ -1549,18 +1464,39 @@ async function loadQuizScores() {
 }
 
 async function submitQuizAnswer(questionId, score, btn) {
+  // Visual feedback — highlight selected
   var btns = document.querySelectorAll('#quiz-answers button');
-  btns.forEach(function(b) { b.style.border = '2px solid var(--s2)'; b.style.background = '#fff'; b.disabled = true; });
+  btns.forEach(function(b) {
+    b.style.border = '2px solid var(--s2)';
+    b.style.background = '#fff';
+    b.style.color = 'var(--n5)';
+    b.disabled = true;
+  });
   btn.style.border = '2px solid var(--g5)';
   btn.style.background = 'var(--g50)';
-  var res = await apiFetch('/quiz/answer', { method: 'POST', body: JSON.stringify({ question_id: questionId, score: score }) });
+  btn.style.color = 'var(--g7)';
+
+  var res = await apiFetch('/quiz/answer', {
+    method: 'POST',
+    body: JSON.stringify({ question_id: questionId, score: score }),
+  });
+
   if (res && res.ok) {
     var d = await res.json();
     quizProgress = d.progress || quizProgress;
-    quizQuestions = quizQuestions.map(function(q) { if (q.id === questionId) q.already_answered = true; return q; });
+
+    // Mark question as answered
+    quizQuestions = quizQuestions.map(function(q) {
+      if (q.id === questionId) q.already_answered = true;
+      return q;
+    });
+
+    // Short delay then rebuild page
     setTimeout(function() {
       buildAppPage('quiz');
-      if (quizProgress.gallery_unlocked && quizProgress.answered === 10) showToast('Bilik Pameran telah dibuka! 🎉', 'success');
+      if (quizProgress.gallery_unlocked && quizProgress.answered === 10) {
+        showToast('Bilik Pameran telah dibuka! 🎉', 'success');
+      }
     }, 400);
   } else {
     showToast('Gagal menyimpan jawapan. Cuba semula.', 'error');
@@ -1573,7 +1509,9 @@ async function submitQuizAnswer(questionId, score, btn) {
 ══════════════════════════════════════ */
 async function loadAndShowChat() {
   var ac = convos[activeChatIdx];
-  if (ac && ac.id) msgs = await apiLoadMessages(ac.id);
+  if (ac && ac.id) {
+    msgs = await apiLoadMessages(ac.id);
+  }
   _go('chat');
   var list = document.querySelector('.chat-list');
   var area = document.querySelector('.chat-area');
@@ -1597,10 +1535,10 @@ function buildTierGrid() {
   var g = document.getElementById('tier-grid');
   if (!g) return;
   var tiers = [
-    { n: 'Rahmah',   icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', p: 'Percuma',   d: '7 Hari',  bg: 'var(--s0)',              bd: 'var(--s2)',   f: ['10 paparan/hari','3 sembang','Gambar kabur'] },
-    { n: 'Gold',     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="1.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', p: 'RM39.99',  d: '30 Hari', bg: 'rgba(255,249,230,.3)',   bd: 'var(--g400)', pop: true, f: ['30 paparan/hari','10 sembang','Gambar jelas','WhatsApp','Tanpa iklan'] },
-    { n: 'Platinum', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', p: 'RM69.99',  d: '60 Hari', bg: 'rgba(243,232,255,.15)',  bd: '#C4B5FD',    s: '12%', f: ['Tanpa had','Keutamaan carian','Video ta\'aruf','Ciri beta'] },
-    { n: 'Premium',  icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="1.5" stroke-linecap="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/></svg>', p: 'RM101.99', d: '90 Hari', bg: 'rgba(237,233,254,.2)',   bd: '#A78BFA',    s: '15%', f: ['Semua Platinum','Keutamaan tertinggi','Laporan PDF','3 Golden Ticket'] },
+    { n: 'Rahmah',  icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', p: 'Percuma',   d: '7 Hari',  bg: 'var(--s0)',              bd: 'var(--s2)',   f: ['10 paparan/hari','3 sembang','Gambar kabur'] },
+    { n: 'Gold',    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--g6)" stroke-width="1.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', p: 'RM39.99',  d: '30 Hari', bg: 'rgba(255,249,230,.3)',   bd: 'var(--g400)', pop: true, f: ['30 paparan/hari','10 sembang','Gambar jelas','WhatsApp','Tanpa iklan'] },
+    { n: 'Platinum',icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="1.5" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>', p: 'RM69.99',  d: '60 Hari', bg: 'rgba(243,232,255,.15)',  bd: '#C4B5FD',    s: '12%', f: ['Tanpa had','Keutamaan carian','Video ta\'aruf','Ciri beta'] },
+    { n: 'Premium', icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6D28D9" stroke-width="1.5" stroke-linecap="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/></svg>', p: 'RM101.99', d: '90 Hari', bg: 'rgba(237,233,254,.2)',   bd: '#A78BFA',    s: '15%', f: ['Semua Platinum','Keutamaan tertinggi','Laporan PDF','3 Golden Ticket'] },
   ];
   g.innerHTML = tiers.map(function(t) {
     return '<div style="border-radius:var(--r);border:2px solid ' + t.bd + ';padding:20px;background:' + t.bg + ';position:relative;' + (t.pop ? 'box-shadow:0 0 20px rgba(200,162,60,.2)' : '') + '">'
@@ -1620,11 +1558,13 @@ function buildTierGrid() {
    INIT
 ══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
+  // Wire login form
   var loginContent = document.getElementById('login-form-content');
   if (loginContent) {
     loginContent.innerHTML = '<div style="text-align:center;margin-bottom:28px"><h2 style="font-family:var(--fd);font-weight:600;font-size:22px">Selamat Kembali</h2><p style="color:var(--is);font-size:14px;margin-top:4px">Log masuk ke akaun anda</p></div><div class="card"><div style="margin-bottom:14px"><label class="lbl">Alamat Emel</label><input id="login-email" class="inp" type="email" placeholder="anda@contoh.com" autocomplete="email"></div><div style="margin-bottom:18px"><label class="lbl">Kata Laluan</label><input id="login-password" class="inp" type="password" placeholder="Kata laluan anda" autocomplete="current-password"></div><button id="login-btn" class="btn bp" style="width:100%;padding:13px 0" onclick="apiLogin()">Log Masuk</button></div><p style="text-align:center;color:var(--im);font-size:14px;margin-top:18px">Belum ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go(\'register\')">Daftar Sekarang</span></p>';
   }
 
+  // Wire register forms
   var regS1 = document.getElementById('reg-s1');
   if (regS1) {
     regS1.innerHTML = '<h2 style="font-family:var(--fd);font-weight:700;font-size:26px;margin-bottom:8px">Daftar Akaun</h2><p style="color:var(--is);margin-bottom:24px">Langkah pertama menuju jodoh yang sekufu.</p><div style="margin-bottom:14px"><label class="lbl">Alamat Emel</label><input id="reg-email" class="inp" type="email" placeholder="anda@contoh.com" autocomplete="email"></div><div style="margin-bottom:14px"><label class="lbl">Kata Laluan</label><input id="reg-password" class="inp" type="password" placeholder="Min 8 aksara, huruf besar &amp; nombor" autocomplete="new-password"><p style="font-size:12px;color:var(--im);margin-top:5px">Contoh: Jodoh123</p></div><div style="margin-bottom:18px"><label class="lbl">Sahkan Kata Laluan</label><input id="reg-confirm" class="inp" type="password" placeholder="Ulang kata laluan" autocomplete="new-password"></div><button id="reg-btn" class="btn bp" style="width:100%;padding:13px 0" onclick="apiRegister()">Teruskan</button><p style="text-align:center;color:var(--im);font-size:14px;margin-top:18px">Sudah ada akaun? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="go(\'login\')">Log Masuk</span></p>';
@@ -1632,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var regS2 = document.getElementById('reg-s2');
   if (regS2) {
-    regS2.innerHTML = '<button class="btn bg" style="margin-bottom:14px;margin-left:-8px;gap:6px" onclick="regStep(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Kembali</button><h2 style="font-family:var(--fd);font-weight:700;font-size:26px;margin-bottom:8px">Pengesahan OTP</h2><p style="color:var(--is);margin-bottom:24px">Kod 6 digit dihantar ke emel anda.</p><div style="margin-bottom:18px"><label class="lbl">Kod OTP</label><input id="reg-otp" class="inp" placeholder="000000" maxlength="6" inputmode="numeric" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em"></div><button id="otp-btn" class="btn bp" style="width:100%;padding:13px 0" onclick="apiVerifyOTP()">Sahkan OTP</button><p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="apiRegister()">Hantar Semula</span></p>';
+    regS2.innerHTML = '<button class="btn bg" style="margin-bottom:14px;margin-left:-8px;gap:6px" onclick="regStep(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Kembali</button><h2 style="font-family:var(--fd);font-weight:700;font-size:26px;margin-bottom:8px">Pengesahan OTP</h2><p style="color:var(--is);margin-bottom:24px">Kod 6 digit dihantar ke emel anda. Sah 10 minit.</p><div style="margin-bottom:18px"><label class="lbl">Kod OTP</label><input id="reg-otp" class="inp" placeholder="000000" maxlength="6" inputmode="numeric" style="text-align:center;font-family:var(--fm);font-size:28px;letter-spacing:.5em"></div><button id="otp-btn" class="btn bp" style="width:100%;padding:13px 0" onclick="apiVerifyOTP()">Sahkan OTP</button><p style="text-align:center;color:var(--im);font-size:14px;margin-top:16px">Tidak terima? <span style="color:var(--g5);font-weight:600;cursor:pointer" onclick="apiRegister()">Hantar Semula</span></p>';
   }
 
   renderRegSteps();
