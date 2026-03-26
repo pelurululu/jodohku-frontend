@@ -149,7 +149,7 @@ async function apiLoadGallery(reset) {
   if (reset) { galleryPage = 1; galleryDone = false; profiles = []; }
   if (galleryDone) return;
   galleryLoading = true;
-  var res = await apiFetch('/gallery/?page=' + galleryPage + '&page_size=10');
+  var res = await apiFetch('/gallery/?page=' + galleryPage + '&page_size=20');
   galleryLoading = false;
   if (!res || !res.ok) { showToast('Gagal memuatkan galeri.', 'error'); _go('gallery'); return; }
   var d = await res.json();
@@ -175,7 +175,7 @@ async function apiLoadGallery(reset) {
     };
   });
   profiles = reset ? items : profiles.concat(items);
-  if (items.length < 10) galleryDone = true;
+  if (items.length < 20) galleryDone = true;
   galleryPage++;
   _go('gallery');
 }
@@ -190,14 +190,14 @@ async function apiToggleFav(id) {
 /* ══════════════
    CHAT
 ══════════════ */
-var conversations = [], wsConn = null;
+var convos = [], wsConn = null;
 
 async function apiLoadConversations() {
   var res = await apiFetch('/chat/conversations');
   if (!res || !res.ok) return;
   var d = await res.json();
-  conversations = (d && (d.conversations || d.items)) || [];
-  unreadN = conversations.reduce(function(s, c) { return s + (c.unread_count || 0); }, 0);
+  convos = (d && (d.conversations || d.items)) || [];
+  unreadN = convos.reduce(function(s, c) { return s + (c.unread_count || 0); }, 0);
 }
 
 async function apiLoadMessages(convId) {
@@ -218,7 +218,7 @@ async function apiSendMessage() {
   var inp  = document.getElementById('msg-inp');
   if (!inp || !inp.value.trim()) return;
   var text = inp.value.trim();
-  var conv = conversations[activeChatIdx];
+  var conv = convos[activeChatIdx];
   if (!conv) return;
   inp.value = '';
   msgs.push({ mine: true, text: text, time: new Date().toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) });
