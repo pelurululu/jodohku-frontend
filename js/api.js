@@ -202,6 +202,7 @@ async function apiLoadConversations() {
       id:               c.id,
       partner_user_id:  c.partner_user_id || partnerData.user_id || '',
       partner_code_name: c.partner_code_name || partnerData.code || '??',
+      partner_display_name: c.partner_display_name || partnerData.display_name || partnerData.name || c.partner_code_name || partnerData.code || '??',
       partner_photo_url: c.partner_photo_url || partnerData.photo_url || null,
       partner_tier:     c.partner_tier || '',
       status:           c.status || 'active',
