@@ -422,6 +422,7 @@ async function submitLamar(userId, name) {
   if (!msg) msg = 'Assalamualaikum, saya berminat untuk berkenalan.';
   if (btn) { btn.disabled = true; btn.textContent = 'Menghantar...'; }
 
+  // Create pending conversation
   var res = await apiFetch('/chat/initiate', {
     method: 'POST',
     body: JSON.stringify({ target_user_id: userId, message: { content: msg, is_ice_breaker: false } })
@@ -430,22 +431,58 @@ async function submitLamar(userId, name) {
   var modal = document.getElementById('lamar-modal');
   if (modal) modal.remove();
 
-  if (res && res.ok) {
-    // Send notification to the target user
-    await apiFetch('/notifications/send', {
-      method: 'POST',
-      body: JSON.stringify({
-        recipient_user_id: userId,
-        type: 'lamar_received',
-        title: 'Anda menerima lamaran baharu',
-        body: (currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang') + ' telah menghantar lamaran kepada anda.',
-      })
-    });
-    showToast('Permintaan lamar dihantar!', 'success');
-    profiles = profiles.filter(function(p){ return p.id !== userId; });
-    buildAppPage('gallery');
-  } else {
+  if (!res || !res.ok) {
     showToast('Gagal menghantar lamar. Cuba semula.', 'error');
+    return;
+  }
+
+  var data = await res.json();
+  var convId = data.conversation_id || '';
+
+  // Notify recipient — they must accept before chat unlocks
+  await apiFetch('/notifications/send', {
+    method: 'POST',
+    body: JSON.stringify({
+      recipient_user_id: userId,
+      type: 'lamar_received',
+      title: 'Anda menerima lamaran baharu',
+      body: (currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang') + ' telah menghantar lamaran kepada anda.',
+      conversation_id: convId,
+      sender_name: currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang',
+    })
+  });
+
+  showToast('Lamaran dihantar! Menunggu penerimaan.', 'success');
+  profiles = profiles.filter(function(p){ return p.id !== userId; });
+  buildAppPage('gallery');
+}
+
+async function acceptLamar(convId, notifIdx) {
+  var btn = document.getElementById('accept-btn-' + notifIdx);
+  if (btn) { btn.disabled = true; btn.textContent = 'Menerima...'; }
+  var res = await apiFetch('/chat/conversations/' + convId + '/accept', { method: 'POST' });
+  if (res && res.ok) {
+    showToast('Lamaran diterima! Anda kini boleh berbual.', 'success');
+    if (notifs[notifIdx]) notifs[notifIdx].read = true;
+    await apiLoadConversations();
+    _go('chat');
+  } else {
+    showToast('Gagal menerima lamaran.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Terima'; }
+  }
+}
+
+async function rejectLamar(convId, notifIdx) {
+  var btn = document.getElementById('reject-btn-' + notifIdx);
+  if (btn) { btn.disabled = true; btn.textContent = 'Menolak...'; }
+  var res = await apiFetch('/chat/conversations/' + convId + '/reject', { method: 'POST' });
+  if (res && res.ok) {
+    showToast('Lamaran ditolak.', 'info');
+    if (notifs[notifIdx]) notifs[notifIdx].accepted = false; notifs[notifIdx].read = true;
+    _go('notif');
+  } else {
+    showToast('Gagal menolak lamaran.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Tolak'; }
   }
 }
 
@@ -814,19 +851,48 @@ function buildNotifPage() {
   }
 
   notifs.forEach(function(n, i) {
-    var ic = n.type === 'new_match' ? ICONS.heart
+    var isLamar = n.type === 'lamar_received';
+    var isAccepted = n.type === 'lamar_accepted';
+    var isRejected = n.type === 'lamar_rejected';
+
+    var ic = isLamar    ? ICONS.heart
+           : isAccepted ? ICONS.check
            : n.type === 'new_message' ? ICONS.chat
            : n.type === 'profile_viewed' ? ICONS.eye
            : ICONS.notif;
-    h += '<div class="card" onclick="markRead(' + i + ')" style="display:flex;align-items:flex-start;gap:14px;margin-bottom:8px;cursor:pointer;'
-      + 'background:' + (n.read ? '#fff' : 'rgba(255,249,230,.3)') + ';'
-      + 'border:' + (n.read ? 'none' : '1px solid rgba(200,162,60,.15)') + '">'
-      + '<div style="width:38px;height:38px;border-radius:50%;background:' + (n.read ? 'var(--s1)' : 'var(--g50)') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' + ic + '</div>'
+
+    var iconBg = isLamar    ? 'rgba(200,162,60,.15)'
+               : isAccepted ? 'rgba(52,168,83,.12)'
+               : isRejected ? 'rgba(239,68,68,.1)'
+               : (n.read ? 'var(--s1)' : 'var(--g50)');
+
+    h += '<div class="card" style="margin-bottom:8px;'
+      + 'background:' + (n.read ? '#fff' : (isLamar ? 'rgba(255,249,230,.4)' : 'rgba(255,249,230,.3)')) + ';'
+      + 'border:' + (n.read ? 'none' : '1px solid rgba(200,162,60,.15)') + '">';
+
+    h += '<div style="display:flex;align-items:flex-start;gap:14px" onclick="markRead(' + i + ')" style="cursor:pointer">'
+      + '<div style="width:38px;height:38px;border-radius:50%;background:' + iconBg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' + ic + '</div>'
       + '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + (n.title || '') + '</div>'
       + '<div style="font-size:13px;color:var(--is);margin-top:2px">' + (n.body || '') + '</div>'
-      + '<div style="font-size:11px;color:var(--im);margin-top:4px">' + (n.time || '') + '</div></div>'
-      + (n.read ? '' : '<div style="width:8px;height:8px;background:var(--g5);border-radius:50%;margin-top:8px;flex-shrink:0"></div>')
+      + '<div style="font-size:11px;color:var(--im);margin-top:4px">' + (n.time || '') + '</div>'
+      + '</div>'
+      + (!n.read ? '<div style="width:8px;height:8px;background:var(--g5);border-radius:50%;margin-top:8px;flex-shrink:0"></div>' : '')
       + '</div>';
+
+    // Accept / Reject buttons for pending lamar
+    if (isLamar && n.conversation_id && !n.actioned) {
+      h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">'
+        + '<button id="reject-btn-' + i + '" class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:10px;font-size:13px" onclick="rejectLamar(\'' + n.conversation_id + '\',' + i + ')">' + ICONS.x + ' Tolak</button>'
+        + '<button id="accept-btn-' + i + '" class="btn bp" style="justify-content:center;padding:10px;font-size:13px" onclick="acceptLamar(\'' + n.conversation_id + '\',' + i + ')">' + ICONS.heart + ' Terima</button>'
+        + '</div>';
+    }
+
+    if (isLamar && n.actioned) {
+      h += '<div style="font-size:12px;color:var(--im);margin-top:8px;text-align:center">'
+        + (n.accepted ? 'Diterima — anda kini boleh berbual.' : 'Ditolak.') + '</div>';
+    }
+
+    h += '</div>';
   });
 
   return h + '</div>';
