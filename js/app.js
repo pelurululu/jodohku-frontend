@@ -486,25 +486,25 @@ async function rejectLamar(convId, notifIdx) {
   }
 }
 
-// ── View Profile Modal (Tinder-style) ──
+// ── Shared profile modal builder ──
 var _pmPhotos = [], _pmIdx = 0;
 
-function viewProfile(userId) {
-  var p = profiles.find(function(x){ return x.id === userId; });
-  if (!p) return;
-
-  var photos = (p.photos && p.photos.length) ? p.photos : (p.photo_url ? [{url: p.photo_url}] : []);
+function _buildProfileModal(p, showActions) {
+  var photos = (p.photos && p.photos.length) ? p.photos
+             : (p.photo_url ? [{url: p.photo_url}] : []);
   _pmPhotos = photos;
   _pmIdx = 0;
 
-  var tierClass = p.tier === 'gold' ? 'b-gld' : p.tier === 'platinum' ? 'b-plt' : p.tier === 'premium' ? 'b-prm' : 'b-rah';
+  var tierClass = p.tier === 'gold' ? 'b-gld' : p.tier === 'platinum' ? 'b-plt'
+                : p.tier === 'premium' ? 'b-prm' : 'b-rah';
 
   function photoPart(idx) {
     if (!photos.length) {
-      return '<div style="width:100%;height:320px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,hsl(220,35%,20%),hsl(260,25%,13%))">'
+      return '<div style="width:100%;height:300px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,hsl(220,35%,20%),hsl(260,25%,13%))">'
         + '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>';
     }
-    return '<img id="pm-img" src="' + photos[idx].url + '" style="width:100%;height:320px;object-fit:cover">';
+    // Photo is clickable to open fullscreen
+    return '<img id="pm-img" src="' + photos[idx].url + '" style="width:100%;height:300px;object-fit:cover;cursor:zoom-in" onclick="viewOwnPhoto(\'' + photos[idx].url + '\')" title="Lihat penuh">';
   }
 
   var dotsHtml = photos.length > 1
@@ -512,42 +512,113 @@ function viewProfile(userId) {
       + photos.map(function(_,i){ return '<div id="pmd'+i+'" style="height:3px;border-radius:2px;flex:1;max-width:40px;background:'+(i===0?'#fff':'rgba(255,255,255,.4)')+';transition:background .2s"></div>'; }).join('')
       + '</div>' : '';
 
-  var html = '<div id="profile-view-modal" style="display:flex;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">'
+  var actionsHtml = '';
+  if (showActions === 'gallery') {
+    actionsHtml = '<div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">'
+      + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:13px" onclick="closeProfileModal();rejectProfile(\'' + p.id + '\')">' + ICONS.x + ' Tolak</button>'
+      + '<button class="btn bp" style="justify-content:center;padding:13px" data-pid="' + p.id + '" data-name="' + (p.name||p.code||'') + '" onclick="closeProfileModal();handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
+      + '</div>';
+  } else if (showActions === 'chat') {
+    actionsHtml = '<button class="btn bg" style="width:100%;justify-content:center;padding:13px;border:1px solid var(--s2)" onclick="closeProfileModal()">' + ICONS.chat + ' Kembali ke Sembang</button>';
+  }
+
+  return '<div id="profile-view-modal" style="display:flex;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px">'
     + '<div style="background:#fff;border-radius:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.35)">'
-    // Photo area
     + '<div style="position:relative;background:#111;overflow:hidden;border-radius:20px 20px 0 0">'
     + '<div id="pm-photo-wrap">' + photoPart(0) + '</div>'
     + dotsHtml
-    + (photos.length > 1 ? '<div style="position:absolute;inset:0;display:flex;cursor:pointer"><div style="flex:1" onclick="pmPrev()"></div><div style="flex:1" onclick="pmNext()"></div></div>' : '')
+    + (photos.length > 1 ? '<div style="position:absolute;inset:0;display:flex;cursor:pointer;pointer-events:none"><div style="flex:1;pointer-events:auto" onclick="pmPrev()"></div><div style="flex:1;pointer-events:auto" onclick="pmNext()"></div></div>' : '')
     + '<button onclick="closeProfileModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10">' + ICONS.x + '</button>'
-    + '<div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;backdrop-filter:blur(4px)">' + ICONS.heart + ' ' + p.score + '%</div>'
+    + (p.score ? '<div style="position:absolute;bottom:12px;right:12px;background:rgba(0,0,0,.5);color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:700;backdrop-filter:blur(4px)">' + ICONS.heart + ' ' + p.score + '%</div>' : '')
     + '</div>'
-    // Info
     + '<div style="padding:20px">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
     + '<div><div style="font-family:var(--fm);font-weight:700;font-size:22px">' + (p.name || 'Ahli Jodohku') + '</div>'
     + '<div style="color:var(--im);font-size:13px">' + (p.age ? p.age + ' tahun' : '') + (p.state ? ' &bull; ' + p.state.replace(/_/g,' ') : '') + '</div></div>'
-    + '<div style="display:flex;gap:6px"><span class="badge ' + tierClass + '">' + p.tier.toUpperCase() + '</span>'
+    + '<div style="display:flex;gap:6px"><span class="badge ' + tierClass + '">' + (p.tier||'rahmah').toUpperCase() + '</span>'
     + (p.t20 ? '<span class="badge b-ver">T20</span>' : '') + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">'
-    + (p.edu   ? '<span class="chip">' + ICONS.edu + p.edu.replace(/_/g,' ') + '</span>' : '')
-    + (p.job   ? '<span class="chip">' + ICONS.work + p.job + '</span>' : '')
-    + (p.status? '<span class="chip">' + p.status + '</span>' : '')
-    + (p.online? '<span class="chip" style="color:var(--e7)"><span class="online-dot" style="display:inline-block;margin-right:4px"></span>Dalam Talian</span>' : '')
+    + (p.edu    ? '<span class="chip">' + ICONS.edu  + p.edu.replace(/_/g,' ')  + '</span>' : '')
+    + (p.job    ? '<span class="chip">' + ICONS.work + p.job                    + '</span>' : '')
+    + (p.status ? '<span class="chip">' + p.status + '</span>' : '')
+    + (p.online ? '<span class="chip" style="color:var(--e7)"><span class="online-dot" style="display:inline-block;margin-right:4px"></span>Dalam Talian</span>' : '')
     + '</div>'
     + (p.bio ? '<p style="font-size:14px;color:var(--is);line-height:1.6;margin-bottom:16px">' + p.bio + '</p>' : '')
     + (p.tip ? '<div class="wtip" style="margin-bottom:16px">' + ICONS.sparkle + '<span>' + p.tip + '</span></div>' : '')
-    + '<div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">'
-    + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:13px" onclick="closeProfileModal();rejectProfile(\'' + p.id + '\')">' + ICONS.x + ' Tolak</button>'
-    + '<button class="btn bp" style="justify-content:center;padding:13px" data-pid="' + p.id + '" data-name="' + (p.name||p.code) + '" onclick="closeProfileModal();handleLamar(this)">' + ICONS.heart + ' Lamar</button>'
-    + '</div></div></div></div>';
+    + actionsHtml
+    + '</div></div></div>';
+}
+
+function viewProfile(userId) {
+  var p = profiles.find(function(x){ return x.id === userId; });
+  if (!p) return;
+  var existing = document.getElementById('profile-view-modal');
+  if (existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend', _buildProfileModal(p, 'gallery'));
+  document.getElementById('profile-view-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeProfileModal();
+  });
+}
+
+async function viewPartnerProfile(userId) {
+  // First check if we already have it in profiles array
+  var p = profiles.find(function(x){ return x.id === userId; });
+
+  if (!p) {
+    // Try fetching from gallery compatibility endpoint
+    var res = await apiFetch('/gallery/compatibility/' + userId);
+    if (res && res.ok) {
+      var d = await res.json();
+      p = {
+        id:        userId,
+        name:      d.display_name || d.name || '',
+        age:       d.age || '',
+        state:     d.state_of_residence || d.state || '',
+        edu:       d.education_level || '',
+        job:       d.occupation || '',
+        status:    d.marital_status || '',
+        tier:      (d.current_tier || 'rahmah').toLowerCase(),
+        t20:       d.is_verified_t20 || false,
+        score:     d.compatibility_score ? Math.round(d.compatibility_score * 100) : null,
+        online:    d.is_online || false,
+        bio:       d.bio_text || d.bio || '',
+        tip:       d.wingman_tip || '',
+        photo_url: (d.photos && d.photos[0] && d.photos[0].url) || d.photo_url || null,
+        photos:    d.photos || [],
+      };
+    }
+  }
+
+  if (!p) {
+    // Fallback: build minimal profile from convos data
+    var c = convos.find(function(x){ return x.partner_user_id === userId; });
+    if (c) {
+      p = {
+        id:        userId,
+        name:      c.partner_code_name || '',
+        age:       '',
+        state:     '',
+        edu:       '',
+        job:       '',
+        status:    '',
+        tier:      c.partner_tier || 'rahmah',
+        t20:       false,
+        score:     null,
+        online:    c.is_online || false,
+        bio:       '',
+        tip:       '',
+        photo_url: c.partner_photo_url || null,
+        photos:    c.partner_photo_url ? [{url: c.partner_photo_url}] : [],
+      };
+    }
+  }
+
+  if (!p) { showToast('Profil tidak dijumpai.', 'warn'); return; }
 
   var existing = document.getElementById('profile-view-modal');
   if (existing) existing.remove();
-  document.body.insertAdjacentHTML('beforeend', html);
-
-  // Close on backdrop click
+  document.body.insertAdjacentHTML('beforeend', _buildProfileModal(p, 'chat'));
   document.getElementById('profile-view-modal').addEventListener('click', function(e) {
     if (e.target === this) closeProfileModal();
   });
@@ -557,7 +628,7 @@ function pmPrev() {
   if (!_pmPhotos.length) return;
   _pmIdx = (_pmIdx - 1 + _pmPhotos.length) % _pmPhotos.length;
   var w = document.getElementById('pm-photo-wrap');
-  if (w) w.innerHTML = '<img id="pm-img" src="' + _pmPhotos[_pmIdx].url + '" style="width:100%;height:320px;object-fit:cover">';
+  if (w) w.innerHTML = '<img id="pm-img" src="' + _pmPhotos[_pmIdx].url + '" style="width:100%;height:300px;object-fit:cover;cursor:zoom-in" onclick="viewOwnPhoto(\'' + _pmPhotos[_pmIdx].url + '\')" title="Lihat penuh">';
   _pmPhotos.forEach(function(_,i){ var d=document.getElementById('pmd'+i); if(d) d.style.background=i===_pmIdx?'#fff':'rgba(255,255,255,.4)'; });
 }
 
@@ -565,7 +636,7 @@ function pmNext() {
   if (!_pmPhotos.length) return;
   _pmIdx = (_pmIdx + 1) % _pmPhotos.length;
   var w = document.getElementById('pm-photo-wrap');
-  if (w) w.innerHTML = '<img id="pm-img" src="' + _pmPhotos[_pmIdx].url + '" style="width:100%;height:320px;object-fit:cover">';
+  if (w) w.innerHTML = '<img id="pm-img" src="' + _pmPhotos[_pmIdx].url + '" style="width:100%;height:300px;object-fit:cover;cursor:zoom-in" onclick="viewOwnPhoto(\'' + _pmPhotos[_pmIdx].url + '\')" title="Lihat penuh">';
   _pmPhotos.forEach(function(_,i){ var d=document.getElementById('pmd'+i); if(d) d.style.background=i===_pmIdx?'#fff':'rgba(255,255,255,.4)'; });
 }
 
@@ -604,16 +675,22 @@ function buildChatPage() {
   }
 
   convos.forEach(function(c, i) {
-    var partner = c.partner || {};
-    var code = partner.code || c.partner_code_name || '??';
-    var online = partner.online || c.is_online || false;
-    var lastMsg = c.last_message || c.lastMsg || '';
-    var time = c.last_message_at ? new Date(c.last_message_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : (c.time || '');
-    var unread = c.unread_count || c.unread || 0;
+    var code = c.partner_code_name || '??';
+    var online = c.is_online || false;
+    var lastMsg = c.last_message || '';
+    var time = c.last_message_at ? new Date(c.last_message_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '';
+    var unread = c.unread_count || 0;
+    var photoUrl = c.partner_photo_url || null;
+    var partnerId = c.partner_user_id || '';
+
+    var avatarHtml = photoUrl
+      ? '<div class="ch-av" style="background:none;padding:0;overflow:hidden;cursor:pointer" onclick="event.stopPropagation();viewOwnPhoto(\'' + photoUrl + '\')"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+        + (online ? '<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>' : '') + '</div>'
+      : '<div class="ch-av">' + code.slice(0, 2)
+        + (online ? '<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>' : '') + '</div>';
 
     h += '<div class="ch-i' + (i === activeChatIdx ? ' on' : '') + '" onclick="activeChatIdx=' + i + ';loadAndShowChat()">'
-      + '<div class="ch-av">' + code.slice(0, 2)
-      + (online ? '<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>' : '') + '</div>'
+      + avatarHtml
       + '<div class="ch-info"><div class="ch-name">' + code + '</div><div class="ch-last">' + lastMsg + '</div></div>'
       + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
       + '<span class="ch-time">' + time + '</span>'
@@ -629,16 +706,21 @@ function buildChatPage() {
     h += '<div style="display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;color:var(--im)">'
       + ICONS.chat + '<p style="font-size:14px">Pilih perbualan</p></div>';
   } else {
-    var partner = ac.partner || {};
-    var code   = partner.code || ac.partner_code_name || '??';
-    var online  = partner.online || ac.is_online || false;
-    var score   = partner.score || ac.compatibility_score ? Math.round((ac.compatibility_score || 0) * 100) : null;
+    var code      = ac.partner_code_name || '??';
+    var online    = ac.is_online || false;
+    var score     = ac.compatibility_score ? Math.round(ac.compatibility_score * 100) : null;
+    var photoUrl  = ac.partner_photo_url || null;
+    var partnerId = ac.partner_user_id || '';
+
+    var hdAvatarHtml = photoUrl
+      ? '<div class="ch-av" style="width:38px;height:38px;background:none;padding:0;overflow:hidden;cursor:pointer" onclick="viewPartnerProfile(\'' + partnerId + '\')" title="Lihat profil"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%"></div>'
+      : '<div class="ch-av" style="width:38px;height:38px;font-size:10px;cursor:pointer" onclick="viewPartnerProfile(\'' + partnerId + '\')" title="Lihat profil">' + code.slice(0, 2) + '</div>';
 
     h += '<div class="chat-hd">'
       + '<button class="btn bg mob-back-btn" onclick="showChatList()" style="display:none;padding:6px 8px">' + ICONS.back + '</button>'
-      + '<div class="ch-av" style="width:38px;height:38px;font-size:10px">' + code.slice(0, 2)
-      + (online ? '<span class="online-dot" style="position:absolute;bottom:0;right:0;width:8px;height:8px;border:2px solid #fff"></span>' : '') + '</div>'
-      + '<div style="flex:1"><div style="font-family:var(--fm);font-size:13px;font-weight:600">' + code + '</div>'
+      + hdAvatarHtml
+      + '<div style="flex:1;cursor:pointer" onclick="viewPartnerProfile(\'' + partnerId + '\')">'
+      + '<div style="font-family:var(--fm);font-size:13px;font-weight:600">' + code + '</div>'
       + '<div style="font-size:12px;color:' + (online ? 'var(--e5)' : 'var(--im)') + '">' + (online ? 'Dalam Talian' : 'Luar Talian') + '</div></div>'
       + (score ? '<span class="badge b-gld">' + ICONS.heart + ' ' + score + '%</span>' : '')
       + '</div>';
