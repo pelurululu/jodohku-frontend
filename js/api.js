@@ -196,7 +196,23 @@ async function apiLoadConversations() {
   var res = await apiFetch('/chat/conversations');
   if (!res || !res.ok) return;
   var d = await res.json();
-  convos = (d && (d.conversations || d.items)) || [];
+  convos = ((d && (d.conversations || d.items)) || []).map(function(c) {
+    var partnerData = c.partner || {};
+    return {
+      id:               c.id,
+      partner_user_id:  c.partner_user_id || partnerData.user_id || '',
+      partner_code_name: c.partner_code_name || partnerData.code || '??',
+      partner_photo_url: c.partner_photo_url || partnerData.photo_url || null,
+      partner_tier:     c.partner_tier || '',
+      status:           c.status || 'active',
+      last_message:     c.last_message || '',
+      last_message_at:  c.last_message_at || '',
+      unread_count:     c.unread_count || 0,
+      is_online:        c.is_online || partnerData.online || false,
+      compatibility_score: c.compatibility_score || null,
+      partner:          partnerData,
+    };
+  });
   unreadN = convos.reduce(function(s, c) { return s + (c.unread_count || 0); }, 0);
 }
 
