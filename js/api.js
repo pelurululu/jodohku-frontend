@@ -260,12 +260,15 @@ async function apiLoadNotifs() {
   var d = await res.json();
   notifs = ((d && (d.notifications || d.items)) || []).map(function(n) {
     return {
-      id:    n.id,
-      type:  n.type,
-      title: n.title || n.title_ms || '',
-      body:  n.body || n.body_ms || n.message || '',
-      time:  n.created_at ? new Date(n.created_at).toLocaleString('ms-MY') : '',
-      read:  n.is_read || false,
+      id:              n.id,
+      type:            n.type,
+      title:           n.title || n.title_ms || '',
+      body:            n.body  || n.body_ms  || n.message || '',
+      time:            n.created_at ? new Date(n.created_at).toLocaleString('ms-MY') : '',
+      read:            n.is_read || false,
+      conversation_id: (n.data && n.data.conversation_id) || '',
+      sender_name:     (n.data && n.data.sender_name) || '',
+      actioned:        false,
     };
   });
 }
