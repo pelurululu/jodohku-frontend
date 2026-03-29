@@ -15,6 +15,9 @@ var convos        = [];
 var notifs        = [];
 var currentUser   = Auth.getUser();
 
+// Track dismissed (proposed/rejected) profile IDs so they don't reappear on tab switch
+var dismissedProfileIds = new Set();
+
 /* ══════════════════════════════════════
    MOBILE NAV
 ══════════════════════════════════════ */
@@ -87,7 +90,8 @@ go = async function(pg) {
     showToast('Sila log masuk dahulu.', 'warn');
     return _go('login');
   }
-  if (pg === 'gallery' && Auth.isLoggedIn() && profiles.length === 0) await apiLoadGallery();
+  if (pg === 'gallery' && Auth.isLoggedIn() && profiles.length === 0) { await apiLoadGallery(); }
+  else if (pg === 'gallery' && Auth.isLoggedIn()) { profiles = profiles.filter(function(p){ return !dismissedProfileIds.has(p.id); }); }
   if (pg === 'chat'    && Auth.isLoggedIn()) { await apiLoadConversations(); setupWS(); }
   if (pg === 'notif'   && Auth.isLoggedIn()) await apiLoadNotifs();
   if (pg === 'profile' && Auth.isLoggedIn()) await apiLoadProfile();
@@ -387,6 +391,7 @@ function mapProfiles(arr) {
 
 function rejectProfile(userId) {
   apiFetch('/gallery/action', { method:'POST', body:JSON.stringify({ target_user_id:userId, action:'reject' }) });
+  dismissedProfileIds.add(userId);
   profiles = profiles.filter(function(p){ return p.id !== userId; });
   buildAppPage('gallery');
 }
@@ -440,19 +445,25 @@ async function submitLamar(userId, name) {
   var convId = data.conversation_id || '';
 
   // Notify recipient — they must accept before chat unlocks
-  await apiFetch('/notifications/send', {
+  var senderName = currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang';
+  var notifRes = await apiFetch('/notifications/send', {
     method: 'POST',
     body: JSON.stringify({
       recipient_user_id: userId,
       type: 'lamar_received',
       title: 'Anda menerima lamaran baharu',
-      body: (currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang') + ' telah menghantar lamaran kepada anda.',
+      body: senderName + ' telah menghantar lamaran kepada anda.',
       conversation_id: convId,
-      sender_name: currentUser && currentUser.code_name ? currentUser.code_name : 'Seseorang',
+      sender_name: senderName,
     })
   });
 
+  if (!notifRes || !notifRes.ok) {
+    console.warn('[Lamar] Notification send failed, but lamar was created.');
+  }
+
   showToast('Lamaran dihantar! Menunggu penerimaan.', 'success');
+  dismissedProfileIds.add(userId);
   profiles = profiles.filter(function(p){ return p.id !== userId; });
   buildAppPage('gallery');
 }
@@ -463,7 +474,11 @@ async function acceptLamar(convId, notifIdx) {
   var res = await apiFetch('/chat/conversations/' + convId + '/accept', { method: 'POST' });
   if (res && res.ok) {
     showToast('Lamaran diterima! Anda kini boleh berbual.', 'success');
-    if (notifs[notifIdx]) notifs[notifIdx].read = true;
+    if (notifs[notifIdx]) {
+      notifs[notifIdx].read = true;
+      notifs[notifIdx].actioned = true;
+      notifs[notifIdx].accepted = true;
+    }
     await apiLoadConversations();
     _go('chat');
   } else {
@@ -478,7 +493,11 @@ async function rejectLamar(convId, notifIdx) {
   var res = await apiFetch('/chat/conversations/' + convId + '/reject', { method: 'POST' });
   if (res && res.ok) {
     showToast('Lamaran ditolak.', 'info');
-    if (notifs[notifIdx]) notifs[notifIdx].accepted = false; notifs[notifIdx].read = true;
+    if (notifs[notifIdx]) {
+      notifs[notifIdx].accepted = false;
+      notifs[notifIdx].read = true;
+      notifs[notifIdx].actioned = true;
+    }
     _go('notif');
   } else {
     showToast('Gagal menolak lamaran.', 'error');
@@ -675,7 +694,7 @@ function buildChatPage() {
   }
 
   convos.forEach(function(c, i) {
-    var code = c.partner_code_name || '??';
+    var code = c.partner_display_name || c.partner_code_name || '??';
     var online = c.is_online || false;
     var lastMsg = c.last_message || '';
     var time = c.last_message_at ? new Date(c.last_message_at).toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit' }) : '';
@@ -706,7 +725,7 @@ function buildChatPage() {
     h += '<div style="display:flex;align-items:center;justify-content:center;flex:1;flex-direction:column;gap:12px;color:var(--im)">'
       + ICONS.chat + '<p style="font-size:14px">Pilih perbualan</p></div>';
   } else {
-    var code      = ac.partner_code_name || '??';
+    var code      = ac.partner_display_name || ac.partner_code_name || '??';
     var online    = ac.is_online || false;
     var score     = ac.compatibility_score ? Math.round(ac.compatibility_score * 100) : null;
     var photoUrl  = ac.partner_photo_url || null;
@@ -897,25 +916,119 @@ function buildPaymentPage() {
     { n: 'Sovereign',p: 'RM1,299.99', d: '30 Hari', key: 'sovereign',f: ['Human Matchmaker','CTOS','Mod Halimunan'] },
   ];
 
-  return '<div style="max-width:760px;margin:0 auto">'
+  var h = '<div style="max-width:760px;margin:0 auto">'
     + '<h1 style="font-family:var(--fd);font-weight:700;font-size:24px;margin-bottom:20px">Langganan</h1>'
-    + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:20px;display:flex;align-items:center;gap:14px">'
+    + '<div class="card" style="background:rgba(255,249,230,.5);border:1px solid rgba(200,162,60,.2);margin-bottom:12px;display:flex;align-items:center;gap:14px">'
     + '<div style="width:44px;height:44px;border-radius:50%;background:rgba(200,162,60,.1);display:flex;align-items:center;justify-content:center">' + ICONS.payment + '</div>'
     + '<div><div style="font-weight:600">Pelan Semasa: ' + tier.toUpperCase() + '</div>'
     + '<div style="font-size:13px;color:var(--is)">Klik Langgan untuk naik taraf</div></div></div>'
-    + '<div class="grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
-    + plans.map(function(t) {
-        var isCur = t.key === tier;
-        return '<div class="card" style="border:' + (isCur ? '2px solid var(--g5)' : '1px solid var(--s2)') + '">'
-          + '<div style="font-family:var(--fd);font-weight:700;font-size:17px;margin-bottom:4px">' + t.n + '</div>'
-          + (t.s ? '<span style="background:#E6F5ED;color:var(--e7);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Jimat ' + t.s + '</span>' : '')
-          + '<div style="font-family:var(--fd);font-weight:700;font-size:22px;color:var(--n5);margin-top:6px">' + t.p + '</div>'
-          + '<div style="font-size:12px;color:var(--im);margin-bottom:10px">' + t.d + '</div>'
-          + '<ul style="list-style:none;padding:0;margin-bottom:14px">' + t.f.map(function(f) { return '<li style="font-size:13px;color:var(--is);padding:3px 0;display:flex;gap:6px">' + ICONS.check + f + '</li>'; }).join('') + '</ul>'
-          + '<button class="btn ' + (isCur ? 'bg' : 'bp') + '" style="width:100%;' + (isCur ? 'border:1px solid var(--s2);opacity:.6' : '') + '" onclick="' + (isCur ? '' : 'apiCreateBill(\'' + t.key + '\')') + '">' + (isCur ? 'Pelan Semasa' : 'Langgan') + '</button>'
-          + '</div>';
-      }).join('')
+    + '<div class="card" style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.25);margin-bottom:20px;display:flex;align-items:center;gap:12px;padding:12px 16px">'
+    + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    + '<div style="font-size:13px;color:#1d4ed8"><strong>Mod Sandbox ToyyibPay</strong> — Pembayaran ujian sahaja. Tiada wang sebenar dikenakan.</div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+
+  plans.forEach(function(t) {
+    var isCur = t.key === tier;
+    h += '<div class="card" style="border:' + (isCur ? '2px solid var(--g5)' : '1px solid var(--s2)') + '">'
+      + '<div style="font-family:var(--fd);font-weight:700;font-size:17px;margin-bottom:4px">' + t.n + '</div>'
+      + (t.s ? '<span style="background:#E6F5ED;color:var(--e7);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">Jimat ' + t.s + '</span>' : '')
+      + '<div style="font-family:var(--fd);font-weight:700;font-size:22px;color:var(--n5);margin-top:6px">' + t.p + '</div>'
+      + '<div style="font-size:12px;color:var(--im);margin-bottom:10px">' + t.d + '</div>'
+      + '<ul style="list-style:none;padding:0;margin-bottom:14px">' + t.f.map(function(f) { return '<li style="font-size:13px;color:var(--is);padding:3px 0;display:flex;gap:6px">' + ICONS.check + f + '</li>'; }).join('') + '</ul>'
+      + '<button class="btn ' + (isCur ? 'bg' : 'bp') + '" style="width:100%;' + (isCur ? 'border:1px solid var(--s2);opacity:.6;' : '') + 'justify-content:center;padding:12px"'
+      + (isCur ? '' : ' onclick="showPaymentModal(\'' + t.key + '\',\'' + t.n + '\',\'' + t.p + '\')"')
+      + '>' + (isCur ? 'Pelan Semasa' : 'Langgan') + '</button>'
+      + '</div>';
+  });
+
+  h += '</div></div>';
+  return h;
+}
+
+function showPaymentModal(tierKey, tierName, tierPrice) {
+  var existing = document.getElementById('payment-sandbox-modal');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'payment-sandbox-modal';
+  modal.style.cssText = 'display:flex;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML =
+    '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;padding:24px;box-shadow:0 24px 64px rgba(0,0,0,.35);max-height:90vh;overflow-y:auto">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    + '<div style="font-family:var(--fm);font-weight:700;font-size:18px;color:var(--n5)">Pembayaran</div>'
+    + '<button onclick="document.getElementById(\'payment-sandbox-modal\').remove()" style="width:28px;height:28px;border-radius:50%;background:var(--s1);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">' + ICONS.x + '</button>'
+    + '</div>'
+    + '<div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:12px;margin-bottom:16px;font-size:13px;color:#1d4ed8">'
+    + '<strong>&#9888; Mod Sandbox ToyyibPay</strong> &mdash; Persekitaran ujian. Tiada wang sebenar dikenakan.'
+    + '</div>'
+    + '<div style="background:var(--s1);border-radius:10px;padding:14px;margin-bottom:16px">'
+    + '<div style="font-size:12px;color:var(--im);margin-bottom:4px">Pelan yang dipilih</div>'
+    + '<div style="font-weight:700;font-size:16px">' + tierName + ' &mdash; ' + tierPrice + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:14px">'
+    + '<label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Nama Pemegang Kad</label>'
+    + '<input class="inp" id="pay-name" placeholder="Nama anda">'
+    + '</div>'
+    + '<div style="margin-bottom:14px">'
+    + '<label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Nombor Kad (Ujian)</label>'
+    + '<input class="inp" id="pay-card" value="4111 1111 1111 1111" style="font-family:monospace;letter-spacing:1px">'
+    + '<div style="font-size:11px;color:var(--im);margin-top:4px">Visa Ujian: 4111 1111 1111 1111</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+    + '<div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">Tarikh Luput</label>'
+    + '<input class="inp" id="pay-exp" value="12/28" placeholder="MM/YY"></div>'
+    + '<div><label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">CVV</label>'
+    + '<input class="inp" id="pay-cvv" value="123" placeholder="123"></div>'
+    + '</div>'
+    + '<div style="background:rgba(52,168,83,.06);border:1px solid rgba(52,168,83,.2);border-radius:8px;padding:10px;margin-bottom:16px;font-size:12px;color:#166534">'
+    + '&#128274; Diproses melalui <strong>ToyyibPay Sandbox</strong>. Data ujian sahaja &mdash; tiada transaksi sebenar.'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 2fr;gap:10px">'
+    + '<button class="btn bg" style="border:1px solid var(--s2);justify-content:center;padding:12px" onclick="document.getElementById(\'payment-sandbox-modal\').remove()">Batal</button>'
+    + '<button id="pay-submit-btn" class="btn bp" style="justify-content:center;padding:12px" onclick="processSandboxPayment(\'' + tierKey + '\')">' + ICONS.payment + ' Bayar Sekarang</button>'
     + '</div></div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  var nameEl = document.getElementById('pay-name');
+  if (nameEl && currentUser) nameEl.value = currentUser.full_name || currentUser.code_name || '';
+}
+
+async function processSandboxPayment(tierKey) {
+  var btn  = document.getElementById('pay-submit-btn');
+  var card = ((document.getElementById('pay-card')  || {}).value || '').replace(/\s/g,'');
+  var exp  = (document.getElementById('pay-exp')   || {}).value || '';
+  var cvv  = (document.getElementById('pay-cvv')   || {}).value || '';
+  var name = (document.getElementById('pay-name')  || {}).value || '';
+  if (card.length < 12) { showToast('Sila masukkan nombor kad yang sah.', 'error'); return; }
+  if (!exp)             { showToast('Sila masukkan tarikh luput.', 'error'); return; }
+  if (cvv.length < 3)  { showToast('Sila masukkan CVV yang sah.', 'error'); return; }
+  if (!name)            { showToast('Sila masukkan nama pemegang kad.', 'error'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
+  var res = await apiFetch('/payment/create-bill', {
+    method: 'POST',
+    body: JSON.stringify({ tier: tierKey })
+  });
+  var modal = document.getElementById('payment-sandbox-modal');
+  if (res && res.ok) {
+    var d = await res.json();
+    if (d.payment_url) {
+      if (modal) modal.remove();
+      showToast('Mengalihkan ke ToyyibPay Sandbox...', 'info');
+      setTimeout(function() { window.location.href = d.payment_url; }, 800);
+    } else if (d.success) {
+      if (modal) modal.remove();
+      showToast('Langganan ' + tierKey.toUpperCase() + ' berjaya diaktifkan!', 'success');
+      currentUser = null; await apiLoadProfile();
+      _go('payment');
+    } else {
+      showToast(d.error || 'Gagal membuat bil. Cuba semula.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Bayar Sekarang'; }
+    }
+  } else {
+    var errData = {};
+    try { if (res) errData = await res.json(); } catch(e2) {}
+    showToast(errData.detail || errData.error || 'Ralat sambungan. Cuba semula.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Bayar Sekarang'; }
+  }
 }
 
 /* ── Notifications Page ── */
@@ -1965,7 +2078,49 @@ document.addEventListener('DOMContentLoaded', function() {
   renderRegSteps();
   buildTierGrid();
 
-  if (Auth.isLoggedIn()) {
+  // Handle return from ToyyibPay payment gateway
+  var urlParams = new URLSearchParams(window.location.search);
+  var paymentStatus = urlParams.get('payment');
+  if (paymentStatus) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    if (Auth.isLoggedIn()) {
+      currentUser = Auth.getUser();
+      apiLoadNotifs();
+      if (paymentStatus === 'success') {
+        showToast('Pembayaran berjaya! Langganan anda telah diaktifkan.', 'success');
+        apiLoadProfile().then(function() { go('payment'); });
+      } else {
+        showToast('Pembayaran sedang diproses atau dibatalkan.', 'warn');
+        go('payment');
+      }
+      return;
+    }
+  }
+
+  // Handle payment return redirect from ToyyibPay
+  var urlParams = new URLSearchParams(window.location.search);
+  var paymentStatus = urlParams.get('payment');
+  if (paymentStatus === 'success') {
+    history.replaceState(null, '', window.location.pathname);
+    if (Auth.isLoggedIn()) {
+      currentUser = Auth.getUser();
+      apiLoadNotifs();
+      go('payment').then(function() {
+        showToast('Pembayaran berjaya! Langganan anda telah diaktifkan.', 'success');
+      });
+    } else {
+      go('login');
+    }
+  } else if (paymentStatus === 'pending') {
+    history.replaceState(null, '', window.location.pathname);
+    if (Auth.isLoggedIn()) {
+      currentUser = Auth.getUser();
+      apiLoadNotifs();
+      go('payment').then(function() {
+        showToast('Pembayaran sedang diproses. Sila semak semula.', 'warn');
+      });
+    }
+  } else if (Auth.isLoggedIn()) {
     currentUser = Auth.getUser();
     apiLoadNotifs();
     go('gallery');
