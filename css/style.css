@@ -234,3 +234,63 @@ button{cursor:pointer;font-family:var(--fb)}
   .grid-2{grid-template-columns:1fr!important}
   .hero h1{font-size:1.8rem}
 }
+
+/* ======================= MAINTENANCE POPUP ======================= */
+.maintenance-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  /* This creates the background blur effect */
+  backdrop-filter: blur(10px); 
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999; /* Ensures it stays on top of the navbar and everything else */
+}
+
+.maintenance-popup {
+  background: #ffffff;
+  padding: 40px 32px;
+  border-radius: 20px; /* Matches your --r variable aesthetic */
+  text-align: center;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: 1px solid rgba(200, 162, 60, 0.2); /* Subtle gold border */
+}
+
+.maintenance-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: #FFF9E6; /* Light gold background */
+  color: #C8A23C; /* Gold accent color */
+  margin-bottom: 24px;
+}
+
+.maintenance-popup h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 12px;
+}
+
+.maintenance-popup p {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Helper class to prevent scrolling when maintenance is active */
+body.no-scroll {
+  overflow: hidden;
+}
